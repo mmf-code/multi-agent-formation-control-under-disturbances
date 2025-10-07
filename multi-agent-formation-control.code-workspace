@@ -20,12 +20,13 @@
     "settings": {
         "cmake.sourceDirectory": "${workspaceFolder:Root}/agent_control_pkg",
         "cmake.buildDirectory": "${workspaceFolder:Root}/build",
-        "python.defaultInterpreterPath": "${workspaceFolder:Agent Control Package}/.venv/bin/python",
+        // Use Windows-friendly path to the project's virtualenv
+        "python.defaultInterpreterPath": "${workspaceFolder:Agent Control Package}/.venv/Scripts/python.exe",
         "files.exclude": {
             "**/build": true,
             "**/install": true,
             "**/log": true,
-            "**/.venv": false,
+            "**/.venv": true,
             "**/vcpkg_installed": true,
             "**/__pycache__": true,
             "**/*.pyc": true

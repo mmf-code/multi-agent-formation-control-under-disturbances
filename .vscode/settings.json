@@ -46,12 +46,29 @@
     "python.analysis.typeCheckingMode": "off",
     "python.analysis.autoImportCompletions": true,
     "python.analysis.diagnosticMode": "workspace",
-    "python.defaultInterpreterPath": "python",
+    // Use the project-local virtual environment interpreter (Windows path)
+    "python.defaultInterpreterPath": "${workspaceFolder}/agent_control_pkg/.venv/Scripts/python.exe",
     "python.terminal.activateEnvironment": false,
+    // Exclude heavy/generated folders from Pylance analysis to reduce noise
     "python.analysis.exclude": [
+        "**/.venv/**",
+        "**/venv/**",
+        "**/env/**",
         "**/build/**",
+        "**/build-ninja/**",
         "**/build/_deps/**",
-        "**/_deps/**"
+        "**/vcpkg_installed/**",
+        "**/__pycache__/**",
+        "**/.cache/**"
+    ],
+    // Ensure the new linter extensions respect these toggles (VS Code modern scheme)
+    "pylint.enabled": false,
+    "flake8.enabled": true,
+    "flake8.args": [
+        "--max-line-length=88",
+        "--ignore=E501,E127,E128,W503,W504,E203,W291,W292,E731,F401,F811",
+        "--exclude=build,build-ninja,.cache,vcpkg_installed,.venv,venv,env,docs",
+        "--per-file-ignores=analysis/*.py:E501,E127,W504,W291,W292"
     ],
 
     // YAML Language Support
@@ -109,7 +126,10 @@
     "files.trimTrailingWhitespace": true,
     "files.trimFinalNewlines": true,
     "files.exclude": {
-        "**/build/_deps/**": true
+        "**/build/**": true,
+        "**/build/_deps/**": true,
+        "**/.venv/**": true,
+        "**/__pycache__/**": true
     },
 
     // Cursor and editor enhancements
