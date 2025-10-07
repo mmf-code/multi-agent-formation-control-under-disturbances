@@ -172,7 +172,8 @@ endif()
 
 # Note: Simple PID tuner removed (simple_pid_tuning_main.cpp deleted)
 
-# --- Executable for Multi-Drone PID Test ---
+# --- Standalone tester removed (migrating to ROS 2 nodes) ---
+# --- Executable for Multi-Drone PID Test (standalone) ---
 add_executable(multi_drone_pid_tester
     src/multi_drone_pid_test_main.cpp
 )
@@ -180,9 +181,9 @@ target_include_directories(multi_drone_pid_tester PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 target_link_libraries(multi_drone_pid_tester PRIVATE
-    pid_logic_lib      # Link against your PID library
-    fuzzy_logic_lib    # Link against fuzzy logic library
-    config_reader_lib  # Link against config reader library
+    pid_logic_lib
+    fuzzy_logic_lib
+    config_reader_lib
 )
 
 # Note: Modular PID system removed (obsolete directory deleted)

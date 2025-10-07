@@ -161,3 +161,8 @@ analysis/*.py
 latex_output/
 pdf_output/
 html_output/
+# Build directories (CMake/VS/colcon)
+build/
+build-ninja/
+install/
+log/

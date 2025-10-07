@@ -1,3 +1,0 @@
-C:/Users/ataka/OneDrive/Masaüstü/docs/multi-agent-formation-control-under-disturbances/build/_deps/yaml-cpp-subbuild/CMakeFiles/yaml-cpp-populate.dir
-C:/Users/ataka/OneDrive/Masaüstü/docs/multi-agent-formation-control-under-disturbances/build/_deps/yaml-cpp-subbuild/CMakeFiles/ALL_BUILD.dir
-C:/Users/ataka/OneDrive/Masaüstü/docs/multi-agent-formation-control-under-disturbances/build/_deps/yaml-cpp-subbuild/CMakeFiles/ZERO_CHECK.dir
