@@ -124,6 +124,17 @@ Thumbs.db
 *.swo
 .idea/
 *.sublime-*
+.vscode/
+
+# LLM/editor assistant configs
+.cursor/
+.cursorrules
+.cursorrules.json
+.aider*
+.claude/
+.codeium/
+.tabnine/
+.windsurf/
 
 # vcpkg
 vcpkg_installed/
