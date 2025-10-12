@@ -51,9 +51,9 @@ def _step_metrics(sig, t, band=0.05):
     return {'overshoot_pct': OS, 'peak_time': peak_time, 'settling_time': Ts, 'rise_time_10_90': Tr}
 
 
-def plot_csv(csv_path: str, out_path: str | None = None):
+def _prepare_dataframe(csv_path: str):
+    """Load and prepare dataframe with numeric conversion and time ordering."""
     df = pd.read_csv(csv_path)
-    # robust numeric conversion and time ordering
     if 'time' not in df.columns:
         raise ValueError('time column missing')
     for c in df.columns:
@@ -62,13 +62,11 @@ def plot_csv(csv_path: str, out_path: str | None = None):
         except Exception:
             pass
     df = df.dropna(subset=['time']).sort_values('time').reset_index(drop=True)
-    target_x = df["target_x"].iloc[0] if "target_x" in df.columns else None
-    target_y = df["target_y"].iloc[0] if "target_y" in df.columns else None
+    return df
 
-    fig, axes = plt.subplots(3, 2, figsize=(12, 10), constrained_layout=True)
 
-    # Position
-    ax = axes[0, 0]
+def _plot_position(ax, df, target_x, target_y):
+    """Plot position data with targets."""
     ax.plot(df["time"], df["x"], label="x [m]")
     ax.plot(df["time"], df["y"], label="y [m]")
     if target_x is not None:
@@ -81,8 +79,9 @@ def plot_csv(csv_path: str, out_path: str | None = None):
     ax.grid(True)
     ax.legend()
 
-    # Velocity
-    ax = axes[0, 1]
+
+def _plot_velocity(ax, df):
+    """Plot velocity data."""
     ax.plot(df["time"], df["vx"], label="vx [m/s]")
     ax.plot(df["time"], df["vy"], label="vy [m/s]")
     ax.set_title("Velocity")
@@ -91,8 +90,9 @@ def plot_csv(csv_path: str, out_path: str | None = None):
     ax.grid(True)
     ax.legend()
 
-    # Raw/filtered command
-    ax = axes[1, 0]
+
+def _plot_control(ax, df):
+    """Plot control commands (raw vs filtered)."""
     if "ax_cmd_f" in df.columns:
         ax.plot(df["time"], df["ax_cmd_f"], label="ax_cmd_f [m/s^2]")
         ax.plot(df["time"], df["ay_cmd_f"], label="ay_cmd_f [m/s^2]")
@@ -104,8 +104,9 @@ def plot_csv(csv_path: str, out_path: str | None = None):
     ax.grid(True)
     ax.legend()
 
-    # Drag & relative airspeed (norms)
-    ax = axes[1, 1]
+
+def _plot_drag(ax, df):
+    """Plot drag and relative airspeed."""
     if "ax_drag" in df.columns and "ay_drag" in df.columns:
         a_drag_norm = np.hypot(df["ax_drag"].to_numpy(), df["ay_drag"].to_numpy())
         ax.plot(df["time"], a_drag_norm, label="|a_drag| [m/s^2]")
@@ -118,48 +119,56 @@ def plot_csv(csv_path: str, out_path: str | None = None):
     ax.set_ylabel("drag [m/s^2]")
     ax.grid(True)
 
-    # Error X with bands and metrics
-    ax = axes[2, 0]
-    if target_x is not None:
-        err_x = df["x"] - target_x
-        ax.plot(df["time"], err_x, label="error x [m]")
-        # bands for 2% and 5% around the final estimate
-        s = df["x"].to_numpy()
-        tail = max(1, len(s) // 10)
-        yfin = float(np.mean(s[-tail:]))
-        A = yfin - float(s[0])
-        band2 = 0.02 * abs(A)
-        band5 = 0.05 * abs(A)
-        ax.axhline(yfin + band2, color="gray", ls=":", alpha=0.6)
-        ax.axhline(yfin - band2, color="gray", ls=":", alpha=0.6, label="2% band")
-        ax.axhline(yfin + band5, color="silver", ls="-.", alpha=0.6)
-        ax.axhline(yfin - band5, color="silver", ls="-.", alpha=0.6, label="5% band")
-        m = _step_metrics(df["x"], df["time"])  # uses final estimate
-        # summary metrics
-        dt = float(np.median(np.diff(df["time"].to_numpy())))
-        rmse_x = float(np.sqrt(np.mean((df["x"].to_numpy() - target_x) ** 2)))
-        iae_x = float(np.sum(np.abs(df["x"].to_numpy() - target_x)) * dt)
-        itae_x = float(np.sum(df["time"].to_numpy() * np.abs(df["x"].to_numpy() - target_x)) * dt)
-        if "ax_cmd_f" in df.columns and "ay_cmd_f" in df.columns:
-            u_norm = float(np.sum(np.hypot(df["ax_cmd_f"].to_numpy(), df["ay_cmd_f"].to_numpy())) * dt)
-        else:
-            u_norm = float('nan')
-        txt = (
-            f"Overshoot: {m['overshoot_pct']:.1f}%\n"
-            f"Peak time: {m['peak_time']:.2f}s\n"
-            f"Settling(±5%): {m['settling_time']:.2f}s\n"
-            f"Rise 10-90%: {m['rise_time_10_90']:.2f}s\n"
-            f"RMSE_x: {rmse_x:.3f}, IAE_x: {iae_x:.3f}\nITAE_x: {itae_x:.3f}, |u|_1: {u_norm:.3f}"
-        )
-        ax.text(0.02, 0.98, txt, transform=ax.transAxes, va="top", ha="left",
-                bbox=dict(boxstyle="round", facecolor="white", alpha=0.8))
+
+def _plot_error_x(ax, df, target_x):
+    """Plot X error with bands and metrics."""
+    if target_x is None:
+        return
+    
+    err_x = df["x"] - target_x
+    ax.plot(df["time"], err_x, label="error x [m]")
+    
+    # bands for 2% and 5% around the final estimate
+    s = df["x"].to_numpy()
+    tail = max(1, len(s) // 10)
+    yfin = float(np.mean(s[-tail:]))
+    A = yfin - float(s[0])
+    band2 = 0.02 * abs(A)
+    band5 = 0.05 * abs(A)
+    ax.axhline(yfin + band2, color="gray", ls=":", alpha=0.6)
+    ax.axhline(yfin - band2, color="gray", ls=":", alpha=0.6, label="2% band")
+    ax.axhline(yfin + band5, color="silver", ls="-.", alpha=0.6)
+    ax.axhline(yfin - band5, color="silver", ls="-.", alpha=0.6, label="5% band")
+    
+    m = _step_metrics(df["x"], df["time"])
+    # summary metrics
+    dt = float(np.median(np.diff(df["time"].to_numpy())))
+    rmse_x = float(np.sqrt(np.mean((df["x"].to_numpy() - target_x) ** 2)))
+    iae_x = float(np.sum(np.abs(df["x"].to_numpy() - target_x)) * dt)
+    itae_x = float(np.sum(df["time"].to_numpy() * np.abs(df["x"].to_numpy() - target_x)) * dt)
+    
+    if "ax_cmd_f" in df.columns and "ay_cmd_f" in df.columns:
+        u_norm = float(np.sum(np.hypot(df["ax_cmd_f"].to_numpy(), df["ay_cmd_f"].to_numpy())) * dt)
+    else:
+        u_norm = float('nan')
+    
+    txt = (
+        f"Overshoot: {m['overshoot_pct']:.1f}%\n"
+        f"Peak time: {m['peak_time']:.2f}s\n"
+        f"Settling(±5%): {m['settling_time']:.2f}s\n"
+        f"Rise 10-90%: {m['rise_time_10_90']:.2f}s\n"
+        f"RMSE_x: {rmse_x:.3f}, IAE_x: {iae_x:.3f}\nITAE_x: {itae_x:.3f}, |u|_1: {u_norm:.3f}"
+    )
+    ax.text(0.02, 0.98, txt, transform=ax.transAxes, va="top", ha="left",
+            bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.8})
     ax.set_title("Step Error X & Metrics")
     ax.set_xlabel("t [s]")
     ax.set_ylabel("error x [m]")
     ax.grid(True)
 
-    # Error Y with bands
-    ax = axes[2, 1]
+
+def _plot_error_y(ax, df, target_y):
+    """Plot Y error with bands."""
     if target_y is not None:
         err_y = df["y"] - target_y
         ax.plot(df["time"], err_y, label="error y [m]")
@@ -173,12 +182,25 @@ def plot_csv(csv_path: str, out_path: str | None = None):
     ax.set_ylabel("error y [m]")
     ax.grid(True)
 
+
+def plot_csv(csv_path: str, out_path: str | None = None):
+    """Main plotting function."""
+    df = _prepare_dataframe(csv_path)
+    target_x = df["target_x"].iloc[0] if "target_x" in df.columns else None
+    target_y = df["target_y"].iloc[0] if "target_y" in df.columns else None
+
+    fig, axes = plt.subplots(3, 2, figsize=(12, 10), constrained_layout=True)
+
+    _plot_position(axes[0, 0], df, target_x, target_y)
+    _plot_velocity(axes[0, 1], df)
+    _plot_control(axes[1, 0], df)
+    _plot_drag(axes[1, 1], df)
+    _plot_error_x(axes[2, 0], df, target_x)
+    _plot_error_y(axes[2, 1], df, target_y)
+
     # Meta text
     meta_lines = []
-    for k in [
-        "kp", "ki", "kd", "vx_wind", "vy_wind", "cd_lin", "cd_quad",
-        "v_thr", "tau_up", "tau_down", "a_max", "dt",
-    ]:
+    for k in ["kp", "ki", "kd", "vx_wind", "vy_wind", "cd_lin", "cd_quad", "v_thr", "tau_up", "tau_down", "a_max", "dt"]:
         if k in df.columns:
             meta_lines.append(f"{k}={df[k].iloc[0]}")
     meta_text = "  ".join(meta_lines)
