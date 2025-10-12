@@ -1,6 +1,6 @@
 simulation_settings:
   dt: 0.01           # [s]
-  total_time: 12.0   # [s]
+  total_time: 50.0   # [s]
 
 physics:
   mass: 1.5          # [kg]
