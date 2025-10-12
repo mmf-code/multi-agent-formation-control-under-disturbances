@@ -163,6 +163,7 @@ ehthumbs.db
 testing/
 analysis/*.py
 !analysis/plot_simulation_results.py
+!analysis/plot_dynamics_2d.py
 
 # PowerShell execution policy and temporary files
 *.ps1.backup*
@@ -172,6 +173,8 @@ analysis/*.py
 latex_output/
 pdf_output/
 html_output/
+# Centralized runtime outputs (untracked)
+outputs/**
 # Build directories (CMake/VS/colcon)
 build/
 build-ninja/
