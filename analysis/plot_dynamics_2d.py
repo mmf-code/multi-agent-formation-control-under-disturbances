@@ -52,7 +52,6 @@ def _step_metrics(sig, t, band=0.05):
 
 
 def plot_csv(csv_path: str, out_path: str | None = None):
-    import numpy as np
     df = pd.read_csv(csv_path)
     # robust numeric conversion and time ordering
     if 'time' not in df.columns:
@@ -108,7 +107,6 @@ def plot_csv(csv_path: str, out_path: str | None = None):
     # Drag & relative airspeed (norms)
     ax = axes[1, 1]
     if "ax_drag" in df.columns and "ay_drag" in df.columns:
-        import numpy as np
         a_drag_norm = np.hypot(df["ax_drag"].to_numpy(), df["ay_drag"].to_numpy())
         ax.plot(df["time"], a_drag_norm, label="|a_drag| [m/s^2]")
     if "vrel_norm" in df.columns:
@@ -126,7 +124,6 @@ def plot_csv(csv_path: str, out_path: str | None = None):
         err_x = df["x"] - target_x
         ax.plot(df["time"], err_x, label="error x [m]")
         # bands for 2% and 5% around the final estimate
-        import numpy as np
         s = df["x"].to_numpy()
         tail = max(1, len(s) // 10)
         yfin = float(np.mean(s[-tail:]))
@@ -226,6 +223,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
