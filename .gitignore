@@ -178,5 +178,6 @@ outputs/**
 # Build directories (CMake/VS/colcon)
 build/
 build-ninja/
+build2/
 install/
 log/
