@@ -98,6 +98,8 @@ struct SimulationConfig {
 
     // Controller Settings
     SimPIDParams pid_params;
+    // Controller selection: "pid" (default), "p", "pi", "pd", "fuzzy"
+    std::string controller_type{"pid"};
     bool enable_fls{false};
     std::string fuzzy_params_file{"fuzzy_params.yaml"}; 
 

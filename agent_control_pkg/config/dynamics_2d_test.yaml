@@ -1,4 +1,4 @@
-simulation_settings:
+﻿simulation_settings:
   dt: 0.01           # [s]
   total_time: 50.0   # [s]
 
@@ -20,8 +20,16 @@ target:
   y: 5.0             # step target Y [m]
 
 controller_settings:
+  type: pid_fuzzy
   pid:
-    kp: 1.0
-    ki: 0.10
-    kd: 0.35
+    kp: 0.538
+    ki: 0.145
+    kd: 1.368
     enable_derivative_filter: true
+  # Fuzzy + mixing (for pid_fuzzy)
+  fls:
+    enable: true
+    params_file: fuzzy_params.yaml
+  mix:
+    k_pid: 1.0
+    k_fuzzy: 1.0

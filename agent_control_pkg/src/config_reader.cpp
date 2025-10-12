@@ -178,6 +178,12 @@ void ConfigReader::loadControllerSettings(const YAML::Node& node, SimulationConf
         std::cerr << "Warning: 'controller_settings' node is not a map. Skipping." << std::endl;
         return;
     }
+    // Optional controller type at this level
+    if (node["type"]) {
+        try {
+            config.controller_type = node["type"].as<std::string>(config.controller_type);
+        } catch (...) {}
+    }
     YAML::Node pid_node = node["pid"];
     if (pid_node) {
         config.pid_params.kp = pid_node["kp"].as<double>(config.pid_params.kp);

@@ -207,6 +207,8 @@ target_link_libraries(multi_drone_pid_tester PRIVATE
 # --- Simple dynamics tester ---
 add_executable(dynamics_2d_tester
     src/dynamics_2d_test_main.cpp
+    src/controllers/fuzzy_gt2_adapter.cpp
+    src/controllers/combined_pid_fuzzy_adapter.cpp
 )
 target_include_directories(dynamics_2d_tester PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -214,6 +216,7 @@ target_include_directories(dynamics_2d_tester PRIVATE
 target_link_libraries(dynamics_2d_tester PRIVATE
     dynamics_2d_lib
     pid_logic_lib
+    fuzzy_logic_lib
     config_reader_lib
     controllers_lib
 )

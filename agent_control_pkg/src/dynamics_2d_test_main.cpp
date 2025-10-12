@@ -1,5 +1,7 @@
 #include "agent_control_pkg/drone_dynamics_2d.hpp"
 #include "agent_control_pkg/controllers/pid_adapter.hpp"
+#include "agent_control_pkg/controllers/fuzzy_gt2_adapter.hpp"
+#include "agent_control_pkg/controllers/combined_pid_fuzzy_adapter.hpp"
 #include "agent_control_pkg/config_reader.hpp"
 #include <yaml-cpp/yaml.h>
 #include <chrono>
@@ -15,6 +17,8 @@ namespace fs = std::filesystem;
 int main(int argc, char** argv) {
   using agent_control_pkg::DroneDynamics2D;
   using agent_control_pkg::controllers::PIDAdapter;
+  using agent_control_pkg::controllers::FuzzyGT2Adapter;
+  using agent_control_pkg::controllers::CombinedPidFuzzyAdapter;
   using agent_control_pkg::ConfigReader;
   using agent_control_pkg::SimulationConfig;
 
@@ -59,10 +63,81 @@ int main(int argc, char** argv) {
   // drone.setWindAccel(0.0, 0.0);
 
   // Controllers (position -> acceleration) via interface
-  PIDAdapter pid_x(cfg.pid_params.kp, cfg.pid_params.ki, cfg.pid_params.kd, -phys.max_accel, phys.max_accel);
-  PIDAdapter pid_y(cfg.pid_params.kp, cfg.pid_params.ki, cfg.pid_params.kd, -phys.max_accel, phys.max_accel);
-  pid_x.enableDerivativeFilter(cfg.pid_params.enable_derivative_filter, cfg.pid_params.derivative_filter_alpha);
-  pid_y.enableDerivativeFilter(cfg.pid_params.enable_derivative_filter, cfg.pid_params.derivative_filter_alpha);
+  std::unique_ptr<agent_control_pkg::controllers::IController1D> ctrl_x;
+  std::unique_ptr<agent_control_pkg::controllers::IController1D> ctrl_y;
+
+  auto make_pid = [&](double kp, double ki, double kd) {
+    auto p = std::make_unique<PIDAdapter>(kp, ki, kd, -phys.max_accel, phys.max_accel);
+    p->enableDerivativeFilter(cfg.pid_params.enable_derivative_filter, cfg.pid_params.derivative_filter_alpha);
+    return p;
+  };
+
+  std::string ctype = cfg.controller_type;
+  for (auto &ch : ctype) ch = static_cast<char>(::tolower(ch));
+  if (ctype == "p") { cfg.pid_params.ki = 0.0; cfg.pid_params.kd = 0.0; }
+  else if (ctype == "pi") { cfg.pid_params.kd = 0.0; }
+  else if (ctype == "pd") { cfg.pid_params.ki = 0.0; }
+
+  if (ctype == "fuzzy" || (cfg.enable_fls && ctype != "pid" && ctype != "pid_fuzzy")) {
+    // Attempt to configure GT2 FLS from file; fall back to PID on failure
+    agent_control_pkg::FuzzyParams fp;
+    bool ok = agent_control_pkg::loadFuzzyParamsYAML(cfg.fuzzy_params_file, fp);
+    if (ok) {
+      FuzzyGT2Adapter::Options opt;
+      opt.umin = -phys.max_accel; opt.umax = phys.max_accel;
+      opt.wind_scalar = std::hypot(wind_vx, wind_vy);
+      auto f1 = std::make_unique<FuzzyGT2Adapter>(opt);
+      auto f2 = std::make_unique<FuzzyGT2Adapter>(opt);
+      // Build from params (variables: error, dError, optional wind, output)
+      bool include_wind = fp.sets.find("wind") != fp.sets.end();
+      f1->configureFromFuzzyParams(fp, include_wind);
+      f2->configureFromFuzzyParams(fp, include_wind);
+      ctrl_x = std::move(f1);
+      ctrl_y = std::move(f2);
+      std::cout << "Using controller: fuzzy (GT2) with params file '" << cfg.fuzzy_params_file << "'" << std::endl;
+    } else {
+      std::cerr << "Fuzzy params failed to load; falling back to PID." << std::endl;
+      ctrl_x = make_pid(cfg.pid_params.kp, cfg.pid_params.ki, cfg.pid_params.kd);
+      ctrl_y = make_pid(cfg.pid_params.kp, cfg.pid_params.ki, cfg.pid_params.kd);
+    }
+  } else {
+    // Handle pid_fuzzy (hybrid) or pure PID
+    if (ctype == "pid_fuzzy" || ctype == "fuzzy_pid" || ctype == "hybrid") {
+      // Read mix gains from YAML if present
+      double k_pid_mix = 1.0, k_fuzzy_mix = 1.0;
+      if (root["controller_settings"] && root["controller_settings"]["mix"]) {
+        const auto mix = root["controller_settings"]["mix"];
+        k_pid_mix = mix["k_pid"].as<double>(k_pid_mix);
+        k_fuzzy_mix = mix["k_fuzzy"].as<double>(k_fuzzy_mix);
+      }
+      // Build PID
+      auto pidx = make_pid(cfg.pid_params.kp, cfg.pid_params.ki, cfg.pid_params.kd);
+      auto pidy = make_pid(cfg.pid_params.kp, cfg.pid_params.ki, cfg.pid_params.kd);
+      // Build Fuzzy (if params load OK); fall back to PID-only if not
+      agent_control_pkg::FuzzyParams fp;
+      bool ok = agent_control_pkg::loadFuzzyParamsYAML(cfg.fuzzy_params_file, fp);
+      if (ok) {
+        FuzzyGT2Adapter::Options opt;
+        opt.umin = -phys.max_accel; opt.umax = phys.max_accel;
+        opt.wind_scalar = std::hypot(wind_vx, wind_vy);
+        auto fx = std::make_unique<FuzzyGT2Adapter>(opt);
+        auto fy = std::make_unique<FuzzyGT2Adapter>(opt);
+        bool include_wind = fp.sets.find("wind") != fp.sets.end();
+        fx->configureFromFuzzyParams(fp, include_wind);
+        fy->configureFromFuzzyParams(fp, include_wind);
+        ctrl_x = std::make_unique<CombinedPidFuzzyAdapter>(std::move(pidx), std::move(fx), k_pid_mix, k_fuzzy_mix, -phys.max_accel, phys.max_accel);
+        ctrl_y = std::make_unique<CombinedPidFuzzyAdapter>(std::move(pidy), std::move(fy), k_pid_mix, k_fuzzy_mix, -phys.max_accel, phys.max_accel);
+        std::cout << "Using controller: pid+fuzzy (k_pid=" << k_pid_mix << ", k_fuzzy=" << k_fuzzy_mix << ")\n";
+      } else {
+        std::cerr << "Fuzzy params failed to load; using pure PID." << std::endl;
+        ctrl_x = std::move(pidx);
+        ctrl_y = std::move(pidy);
+      }
+    } else {
+      ctrl_x = make_pid(cfg.pid_params.kp, cfg.pid_params.ki, cfg.pid_params.kd);
+      ctrl_y = make_pid(cfg.pid_params.kp, cfg.pid_params.ki, cfg.pid_params.kd);
+    }
+  }
 
   // Output directory and CSV file
   fs::path base_out = fs::path("outputs/simulations/dynamics2d");
@@ -113,8 +188,8 @@ int main(int argc, char** argv) {
   for (; time <= total_time + 1e-12; time += dt) {
     const auto &st = drone.getState();
     // Compute acceleration commands from position error
-    const double ax_cmd = pid_x.compute(st.x, target_x, dt);
-    const double ay_cmd = pid_y.compute(st.y, target_y, dt);
+    const double ax_cmd = ctrl_x->compute(st.x, target_x, dt);
+    const double ay_cmd = ctrl_y->compute(st.y, target_y, dt);
 
     // Step dynamics
     drone.step(ax_cmd, ay_cmd, dt);

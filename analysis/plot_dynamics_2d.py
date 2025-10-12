@@ -124,10 +124,10 @@ def _plot_error_x(ax, df, target_x):
     """Plot X error with bands and metrics."""
     if target_x is None:
         return
-    
+
     err_x = df["x"] - target_x
     ax.plot(df["time"], err_x, label="error x [m]")
-    
+
     # bands for 2% and 5% around the final estimate
     s = df["x"].to_numpy()
     tail = max(1, len(s) // 10)
@@ -139,19 +139,19 @@ def _plot_error_x(ax, df, target_x):
     ax.axhline(yfin - band2, color="gray", ls=":", alpha=0.6, label="2% band")
     ax.axhline(yfin + band5, color="silver", ls="-.", alpha=0.6)
     ax.axhline(yfin - band5, color="silver", ls="-.", alpha=0.6, label="5% band")
-    
+
     m = _step_metrics(df["x"], df["time"])
     # summary metrics
     dt = float(np.median(np.diff(df["time"].to_numpy())))
     rmse_x = float(np.sqrt(np.mean((df["x"].to_numpy() - target_x) ** 2)))
     iae_x = float(np.sum(np.abs(df["x"].to_numpy() - target_x)) * dt)
     itae_x = float(np.sum(df["time"].to_numpy() * np.abs(df["x"].to_numpy() - target_x)) * dt)
-    
+
     if "ax_cmd_f" in df.columns and "ay_cmd_f" in df.columns:
         u_norm = float(np.sum(np.hypot(df["ax_cmd_f"].to_numpy(), df["ay_cmd_f"].to_numpy())) * dt)
     else:
         u_norm = float('nan')
-    
+
     txt = (
         f"Overshoot: {m['overshoot_pct']:.1f}%\n"
         f"Peak time: {m['peak_time']:.2f}s\n"
