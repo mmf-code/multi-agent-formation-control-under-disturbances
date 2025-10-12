@@ -123,6 +123,23 @@ target_include_directories(fuzzy_logic_lib PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
+# --- 2D Drone Dynamics Library ---
+add_library(dynamics_2d_lib
+    src/drone_dynamics_2d.cpp
+)
+target_include_directories(dynamics_2d_lib PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+# --- Controllers library (adapters, base interfaces) ---
+add_library(controllers_lib INTERFACE)
+target_include_directories(controllers_lib INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(controllers_lib INTERFACE pid_logic_lib)
+
 # Note: Obsolete executables removed (agent_control_main.cpp, fuzzy_test_main.cpp deleted)
 
 # --- Unit Tests ---
@@ -184,6 +201,21 @@ target_link_libraries(multi_drone_pid_tester PRIVATE
     pid_logic_lib
     fuzzy_logic_lib
     config_reader_lib
+    dynamics_2d_lib
+)
+
+# --- Simple dynamics tester ---
+add_executable(dynamics_2d_tester
+    src/dynamics_2d_test_main.cpp
+)
+target_include_directories(dynamics_2d_tester PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_link_libraries(dynamics_2d_tester PRIVATE
+    dynamics_2d_lib
+    pid_logic_lib
+    config_reader_lib
+    controllers_lib
 )
 
 # Note: Modular PID system removed (obsolete directory deleted)

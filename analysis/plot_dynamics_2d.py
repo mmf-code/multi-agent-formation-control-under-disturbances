@@ -5,6 +5,7 @@ from datetime import datetime
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 
 
 def find_latest_csv(pattern: str) -> str:
@@ -16,7 +17,6 @@ def find_latest_csv(pattern: str) -> str:
 
 
 def _step_metrics(sig, t, band=0.05):
-    import numpy as np
     s = sig.to_numpy() if hasattr(sig, 'to_numpy') else np.asarray(sig)
     tt = t.to_numpy() if hasattr(t, 'to_numpy') else np.asarray(t)
     if len(s) < 3:

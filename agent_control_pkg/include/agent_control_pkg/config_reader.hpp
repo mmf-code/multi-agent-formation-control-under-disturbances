@@ -76,6 +76,18 @@ struct ZNTuningParams {
     double manual_pu{2.0};               // Ultimate period for quick method calculations
 };
 
+// Physics parameters (2D model)
+struct PhysicsParams {
+    double mass{1.5};                 // kg
+    double drag_coeff_lin{0.1};       // linear drag coefficient (kg/s)
+    double drag_coeff_quad{0.0};      // quadratic drag coefficient (kg/m)
+    double drag_speed_threshold{2.0}; // [m/s] linear→quadratic blend threshold
+    double max_accel{15.0};           // m/s^2 per-axis limit
+    double actuator_tau{0.1};         // s (first-order actuator time constant)
+    double actuator_tau_up{0.0};      // s (optional asymmetric up time constant)
+    double actuator_tau_down{0.0};    // s (optional asymmetric down time constant)
+};
+
 // --- CORRECTED & MERGED: Main simulation configuration structure ---
 struct SimulationConfig {
     // Simulation Settings
@@ -88,6 +100,9 @@ struct SimulationConfig {
     SimPIDParams pid_params;
     bool enable_fls{false};
     std::string fuzzy_params_file{"fuzzy_params.yaml"}; 
+
+    // Physics Settings (2D dynamics)
+    PhysicsParams physics;
 
     // Scenario Settings
     bool wind_enabled{false};
@@ -114,6 +129,7 @@ public:
 private:
     static void loadSimulationSettings(const YAML::Node& node, SimulationConfig& config);
     static void loadControllerSettings(const YAML::Node& node, SimulationConfig& config);
+    static void loadPhysicsSettings(const YAML::Node& node, SimulationConfig& config);
     static void loadScenarioSettings(const YAML::Node& node, SimulationConfig& config);
     static void loadOutputSettings(const YAML::Node& node, SimulationConfig& config);
 };

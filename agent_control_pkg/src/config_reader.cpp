@@ -140,6 +140,9 @@ SimulationConfig ConfigReader::loadConfig(const std::string& config_filepath) {
 
     if (root_node["simulation_settings"]) { loadSimulationSettings(root_node["simulation_settings"], config); }
     if (root_node["controller_settings"]) { loadControllerSettings(root_node["controller_settings"], config); }
+    // Physics settings can be provided under either 'physics' or 'physics_settings'
+    if (root_node["physics"]) { loadPhysicsSettings(root_node["physics"], config); }
+    if (root_node["physics_settings"]) { loadPhysicsSettings(root_node["physics_settings"], config); }
     if (root_node["scenario_settings"]) { loadScenarioSettings(root_node["scenario_settings"], config); }
     if (root_node["output_settings"]) { loadOutputSettings(root_node["output_settings"], config); }
     
@@ -189,6 +192,57 @@ void ConfigReader::loadControllerSettings(const YAML::Node& node, SimulationConf
     if (fls_node) {
         config.enable_fls = fls_node["enable"].as<bool>(config.enable_fls);
         config.fuzzy_params_file = fls_node["params_file"].as<std::string>(config.fuzzy_params_file);
+    }
+}
+
+void ConfigReader::loadPhysicsSettings(const YAML::Node& node, SimulationConfig& config) {
+    if (!node.IsMap()) {
+        std::cerr << "Warning: 'physics' node is not a map. Skipping." << std::endl;
+        return;
+    }
+    // Allow both explicit names and aliases for compatibility
+    config.physics.mass = node["mass"].as<double>(config.physics.mass);
+    // drag_coeff_lin may be provided as 'cd_lin' or 'drag_coeff_lin'
+    if (node["drag_coeff_lin"]) {
+        config.physics.drag_coeff_lin = node["drag_coeff_lin"].as<double>(config.physics.drag_coeff_lin);
+    } else if (node["cd_lin"]) {
+        config.physics.drag_coeff_lin = node["cd_lin"].as<double>(config.physics.drag_coeff_lin);
+    }
+    // optional quadratic drag
+    if (node["drag_coeff_quad"]) {
+        config.physics.drag_coeff_quad = node["drag_coeff_quad"].as<double>(config.physics.drag_coeff_quad);
+    } else if (node["cd_quad"]) {
+        config.physics.drag_coeff_quad = node["cd_quad"].as<double>(config.physics.drag_coeff_quad);
+    }
+    if (node["drag_speed_threshold"]) {
+        config.physics.drag_speed_threshold = node["drag_speed_threshold"].as<double>(config.physics.drag_speed_threshold);
+    } else if (node["drag_v_threshold"]) {
+        config.physics.drag_speed_threshold = node["drag_v_threshold"].as<double>(config.physics.drag_speed_threshold);
+    } else if (node["v_thr"]) {
+        config.physics.drag_speed_threshold = node["v_thr"].as<double>(config.physics.drag_speed_threshold);
+    }
+    // max_accel may be provided as 'a_max'
+    if (node["max_accel"]) {
+        config.physics.max_accel = node["max_accel"].as<double>(config.physics.max_accel);
+    } else if (node["a_max"]) {
+        config.physics.max_accel = node["a_max"].as<double>(config.physics.max_accel);
+    }
+    // actuator time constant may be provided as 'tau_act' or 'actuator_tau'
+    if (node["actuator_tau"]) {
+        config.physics.actuator_tau = node["actuator_tau"].as<double>(config.physics.actuator_tau);
+    } else if (node["tau_act"]) {
+        config.physics.actuator_tau = node["tau_act"].as<double>(config.physics.actuator_tau);
+    }
+    // asymmetric actuator taus (optional)
+    if (node["actuator_tau_up"]) {
+        config.physics.actuator_tau_up = node["actuator_tau_up"].as<double>(config.physics.actuator_tau_up);
+    } else if (node["tau_up"]) {
+        config.physics.actuator_tau_up = node["tau_up"].as<double>(config.physics.actuator_tau_up);
+    }
+    if (node["actuator_tau_down"]) {
+        config.physics.actuator_tau_down = node["actuator_tau_down"].as<double>(config.physics.actuator_tau_down);
+    } else if (node["tau_down"]) {
+        config.physics.actuator_tau_down = node["tau_down"].as<double>(config.physics.actuator_tau_down);
     }
 }
 
