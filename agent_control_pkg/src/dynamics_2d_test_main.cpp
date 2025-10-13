@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <cctype>
 
 namespace fs = std::filesystem;
 
@@ -38,9 +39,15 @@ int main(int argc, char** argv) {
     target_y = root["target"]["y"].as<double>(target_y);
   }
   double wind_vx = 0.0, wind_vy = 0.0;
+  double wind_ax = 0.0, wind_ay = 0.0;
   if (root["wind"]) {
     wind_vx = root["wind"]["vx"].as<double>(wind_vx);
     wind_vy = root["wind"]["vy"].as<double>(wind_vy);
+    // Optional constant acceleration bias (for integral action testing)
+    if (root["wind"]["ax"]) wind_ax = root["wind"]["ax"].as<double>(wind_ax);
+    if (root["wind"]["ay"]) wind_ay = root["wind"]["ay"].as<double>(wind_ay);
+    if (root["wind"]["ax_bias"]) wind_ax = root["wind"]["ax_bias"].as<double>(wind_ax);
+    if (root["wind"]["ay_bias"]) wind_ay = root["wind"]["ay_bias"].as<double>(wind_ay);
   }
   const double dt = cfg.dt;
   const double total_time = cfg.total_time;
@@ -59,8 +66,8 @@ int main(int argc, char** argv) {
   drone.setParams(phys);
   // Ambient wind velocity (m/s)
   drone.setWindVelocity(wind_vx, wind_vy);
-  // Optionally keep small constant acceleration bias (legacy)
-  // drone.setWindAccel(0.0, 0.0);
+  // Optional constant acceleration bias (m/s^2)
+  drone.setWindAccel(wind_ax, wind_ay);
 
   // Controllers (position -> acceleration) via interface
   std::unique_ptr<agent_control_pkg::controllers::IController1D> ctrl_x;
@@ -139,7 +146,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  // Output directory and CSV file
+  // Output directory and CSV file with improved naming and options
   fs::path base_out = fs::path("outputs/simulations/dynamics2d");
   // Day folder (YYYYMMDD) and incremental run_### folder
   auto now = std::chrono::system_clock::now();
@@ -154,20 +161,61 @@ int main(int argc, char** argv) {
   day << std::put_time(&tm, "%Y%m%d");
   fs::path day_dir = base_out / day.str();
   fs::create_directories(day_dir);
-  // find next run index
+  // Custom label from YAML (optional)
+  auto sanitize = [](std::string s) {
+    for (char &c : s) {
+      if (!(std::isalnum(static_cast<unsigned char>(c)) || c=='_' || c=='-' )) c = '_';
+    }
+    // trim consecutive underscores
+    std::string out; out.reserve(s.size());
+    bool prev_us = false; for(char c: s){ bool us = (c=='_'); if(!(us && prev_us)) out.push_back(c); prev_us = us; }
+    return out;
+  };
+  std::string user_label;
+  int max_runs_per_day = -1;
+  bool auto_plot = false;
+  std::string plot_script = "analysis/plot_dynamics_2d.py";
+  try {
+    if (root["output_settings"]) {
+      auto os = root["output_settings"];
+      if (os["run_label"]) user_label = os["run_label"].as<std::string>(user_label);
+      if (os["auto_plot"]) auto_plot = os["auto_plot"].as<bool>(auto_plot);
+      if (os["plot_script"]) plot_script = os["plot_script"].as<std::string>(plot_script);
+      if (os["max_runs_per_day"]) max_runs_per_day = os["max_runs_per_day"].as<int>(max_runs_per_day);
+    }
+  } catch (...) {}
+  // If no user label, build a short default label
+  if (user_label.empty()) {
+    std::ostringstream lab;
+    lab << (ctype.empty() ? cfg.controller_type : ctype);
+    if (std::abs(wind_vx) > 1e-6 || std::abs(wind_vy) > 1e-6) {
+      lab << "__wind";
+    } else {
+      lab << "__nowind";
+    }
+    user_label = lab.str();
+  }
+  const std::string label_sanitized = sanitize(user_label);
+
+  // find next run index (accepts run_### or run_###__label)
   int next_idx = 1;
+  std::vector<std::pair<int, fs::path>> existing_runs;
   for (const auto &entry : fs::directory_iterator(day_dir)) {
     if (!entry.is_directory()) continue;
     auto name = entry.path().filename().string();
     if (name.rfind("run_", 0) == 0) {
       try {
-        int idx = std::stoi(name.substr(4));
+        // parse until non-digit after run_
+        size_t p = 4; while (p < name.size() && std::isdigit(static_cast<unsigned char>(name[p]))) ++p;
+        int idx = std::stoi(name.substr(4, p-4));
         if (idx >= next_idx) next_idx = idx + 1;
+        existing_runs.emplace_back(idx, entry.path());
       } catch (...) {}
     }
   }
   std::ostringstream runname;
   runname << "run_" << std::setw(3) << std::setfill('0') << next_idx;
+  if (!label_sanitized.empty()) runname << "__" << label_sanitized;
   fs::path run_dir = day_dir / runname.str();
   fs::create_directories(run_dir);
   fs::path csv_path = run_dir / fs::path(runname.str() + ".csv");
@@ -180,7 +228,7 @@ int main(int argc, char** argv) {
   // Header must match row contents exactly
   csv << "time,x,y,vx,vy,ax_cmd,ay_cmd,ax_pid,ay_pid,ax_fuzzy,ay_fuzzy,ax_cmd_f,ay_cmd_f,ax_drag,ay_drag,vrel_norm,ax_est,ay_est,";
   csv << "target_x,target_y,e_x,e_x_abs,e_y,e_y_abs,";
-  csv << "kp,ki,kd,vx_wind,vy_wind,cd_lin,cd_quad,v_thr,tau_up,tau_down,a_max,dt\n";
+  csv << "kp,ki,kd,vx_wind,vy_wind,ax_wind,ay_wind,cd_lin,cd_quad,v_thr,tau_up,tau_down,a_max,dt\n";
 
   double time = 0.0;
   double prev_vx = 0.0, prev_vy = 0.0;
@@ -235,7 +283,7 @@ int main(int argc, char** argv) {
         << e_x << ',' << std::abs(e_x) << ','
         << e_y << ',' << std::abs(e_y) << ','
         << cfg.pid_params.kp << ',' << cfg.pid_params.ki << ',' << cfg.pid_params.kd << ','
-        << wind_vx << ',' << wind_vy << ','
+        << wind_vx << ',' << wind_vy << ',' << wind_ax << ',' << wind_ay << ','
         << phys.drag_coeff_lin << ',' << phys.drag_coeff_quad << ',' << phys.drag_speed_threshold << ','
         << phys.actuator_tau_up << ',' << phys.actuator_tau_down << ',' << phys.max_accel << ',' << dt << '\n';
   }
@@ -243,5 +291,33 @@ int main(int argc, char** argv) {
   csv.close();
 
   std::cout << "Wrote: " << csv_path.string() << std::endl;
+
+  // Optional auto-plot: call python plot script
+  if (auto_plot) {
+    try {
+      std::ostringstream cmd;
+#ifdef _WIN32
+      cmd << "python \"" << plot_script << "\" --csv \"" << csv_path.string() << "\"";
+#else
+      cmd << "python3 \"" << plot_script << "\" --csv \"" << csv_path.string() << "\"";
+#endif
+      int rc = std::system(cmd.str().c_str());
+      (void)rc;
+    } catch (...) {}
+  }
+
+  // Optional pruning of old runs per day
+  if (max_runs_per_day > 0) {
+    try {
+      existing_runs.emplace_back(next_idx, run_dir);
+      std::sort(existing_runs.begin(), existing_runs.end(), [](auto &a, auto &b){ return a.first < b.first; });
+      if (static_cast<int>(existing_runs.size()) > max_runs_per_day) {
+        int to_remove = static_cast<int>(existing_runs.size()) - max_runs_per_day;
+        for (int i = 0; i < to_remove; ++i) {
+          std::error_code ec; fs::remove_all(existing_runs[i].second, ec);
+        }
+      }
+    } catch (...) {}
+  }
   return 0;
 }

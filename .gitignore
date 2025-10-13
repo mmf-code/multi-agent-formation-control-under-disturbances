@@ -181,3 +181,7 @@ build-ninja/
 build2/
 install/
 log/
+
+# Auto-generated experiment configs
+agent_control_pkg/config/experiments/auto/
+agent_control_pkg/config/experiments/auto_*.yaml

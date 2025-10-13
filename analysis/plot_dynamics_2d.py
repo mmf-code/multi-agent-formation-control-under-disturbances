@@ -189,9 +189,15 @@ def _plot_error_y(ax, df, target_y):
     ax.grid(True)
 
 
-def plot_csv(csv_path: str, out_path: str | None = None):
+def plot_csv(csv_path: str, out_path: str | None = None, t_end: float | None = None):
     """Main plotting function."""
     df = _prepare_dataframe(csv_path)
+    if t_end is not None:
+        try:
+            t_end_val = float(t_end)
+            df = df[df["time"] <= t_end_val].reset_index(drop=True)
+        except Exception:
+            pass
     target_x = df["target_x"].iloc[0] if "target_x" in df.columns else None
     target_y = df["target_y"].iloc[0] if "target_y" in df.columns else None
 
@@ -225,6 +231,7 @@ def main():
     parser = argparse.ArgumentParser(description="Plot 2D dynamics CSV output")
     parser.add_argument("--csv", type=str, default=None, help="Path to CSV file. If omitted, picks latest in outputs/simulations/dynamics2d")
     parser.add_argument("--out", type=str, default=None, help="Output PNG path")
+    parser.add_argument("--t_end", type=float, default=None, help="Optional time window end [s] (e.g., 20.0)")
     args = parser.parse_args()
 
     patterns = [
@@ -246,7 +253,7 @@ def main():
             raise FileNotFoundError("No CSV found in outputs/simulations/dynamics2d or legacy simulation_outputs")
         csv_path = last
 
-    plot_csv(csv_path, args.out)
+    plot_csv(csv_path, args.out, args.t_end)
 
 
 if __name__ == "__main__":

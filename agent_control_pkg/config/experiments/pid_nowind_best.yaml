@@ -1,0 +1,28 @@
+simulation_settings:
+  dt: 0.01
+  total_time: 50.0
+physics:
+  mass: 1.5
+  cd_lin: 0.12
+  cd_quad: 0.0
+  v_thr: 2.0
+  a_max: 12.0
+  tau_up: 0.08
+  tau_down: 0.06
+wind:
+  vx: 0.0
+  vy: 0.0
+target:
+  x: 5.0
+  y: 5.0
+controller_settings:
+  type: pid
+  pid:
+    kp: 1.16203659531525
+    ki: 0.39221643334328854
+    kd: 2.116803680237502
+    enable_derivative_filter: true
+output_settings:
+  run_label: pid_best_nowind
+  auto_plot: true
+  max_runs_per_day: 10
