@@ -178,7 +178,7 @@ int main(int argc, char** argv) {
     return 1;
   }
   // Header must match row contents exactly
-  csv << "time,x,y,vx,vy,ax_cmd,ay_cmd,ax_cmd_f,ay_cmd_f,ax_drag,ay_drag,vrel_norm,ax_est,ay_est,";
+  csv << "time,x,y,vx,vy,ax_cmd,ay_cmd,ax_pid,ay_pid,ax_fuzzy,ay_fuzzy,ax_cmd_f,ay_cmd_f,ax_drag,ay_drag,vrel_norm,ax_est,ay_est,";
   csv << "target_x,target_y,e_x,e_x_abs,e_y,e_y_abs,";
   csv << "kp,ki,kd,vx_wind,vy_wind,cd_lin,cd_quad,v_thr,tau_up,tau_down,a_max,dt\n";
 
@@ -190,6 +190,17 @@ int main(int argc, char** argv) {
     // Compute acceleration commands from position error
     const double ax_cmd = ctrl_x->compute(st.x, target_x, dt);
     const double ay_cmd = ctrl_y->compute(st.y, target_y, dt);
+
+    // Diagnostics: if hybrid controller, capture contributions
+    double ax_pid = 0.0, ay_pid = 0.0, ax_fuzzy = 0.0, ay_fuzzy = 0.0;
+    if (auto cx = dynamic_cast<CombinedPidFuzzyAdapter*>(ctrl_x.get())) {
+      ax_pid = cx->lastPidContribution();
+      ax_fuzzy = cx->lastFuzzyContribution();
+    }
+    if (auto cy = dynamic_cast<CombinedPidFuzzyAdapter*>(ctrl_y.get())) {
+      ay_pid = cy->lastPidContribution();
+      ay_fuzzy = cy->lastFuzzyContribution();
+    }
 
     // Step dynamics
     drone.step(ax_cmd, ay_cmd, dt);
@@ -214,6 +225,8 @@ int main(int argc, char** argv) {
         << st2.x << ',' << st2.y << ','
         << st2.vx << ',' << st2.vy << ','
         << ax_cmd << ',' << ay_cmd << ','
+        << ax_pid << ',' << ay_pid << ','
+        << ax_fuzzy << ',' << ay_fuzzy << ','
         << ax_cmd_f << ',' << ay_cmd_f << ','
         << ax_drag << ',' << ay_drag << ','
         << vrel_norm << ','

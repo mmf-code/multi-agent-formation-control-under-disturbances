@@ -98,6 +98,12 @@ def _plot_control(ax, df):
         ax.plot(df["time"], df["ay_cmd_f"], label="ay_cmd_f [m/s^2]")
     ax.plot(df["time"], df["ax_cmd"], ls=":", alpha=0.7, label="ax_cmd [m/s^2]")
     ax.plot(df["time"], df["ay_cmd"], ls=":", alpha=0.7, label="ay_cmd [m/s^2]")
+    # Optional: hybrid contributions if present
+    if {"ax_pid","ay_pid","ax_fuzzy","ay_fuzzy"}.issubset(set(df.columns)):
+        ax.plot(df["time"], df["ax_pid"], color="tab:green", alpha=0.6, label="ax_pid [m/s^2]")
+        ax.plot(df["time"], df["ay_pid"], color="tab:olive", alpha=0.6, label="ay_pid [m/s^2]")
+        ax.plot(df["time"], df["ax_fuzzy"], color="tab:red", alpha=0.6, label="ax_fuzzy [m/s^2]")
+        ax.plot(df["time"], df["ay_fuzzy"], color="tab:pink", alpha=0.6, label="ay_fuzzy [m/s^2]")
     ax.set_title("Control (raw vs filtered)")
     ax.set_xlabel("t [s]")
     ax.set_ylabel("a_cmd [m/s^2]")
