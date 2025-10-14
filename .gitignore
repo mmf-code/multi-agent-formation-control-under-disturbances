@@ -56,9 +56,10 @@ outputs/
 # Environment scripts (user-specific)
 refresh_cursor_env.ps1
 
-# Exclude markdown files except README.md
+# Exclude markdown files except README.md and docs/
 *.md
 !README.md
+!docs/**/*.md
 
 # Additional build directories
 build-*/
@@ -90,7 +91,6 @@ ENV/
 
 # Simulation outputs and results
 simulation_outputs/
-results/
 final_project_results/
 *.csv
 *.txt
@@ -101,8 +101,11 @@ final_project_results/
 !*.c
 !*.yaml
 !*.yml
+# Keep thesis metrics summary
+!docs/THESIS_*.txt
+!outputs/simulations/dynamics2d/*_summary_*.csv
 
-# Generated plots and images (keep only documentation images)
+# Generated plots and images (keep only final thesis figures and docs)
 *.png
 *.jpg
 *.jpeg
@@ -112,6 +115,8 @@ final_project_results/
 !docs/**/*.png
 !docs/**/*.jpg
 !docs/**/*.jpeg
+# Keep thesis deliverables (comparison plots from 20251015)
+!outputs/simulations/dynamics2d/20251015/compare_positions_*.png
 
 # Temporary files
 *.tmp
@@ -159,11 +164,10 @@ ehthumbs.db
 *.bak
 *.orig
 
-# Testing and analysis artifacts
+# Testing and analysis artifacts (keep all analysis scripts)
 testing/
-analysis/*.py
-!analysis/plot_simulation_results.py
-!analysis/plot_dynamics_2d.py
+# Keep all analysis Python scripts
+!analysis/*.py
 
 # PowerShell execution policy and temporary files
 *.ps1.backup*
