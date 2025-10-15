@@ -103,8 +103,6 @@ final_project_results/
 !*.yml
 # Keep thesis metrics summary
 !docs/THESIS_*.txt
-!outputs/simulations/dynamics2d/*_summary_*.csv
-
 # Generated plots and images (keep only final thesis figures and docs)
 *.png
 *.jpg
@@ -116,8 +114,6 @@ final_project_results/
 !docs/**/*.jpg
 !docs/**/*.jpeg
 # Keep thesis deliverables (comparison plots from 20251015)
-!outputs/simulations/dynamics2d/20251015/compare_positions_*.png
-
 # Temporary files
 *.tmp
 *.temp
@@ -189,3 +185,8 @@ log/
 # Auto-generated experiment configs
 agent_control_pkg/config/experiments/auto/
 agent_control_pkg/config/experiments/auto_*.yaml
+
+# Exceptions for final thesis deliverables
+!outputs/simulations/dynamics2d/*_summary_*.csv
+!outputs/simulations/dynamics2d/20251015/compare_positions_*.png
+
