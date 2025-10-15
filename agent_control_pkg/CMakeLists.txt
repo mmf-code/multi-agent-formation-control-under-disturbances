@@ -251,4 +251,46 @@ if(yaml-cpp_FOUND)
 endif()
 ament_export_dependencies(${_ament_export_deps})
 
+# ============================================================================
+# GAZEBO PLUGIN
+# ============================================================================
+find_package(gazebo REQUIRED)
+find_package(gazebo_ros REQUIRED)
+
+include_directories(${GAZEBO_INCLUDE_DIRS})
+link_directories(${GAZEBO_LIBRARY_DIRS})
+
+add_library(simple_drone_plugin SHARED
+  plugins/simple_drone_plugin.cpp
+)
+
+target_link_libraries(simple_drone_plugin
+  ${GAZEBO_LIBRARIES}
+  ${gazebo_ros_LIBRARIES}
+)
+
+ament_target_dependencies(simple_drone_plugin
+  rclcpp
+  geometry_msgs
+  nav_msgs
+  gazebo_ros
+)
+
+install(TARGETS simple_drone_plugin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+# Install Gazebo assets
+install(DIRECTORY
+  models/
+  DESTINATION share/${PROJECT_NAME}/models
+)
+
+install(DIRECTORY
+  worlds/
+  DESTINATION share/${PROJECT_NAME}/worlds
+)
+
 ament_package()

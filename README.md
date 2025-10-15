@@ -61,16 +61,65 @@ cmake --build build --config Debug --target dynamics_2d_tester
 - `ros2 launch agent_control_pkg multi_agent_formation.launch.py` to spawn three agents under `/agent_i` namespaces
 - Controller params live in `agent_control_pkg/config/ros2/agent_controller_default.yaml` (namespaced under `agent_0/agent_controller`); formation params in `other_packages/formation_coordinator_pkg/config/formation_config.yaml`
 
-## Gazebo Simulation (2D point tracking)
-- `./start_gazebo_sim.sh` launches Gazebo Classic with the simple drone plugin (`libsimple_drone_plugin.so`), the ROS 2 agent controller, and the formation coordinator.
-- Defaults: single drone starts at `(0, 0, 0)` and tracks a target at `(5, 5, 0)` while holding altitude via the plugin (pure 2D motion).
-- Reset without closing Gazebo:
-  - `ros2 service call /reset_simulation std_srvs/srv/Empty {}` → rewinds the world.
-  - `ros2 lifecycle set /agent_0/agent_controller deactivate` / `activate` → controller restart (if lifecycle enabled).
-- Inspect behaviour:  
-  `ros2 topic echo /agent_0/target_pose --once` (target),  
-  `ros2 topic echo /agent_0/cmd_accel` (commanded accelerations),  
-  `ros2 topic echo /agent_0/odom` (plugin-published estimated state).
+## Gazebo Simulation (ROS2 + 3D Visualization)
+
+### Quick Start
+```bash
+# Terminal 1: Launch Gazebo simulation (includes gzserver, gzclient, controllers)
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+ros2 launch agent_control_pkg gazebo_single_agent.launch.py
+
+# Terminal 2 (optional): Log simulation data to CSV
+python3 scripts/log_simulation_csv.py --namespace agent_0 --output outputs/logs/run_001.csv
+```
+
+### System Architecture (3 Layers)
+1. **Formation Coordinator** → Publishes `/agent_0/target_pose` (reference trajectory)
+2. **Agent Controller** → PID/Fuzzy controller, reads odom + target, outputs `/agent_0/cmd_accel`
+3. **Gazebo + SimpleDronePlugin** → Applies F=ma, publishes `/agent_0/odom` (state feedback)
+
+### Configuration
+- **PID Gains**: `agent_control_pkg/config/ros2/agent_controller_default.yaml`
+  - Tuned values: Kp=0.538, Ki=0.145, Kd=1.368 (~10% overshoot, 4s settling)
+- **World File**: `agent_control_pkg/worlds/minimal_test.world`
+  - Drone spawns at (0, 0, 0), rises to z=0.5m, tracks Y-axis target
+- **Launch Options**:
+  - `gui:=false` → Headless mode (no Gazebo GUI, faster)
+  - `use_sim_time:=true` → Sync with Gazebo clock (default)
+
+### Monitoring & Debugging
+```bash
+# Check topics
+ros2 topic list | grep agent_0
+
+# Monitor real-time data
+ros2 topic echo /agent_0/target_pose  # Formation reference
+ros2 topic echo /agent_0/odom         # Drone state from Gazebo
+ros2 topic echo /agent_0/cmd_accel    # Controller output
+
+# Verify PID parameters loaded correctly
+ros2 param get /agent_0/agent_controller pid.kp  # Should return 0.538
+
+# Check controller diagnostics
+ros2 topic echo /agent_0/diagnostics  # PID/Fuzzy contributions
+```
+
+### CSV Data Analysis
+The logging script captures synchronized data for post-processing:
+```bash
+# Columns: stamp, pos_xyz, vel_xyz, cmd_accel_xyz, target_xyz
+python3 scripts/log_simulation_csv.py --output outputs/logs/test_run.csv
+
+# Plot with existing analysis tools
+python analysis/plot_dynamics_2d.py --csv outputs/logs/test_run.csv
+```
+
+### Troubleshooting
+- **Oscillation**: Check if PID gains loaded correctly (`ros2 param get`)
+- **Gazebo frozen**: Kill processes `pkill -9 gzserver gzclient`, restart launch
+- **No movement**: Verify topics active `ros2 topic hz /agent_0/cmd_accel`
+- **Config not loading**: Rebuild after YAML changes `colcon build --packages-select agent_control_pkg`
 
 ## Run
 ```

@@ -1,21 +1,40 @@
-agent_controller_node:
-  ros__parameters:
-    controller_type: pid_fuzzy
-    dt: 0.005
-    control_frequency_hz: 200.0
-    output_limits.x.min: -10.0
-    output_limits.x.max: 10.0
-    output_limits.y.min: -8.0
-    output_limits.y.max: 12.0
-    pid.kp: 0.538
-    pid.ki: 0.145
-    pid.kd: 1.368
-    pid.enable_derivative_filter: true
-    pid.derivative_filter_alpha: 0.1
-    fuzzy.enable: true
-    fuzzy.include_wind: false
-    fuzzy.wind_scalar: 0.0
-    fuzzy.params_file: fuzzy_params.yaml
-    mix.k_pid: 1.0
-    mix.k_fuzzy: 1.0
-    diagnostics.enable: true
+# ROS2 Agent Controller Configuration
+# This file configures the PID/Fuzzy/Hybrid controller for a single agent
+# Used by: agent_controller_node in gazebo_single_agent.launch.py
+
+agent_0:
+  agent_controller:
+    ros__parameters:
+      # Controller type: pid, fuzzy, pid_fuzzy, p, pi, pd
+      controller_type: pid
+
+      # Timing configuration
+      dt: 0.005  # Control timestep (seconds)
+      control_frequency_hz: 200.0  # Control loop frequency
+
+      # Output limits for acceleration commands (m/s²)
+      output_limits.x.min: -10.0
+      output_limits.x.max: 10.0
+      output_limits.y.min: -8.0
+      output_limits.y.max: 12.0
+
+      # PID controller gains (tuned for ~10% overshoot, 4s settling time)
+      # These values were optimized in standalone C++ simulations
+      pid.kp: 0.538  # Proportional gain
+      pid.ki: 0.145  # Integral gain
+      pid.kd: 1.368  # Derivative gain
+      pid.enable_derivative_filter: true  # Low-pass filter for derivative term
+      pid.derivative_filter_alpha: 0.1  # Filter smoothing factor
+
+      # Fuzzy logic controller configuration
+      fuzzy.enable: false  # Disable fuzzy component (using pure PID)
+      fuzzy.include_wind: false  # Wind disturbance compensation
+      fuzzy.wind_scalar: 0.0  # Wind effect scaling
+      fuzzy.params_file: fuzzy_params.yaml  # Fuzzy membership functions
+
+      # Hybrid controller mixing (only used if controller_type = pid_fuzzy)
+      mix.k_pid: 1.0  # PID contribution weight
+      mix.k_fuzzy: 1.0  # Fuzzy contribution weight
+
+      # Diagnostics
+      diagnostics.enable: true  # Publish detailed controller metrics
