@@ -6,6 +6,8 @@ CompileFlags:
     - -Iinstall/agent_control_pkg/include
     - -Iinstall/formation_coordinator_pkg/include
     - -Iinstall/my_custom_interfaces_pkg/include
+    - -Ibuild/agent_control_pkg
+    - -Ibuild/formation_coordinator_pkg
     # ROS 2 headers
     - -I/opt/ros/humble/include
     # Compiler flags
