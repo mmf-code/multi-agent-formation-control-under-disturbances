@@ -58,11 +58,9 @@
       </link>
     </model>
 
-    <!-- Grid removed - causing loading issues -->
-
     <!-- Drone agent_0 -->
     <model name="agent_0">
-      <pose>0 0 0.5 0 0 0</pose>
+      <pose>0 0 0 0 0 0</pose>
       <static>false</static>
 
       <link name="base_link">

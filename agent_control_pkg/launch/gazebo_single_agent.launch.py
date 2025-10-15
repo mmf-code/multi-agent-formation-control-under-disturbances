@@ -68,6 +68,18 @@ def generate_launch_description():
     # Controller config: PID gains, output limits, controller type
     config_file = os.path.join(pkg_agent_control, 'config', 'ros2', 'agent_controller_default.yaml')
 
+    # ===== Gazebo Environment Setup =====
+    # Set paths for Gazebo to find models and plugins
+    model_path = os.path.join(pkg_agent_control, 'models')
+    plugin_path = os.path.join(pkg_agent_control, '..', '..', 'lib')  # install/agent_control_pkg/lib
+
+    # Append to existing paths (don't overwrite)
+    gazebo_model_path = os.environ.get('GAZEBO_MODEL_PATH', '')
+    gazebo_plugin_path = os.environ.get('GAZEBO_PLUGIN_PATH', '')
+
+    os.environ['GAZEBO_MODEL_PATH'] = f"{model_path}:{gazebo_model_path}"
+    os.environ['GAZEBO_PLUGIN_PATH'] = f"{plugin_path}:{gazebo_plugin_path}"
+
     # ===== Launch Arguments =====
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     gui = LaunchConfiguration('gui', default='true')
@@ -78,7 +90,12 @@ def generate_launch_description():
     # Plugins: gazebo_ros_init (ROS2 integration), gazebo_ros_factory (model spawning)
     gzserver_cmd = ExecuteProcess(
         cmd=['gzserver', '-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so', world_file],
-        output='screen'
+        output='screen',
+        additional_env={
+            'GAZEBO_PLUGIN_PATH': os.environ.get('GAZEBO_PLUGIN_PATH', ''),
+            'GAZEBO_MODEL_PATH': os.environ.get('GAZEBO_MODEL_PATH', ''),
+            'LD_LIBRARY_PATH': os.environ.get('LD_LIBRARY_PATH', '')
+        }
     )
 
     # ===== Gazebo Client (3D Visualization) =====
