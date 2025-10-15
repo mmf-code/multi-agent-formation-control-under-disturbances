@@ -15,20 +15,23 @@ find_package(my_custom_interfaces_pkg REQUIRED)
 # Include directories
 include_directories(include)
 
-# Add executable (when source files are added)
-# add_executable(formation_coordinator src/formation_coordinator.cpp)
-# ament_target_dependencies(formation_coordinator
-#   rclcpp
-#   std_msgs
-#   geometry_msgs
-#   my_custom_interfaces_pkg
-# )
+add_executable(formation_coordinator_node
+  src/formation_coordinator_node.cpp
+)
+target_include_directories(formation_coordinator_node PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+ament_target_dependencies(formation_coordinator_node
+  rclcpp
+  std_msgs
+  geometry_msgs
+  my_custom_interfaces_pkg
+)
 
-# Install targets
-# install(TARGETS
-#   formation_coordinator
-#   DESTINATION lib/${PROJECT_NAME}
-# )
+install(TARGETS
+  formation_coordinator_node
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # Install config files
 install(DIRECTORY

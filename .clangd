@@ -1,10 +1,15 @@
 CompileFlags:
   Add:
-    - -IC:/Users/ataka/OneDrive/Masaüstü/docs/multi-agent-formation-control-under-disturbances/agent_control_pkg/include
-    - -IC:/Users/ataka/OneDrive/Masaüstü/docs/multi-agent-formation-control-under-disturbances/agent_control_pkg/build/_deps/yaml-cpp-src/include
-    - -IC:/vcpkg/installed/x64-windows/include
+    # Workspace includes
+    - -Iagent_control_pkg/include
+    - -Iother_packages/formation_coordinator_pkg/include
+    - -Iinstall/agent_control_pkg/include
+    - -Iinstall/formation_coordinator_pkg/include
+    - -Iinstall/my_custom_interfaces_pkg/include
+    # ROS 2 headers
+    - -I/opt/ros/humble/include
+    # Compiler flags
     - -std=c++17
-    - -DYAML_CPP_STATIC_DEFINE
   Remove:
     - -W*
 Diagnostics:

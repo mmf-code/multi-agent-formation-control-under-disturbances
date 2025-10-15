@@ -83,6 +83,7 @@ TEST_F(PIDControllerTest, DerivativeControl) {
   // Set Kp and Ki to 0 to test only D term
   pid->setTunings(0.0, 0.0, 1.0);
   pid->setSetpoint(10.0);
+  pid->enableDerivativeFilter(false);
 
   // First call to establish previous error
   pid->calculate(5.0, 0.1);
@@ -162,6 +163,7 @@ TEST_F(PIDControllerTest, ZeroDtHandling) {
 TEST_F(PIDControllerTest, CombinedPIDResponse) {
   pid->setTunings(1.0, 0.1, 0.01);
   pid->setSetpoint(10.0);
+  pid->enableDerivativeFilter(false);
 
   // First calculation
   double output1 = pid->calculate(5.0, 0.1);

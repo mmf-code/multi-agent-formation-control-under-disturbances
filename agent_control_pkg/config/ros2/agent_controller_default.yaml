@@ -1,0 +1,21 @@
+agent_controller_node:
+  ros__parameters:
+    controller_type: pid_fuzzy
+    dt: 0.005
+    control_frequency_hz: 200.0
+    output_limits.x.min: -10.0
+    output_limits.x.max: 10.0
+    output_limits.y.min: -8.0
+    output_limits.y.max: 12.0
+    pid.kp: 0.538
+    pid.ki: 0.145
+    pid.kd: 1.368
+    pid.enable_derivative_filter: true
+    pid.derivative_filter_alpha: 0.1
+    fuzzy.enable: true
+    fuzzy.include_wind: false
+    fuzzy.wind_scalar: 0.0
+    fuzzy.params_file: fuzzy_params.yaml
+    mix.k_pid: 1.0
+    mix.k_fuzzy: 1.0
+    diagnostics.enable: true

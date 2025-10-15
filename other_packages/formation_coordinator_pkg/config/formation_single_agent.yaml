@@ -2,13 +2,11 @@ formation_coordinator_node:
   ros__parameters:
     agent_ids:
       - agent_0
-      - agent_1
-      - agent_2
     formation.shape: triangle
-    formation.spacing: 4.0
+    formation.spacing: 0.0
     formation.center.x: 0.0
     formation.center.y: 0.0
     formation.center.z: 0.0
     formation.yaw_deg: 0.0
     frame_id: world
-    publish_frequency_hz: 10.0
+    publish_frequency_hz: 5.0

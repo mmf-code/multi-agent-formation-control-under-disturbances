@@ -53,6 +53,14 @@ cmake -S agent_control_pkg -B build -G "Visual Studio 17 2022"
 cmake --build build --config Debug --target dynamics_2d_tester
 ```
 
+## ROS2 Build & Launch (Linux, ROS 2 Humble)
+- `source /opt/ros/humble/setup.bash`
+- `colcon build --packages-select my_custom_interfaces_pkg formation_coordinator_pkg agent_control_pkg`
+- `source install/setup.bash`
+- `ros2 launch agent_control_pkg single_agent_test.launch.py` for a single-agent loop (controller + coordinator)
+- `ros2 launch agent_control_pkg multi_agent_formation.launch.py` to spawn three agents under `/agent_i` namespaces
+- Controller params live in `agent_control_pkg/config/ros2/agent_controller_default.yaml`; formation params in `other_packages/formation_coordinator_pkg/config/formation_config.yaml`
+
 ## Run
 ```
 # No-wind

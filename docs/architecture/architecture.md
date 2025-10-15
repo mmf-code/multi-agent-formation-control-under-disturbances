@@ -102,4 +102,4 @@ flowchart LR
 Notes
 - The Simulation Runner is currently the most complete executable for experiments.
 - For ROS 2, extract an `AgentControllerCore` from the runner and reuse in C++ nodes.
-
+- `agent_control_pkg/src/ros/agent_controller_node.cpp:1` now wraps the PID/Fuzzy adapters inside a ROS 2 node, while `formation_coordinator_pkg/src/formation_coordinator_node.cpp:1` drives multi-agent setpoints and exposes a `/set_formation` service for shape changes.

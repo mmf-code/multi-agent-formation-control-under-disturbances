@@ -10,9 +10,14 @@
   <!-- These will be important for ROS2 build -->
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <!-- Add dependencies needed when compiling (e.g. rclcpp for ROS2 nodes) -->
-  <!-- <depend>rclcpp</depend> -->
-  <!-- <depend>std_msgs</depend> -->
+  <depend>rclcpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>ament_index_cpp</depend>
+  <depend>yaml-cpp</depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
