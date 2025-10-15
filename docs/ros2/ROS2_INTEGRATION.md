@@ -89,17 +89,20 @@ The Gazebo integration implements the 3-layer control architecture:
 #### SimpleDronePlugin (`agent_control_pkg/plugins/simple_drone_plugin.cpp`)
 - **Purpose**: Bridges ROS2 control commands to Gazebo physics
 - **Force Application**: Direct force injection `F = m * a_cmd` for X-Y motion
-- **Z-Axis Control**: Automatic altitude hold at 0.5m using proportional control (Kp=10)
+- **Stabilisation**:
+  - Linear damping term suppresses oscillations (`force -= v * c_lin`)
+  - Restoring torques keep roll/pitch near zero and damp yaw rate
+- **Z-Axis Control**: Automatic altitude hold at 0.5m using PD control (default Kp≈8, Kd≈3)
   - Gravity compensation: `F_z = m * g` (9.81 m/s²)
-  - Position error feedback: `F_z += m * (z_target - z_current) * 10.0`
+  - Altitude feedback: `F_z += m * (Kp * error - Kd * vel_z)`
 - **ROS2 Topics**:
   - Subscribes: `/agent_X/cmd_accel` (geometry_msgs/Vector3)
   - Publishes: `/agent_X/odom` (nav_msgs/Odometry) at Gazebo physics rate
 - **Configuration**: Plugin namespace set in world file via `<namespace>agent_0</namespace>`
 
 #### World File (`agent_control_pkg/worlds/minimal_test.world`)
-- **Drone Model**: 0.4×0.4×0.1m box, mass 1.5 kg
-- **Initial Pose**: `(0, 0, 0)` - spawns at ground level, rises to z=0.5m automatically
+- **Drone Model**: Stylised quadrotor (sphere body + cross arms + rotor disks), mass 1.5 kg
+- **Initial Pose**: `(0, 0, 0)` – spawns on the ground, climbs to `(5, 5, 0.5)` target via controller
 - **Physics**: ODE solver, 1000 Hz update rate, real-time factor ~1.0
 - **Plugin Loading**: SimpleDronePlugin attached to base_link with namespace configuration
 

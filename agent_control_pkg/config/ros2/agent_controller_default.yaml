@@ -9,8 +9,8 @@ agent_0:
       controller_type: pid
 
       # Timing configuration
-      dt: 0.005  # Control timestep (seconds)
-      control_frequency_hz: 200.0  # Control loop frequency
+      dt: 0.005
+      control_frequency_hz: 200.0
 
       # Output limits for acceleration commands (m/s²)
       output_limits.x.min: -10.0
@@ -19,22 +19,21 @@ agent_0:
       output_limits.y.max: 12.0
 
       # PID controller gains (tuned for ~10% overshoot, 4s settling time)
-      # These values were optimized in standalone C++ simulations
-      pid.kp: 0.538  # Proportional gain
-      pid.ki: 0.145  # Integral gain
-      pid.kd: 1.368  # Derivative gain
-      pid.enable_derivative_filter: true  # Low-pass filter for derivative term
-      pid.derivative_filter_alpha: 0.1  # Filter smoothing factor
+      pid.kp: 0.538
+      pid.ki: 0.145
+      pid.kd: 1.368
+      pid.enable_derivative_filter: true
+      pid.derivative_filter_alpha: 0.1
 
       # Fuzzy logic controller configuration
-      fuzzy.enable: false  # Disable fuzzy component (using pure PID)
-      fuzzy.include_wind: false  # Wind disturbance compensation
-      fuzzy.wind_scalar: 0.0  # Wind effect scaling
-      fuzzy.params_file: fuzzy_params.yaml  # Fuzzy membership functions
+      fuzzy.enable: false
+      fuzzy.include_wind: false
+      fuzzy.wind_scalar: 0.0
+      fuzzy.params_file: fuzzy_params.yaml
 
       # Hybrid controller mixing (only used if controller_type = pid_fuzzy)
-      mix.k_pid: 1.0  # PID contribution weight
-      mix.k_fuzzy: 1.0  # Fuzzy contribution weight
+      mix.k_pid: 1.0
+      mix.k_fuzzy: 1.0
 
       # Diagnostics
-      diagnostics.enable: true  # Publish detailed controller metrics
+      diagnostics.enable: true

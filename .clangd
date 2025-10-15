@@ -9,6 +9,9 @@ CompileFlags:
     - -Ibuild/agent_control_pkg
     - -Ibuild/formation_coordinator_pkg
     # ROS 2 headers
+    - -I/usr/include/gazebo-11
+    - -I/usr/include/ignition/math6
+    - -I/usr/include/ignition/math6/ignition
     - -I/opt/ros/humble/include
     # Compiler flags
     - -std=c++17

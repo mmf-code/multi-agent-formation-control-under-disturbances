@@ -73,39 +73,108 @@
           </inertia>
         </inertial>
 
-        <visual name="visual">
+        <!-- Central body -->
+        <visual name="body">
           <geometry>
-            <box>
-              <size>0.4 0.4 0.1</size>
-            </box>
+            <sphere>
+              <radius>0.12</radius>
+            </sphere>
           </geometry>
           <material>
-            <ambient>0.2 0.5 0.8 1</ambient>
-            <diffuse>0.2 0.5 0.8 1</diffuse>
+            <ambient>0.1 0.3 0.8 1</ambient>
+            <diffuse>0.1 0.4 0.9 1</diffuse>
+          </material>
+        </visual>
+
+        <!-- Arms -->
+        <visual name="arm_x">
+          <pose>0 0 0 0 1.5708 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.02</radius>
+              <length>0.6</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+            <diffuse>0.1 0.1 0.1 1</diffuse>
+          </material>
+        </visual>
+        <visual name="arm_y">
+          <pose>0 0 0 1.5708 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.02</radius>
+              <length>0.6</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+            <diffuse>0.1 0.1 0.1 1</diffuse>
+          </material>
+        </visual>
+
+        <!-- Rotors -->
+        <visual name="rotor_front">
+          <pose>0.3 0 0.03 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.08</radius>
+              <length>0.01</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.8 0.1 0.1 1</ambient>
+            <diffuse>0.9 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+        <visual name="rotor_back">
+          <pose>-0.3 0 0.03 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.08</radius>
+              <length>0.01</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.8 0.1 0.1 1</ambient>
+            <diffuse>0.9 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+        <visual name="rotor_left">
+          <pose>0 0.3 0.03 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.08</radius>
+              <length>0.01</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.1 0.8 0.1 1</ambient>
+            <diffuse>0.2 0.9 0.2 1</diffuse>
+          </material>
+        </visual>
+        <visual name="rotor_right">
+          <pose>0 -0.3 0.03 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.08</radius>
+              <length>0.01</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.1 0.8 0.1 1</ambient>
+            <diffuse>0.2 0.9 0.2 1</diffuse>
           </material>
         </visual>
 
         <collision name="collision">
           <geometry>
-            <box>
-              <size>0.4 0.4 0.1</size>
-            </box>
-          </geometry>
-        </collision>
-
-        <!-- Center marker -->
-        <visual name="center_marker">
-          <pose>0 0 0.06 0 0 0</pose>
-          <geometry>
             <sphere>
-              <radius>0.05</radius>
+              <radius>0.2</radius>
             </sphere>
           </geometry>
-          <material>
-            <ambient>1 0 0 1</ambient>
-            <diffuse>1 0 0 1</diffuse>
-          </material>
-        </visual>
+        </collision>
       </link>
 
       <!-- Plugin -->
@@ -114,9 +183,9 @@
       </plugin>
     </model>
 
-    <!-- Target marker at (0, 2.3) -->
+    <!-- Target marker at (5, 5) -->
     <model name="target_marker">
-      <pose>0 2.3 0.5 0 0 0</pose>
+      <pose>5 5 0.5 0 0 0</pose>
       <static>true</static>
       <link name="link">
         <visual name="visual">

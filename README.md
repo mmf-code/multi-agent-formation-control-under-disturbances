@@ -83,7 +83,9 @@ python3 scripts/log_simulation_csv.py --namespace agent_0 --output outputs/logs/
 - **PID Gains**: `agent_control_pkg/config/ros2/agent_controller_default.yaml`
   - Tuned values: Kp=0.538, Ki=0.145, Kd=1.368 (~10% overshoot, 4s settling)
 - **World File**: `agent_control_pkg/worlds/minimal_test.world`
-  - Drone spawns at (0, 0, 0), rises to z=0.5m, tracks Y-axis target
+  - Drone spawns at (0, 0, 0), rises to z=0.5 m and tracks the point `(5, 5, 0.5)`
+- **Physics Plugin**: `agent_control_pkg/plugins/simple_drone_plugin.cpp`
+  - Adds force-based motion plus linear/attitude damping and altitude PD (Kp≈8, Kd≈3) so the quadrotor stays level and settles without excessive bouncing
 - **Launch Options**:
   - `gui:=false` → Headless mode (no Gazebo GUI, faster)
   - `use_sim_time:=true` → Sync with Gazebo clock (default)

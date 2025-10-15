@@ -144,6 +144,10 @@ namespace gazebo
         0.0
       );
 
+      // Linear damping to suppress oscillations (acts like air drag)
+      auto linear_vel = this->link_->WorldLinearVel();
+      force -= linear_vel * this->linear_damping_;
+
       // Z-axis altitude hold system:
       // 1. Cancel gravity: F_gravity_comp = m * g (9.81 m/s²)
       // 2. Add proportional control to maintain target altitude (0.5m)
@@ -151,15 +155,28 @@ namespace gazebo
       double current_z = pose.Pos().Z();
       double target_z = 0.5;  // Target altitude (meters)
       double z_error = target_z - current_z;
+      double vel_z = linear_vel.Z();
 
       // Total Z force: gravity compensation + P-controller
-      // Kp_z = 10.0 (proportional gain for altitude hold)
-      double z_force = this->mass_ * 9.81 + this->mass_ * z_error * 10.0;
+      // Fz = m * (g + Kp * error - Kd * vel_z)
+      double altitude_term = this->altitude_kp_ * z_error - this->altitude_kd_ * vel_z;
+      double z_force = this->mass_ * (9.81 + altitude_term);
 
       force.Z(z_force);
 
       // Apply total force to drone's center of mass
       this->link_->AddForce(force);
+
+      // Attitude stabilization: keep roll/pitch near zero, damp angular rates
+      auto angular_vel = this->link_->WorldAngularVel();
+      ignition::math::Vector3d attitude_error(pose.Rot().Roll(), pose.Rot().Pitch(), 0.0);
+      ignition::math::Vector3d stabilization_torque(
+        -this->attitude_stiffness_ * attitude_error.X(),
+        -this->attitude_stiffness_ * attitude_error.Y(),
+        -this->yaw_damping_ * angular_vel.Z());
+
+      stabilization_torque -= angular_vel * this->angular_damping_;
+      this->link_->AddTorque(stabilization_torque);
 
       // Publish current state to ROS2 (odometry feedback)
       this->PublishOdometry();
@@ -236,6 +253,14 @@ namespace gazebo
     double cmd_accel_x_ = 0.0;  ///< Commanded X acceleration (m/s²)
     double cmd_accel_y_ = 0.0;  ///< Commanded Y acceleration (m/s²)
     double cmd_accel_z_ = 0.0;  ///< Commanded Z acceleration (unused, locked)
+
+    // Damping / stabilization parameters (tuned for 2D hover behavior)
+    double linear_damping_ = 1.5;        ///< Linear velocity damping coefficient
+    double angular_damping_ = 0.2;       ///< Angular velocity damping coefficient
+    double attitude_stiffness_ = 4.0;    ///< Restoring torque for roll/pitch
+    double yaw_damping_ = 0.1;           ///< Yaw damping to prevent spinning
+    double altitude_kp_ = 4.0;           ///< Altitude proportional gain
+    double altitude_kd_ = 4.0;           ///< Altitude velocity damping gain
   };
 
   // Register this plugin with Gazebo
