@@ -59,7 +59,18 @@ cmake --build build --config Debug --target dynamics_2d_tester
 - `source install/setup.bash`
 - `ros2 launch agent_control_pkg single_agent_test.launch.py` for a single-agent loop (controller + coordinator)
 - `ros2 launch agent_control_pkg multi_agent_formation.launch.py` to spawn three agents under `/agent_i` namespaces
-- Controller params live in `agent_control_pkg/config/ros2/agent_controller_default.yaml`; formation params in `other_packages/formation_coordinator_pkg/config/formation_config.yaml`
+- Controller params live in `agent_control_pkg/config/ros2/agent_controller_default.yaml` (namespaced under `agent_0/agent_controller`); formation params in `other_packages/formation_coordinator_pkg/config/formation_config.yaml`
+
+## Gazebo Simulation (2D point tracking)
+- `./start_gazebo_sim.sh` launches Gazebo Classic with the simple drone plugin (`libsimple_drone_plugin.so`), the ROS 2 agent controller, and the formation coordinator.
+- Defaults: single drone starts at `(0, 0, 0)` and tracks a target at `(5, 5, 0)` while holding altitude via the plugin (pure 2D motion).
+- Reset without closing Gazebo:
+  - `ros2 service call /reset_simulation std_srvs/srv/Empty {}` → rewinds the world.
+  - `ros2 lifecycle set /agent_0/agent_controller deactivate` / `activate` → controller restart (if lifecycle enabled).
+- Inspect behaviour:  
+  `ros2 topic echo /agent_0/target_pose --once` (target),  
+  `ros2 topic echo /agent_0/cmd_accel` (commanded accelerations),  
+  `ros2 topic echo /agent_0/odom` (plugin-published estimated state).
 
 ## Run
 ```

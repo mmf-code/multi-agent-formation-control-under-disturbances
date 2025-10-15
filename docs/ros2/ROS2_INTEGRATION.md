@@ -45,7 +45,7 @@ This document outlines how to integrate the agent-level controller (PID/PD/PID+G
 
 ## Baseline Implementation (2025-10)
 - `agent_control_pkg/src/ros/agent_controller_node.cpp:1` hosts the 200 Hz control loop; subscribes to `~/target_pose` (`geometry_msgs/PoseStamped`) and `~/odom` (`nav_msgs/Odometry`), publishes `~/cmd_accel` (`geometry_msgs/Vector3`) plus `~/diagnostics`. Controllers are created from ROS parameters (PID, P/PI/PD, GT2 fuzzy, or hybrid) using adapters under `agent_control_pkg/src/controllers/`.
-- Parameters mirror legacy YAML via dot notation (`pid.kp`, `output_limits.x.min`, etc.) in `agent_control_pkg/config/ros2/agent_controller_default.yaml:1`. Fuzzy configs resolve through `fuzzy.params_file` using `findConfigFilePath` and `ament_index_cpp`.
+- Parameters mirror legacy YAML via dot notation (`pid.kp`, `output_limits.x.min`, etc.) in `agent_control_pkg/config/ros2/agent_controller_default.yaml:1`. **Note**: each agent is namespaced (`agent_0/agent_controller/ros__parameters`), so parameters apply automatically when the launch file sets `namespace='agent_0'`.
 - `formation_coordinator_pkg/src/formation_coordinator_node.cpp:1` publishes per-agent targets at configurable rates and exposes `/set_formation` (`my_custom_interfaces_pkg/srv/UpdateFormation`) to change shape, spacing, center, yaw, and agent list on the fly. Formation state is broadcast via `my_custom_interfaces_pkg/msg/FormationState`.
 - Launchers:
   - `agent_control_pkg/launch/single_agent_test.launch.py:1` → runs one controller under `agent_0` namespace with the coordinator set to a single target.
@@ -61,6 +61,9 @@ source /opt/ros/humble/setup.bash
 colcon build --packages-select my_custom_interfaces_pkg formation_coordinator_pkg agent_control_pkg
 source install/setup.bash
 
+# 2D Gazebo run (single drone → target at 5,5,0)
+./start_gazebo_sim.sh
+
 # Single agent harness (namespaced controller, coordinator keeps target fixed)
 ros2 launch agent_control_pkg single_agent_test.launch.py
 
@@ -71,4 +74,9 @@ ros2 launch agent_control_pkg multi_agent_formation.launch.py
 ros2 topic list
 ros2 topic echo /agent_0/cmd_accel
 ros2 service call /set_formation my_custom_interfaces_pkg/srv/UpdateFormation "{shape: 'line', spacing: 5.0, center_x: 0.0, center_y: 0.0, center_z: 0.0, yaw_deg: 0.0, agent_ids: []}"
+```
+
+Resetting a Gazebo run without closing the GUI:
+```
+ros2 service call /reset_simulation std_srvs/srv/Empty {}
 ```
