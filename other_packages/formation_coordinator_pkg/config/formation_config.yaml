@@ -1,12 +1,29 @@
 formation_coordinator_node:
   ros__parameters:
+    # Agent IDs - can be overridden by launch file
     agent_ids:
       - agent_0
-    formation.shape: line
-    formation.spacing: 0.0
+      - agent_1
+      - agent_2
+      - agent_3
+      - agent_4
+
+    # Formation shape: triangle, line, square
+    formation.shape: triangle
+
+    # Spacing between agents (meters)
+    formation.spacing: 3.0
+
+    # Formation center position
     formation.center.x: 5.0
-    formation.center.y: 5.0
+    formation.center.y: 4.0
     formation.center.z: 0.5
+
+    # Formation orientation (degrees)
     formation.yaw_deg: 0.0
+
+    # Reference frame
     frame_id: world
+
+    # Update rate (Hz)
     publish_frequency_hz: 10.0

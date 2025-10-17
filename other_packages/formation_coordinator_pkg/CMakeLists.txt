@@ -15,11 +15,23 @@ find_package(my_custom_interfaces_pkg REQUIRED)
 # Include directories
 include_directories(include)
 
+# PSO Library
+add_library(particle_swarm_optimizer
+  src/particle_swarm_optimizer.cpp
+)
+target_include_directories(particle_swarm_optimizer PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
 add_executable(formation_coordinator_node
   src/formation_coordinator_node.cpp
 )
 target_include_directories(formation_coordinator_node PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_link_libraries(formation_coordinator_node
+  particle_swarm_optimizer
 )
 ament_target_dependencies(formation_coordinator_node
   rclcpp

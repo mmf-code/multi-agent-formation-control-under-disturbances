@@ -94,7 +94,36 @@ ros2 launch agent_control_pkg multi_agent_formation.launch.py
 
 ## Gazebo Simulation (ROS2 + 3D Visualization)
 
-### 🚀 Quick Start (30 Seconds)
+### 🎓 Thesis Multi-Controller Comparison Demo (NEW!)
+
+**Compare All 5 Controllers Simultaneously:**
+```bash
+source /opt/ros/humble/setup.bash
+cd /home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances
+source install/setup.bash
+./scripts/run_thesis_demo.sh
+```
+
+**Features:**
+- ✅ **5 drones** running simultaneously, each with different controller
+- ✅ **Color-coded drones**: Red (P), Green (PI), Blue (PD), Yellow (PID), Magenta (PID+Fuzzy)
+- ✅ **Triangle formation** with first 3 drones
+- ✅ **High FPS** optimization for smooth performance
+- ✅ **Real-time metrics** comparison
+- ✅ **Individual trajectory** visualization for each controller
+
+**Performance Modes:**
+```bash
+./scripts/run_thesis_demo.sh                # Full demo (GUI + RViz)
+./scripts/run_thesis_demo.sh --headless     # No Gazebo GUI (higher FPS)
+./scripts/run_thesis_demo.sh --no-rviz      # No RViz2 (save resources)
+./scripts/run_thesis_demo.sh --performance  # Headless + No RViz (maximum FPS)
+./scripts/run_thesis_demo.sh --triangle     # Only 3 drones (triangle formation)
+```
+
+---
+
+### 🚀 Quick Start - Single Drone Demo (30 Seconds)
 
 **One-Command Launch:**
 ```bash
