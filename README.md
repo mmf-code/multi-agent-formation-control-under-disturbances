@@ -54,41 +54,191 @@ cmake --build build --config Debug --target dynamics_2d_tester
 ```
 
 ## ROS2 Build & Launch (Linux, ROS 2 Humble)
-- `source /opt/ros/humble/setup.bash`
-- `colcon build --packages-select my_custom_interfaces_pkg formation_coordinator_pkg agent_control_pkg`
-- `source install/setup.bash`
-- `ros2 launch agent_control_pkg single_agent_test.launch.py` for a single-agent loop (controller + coordinator)
-- `ros2 launch agent_control_pkg multi_agent_formation.launch.py` to spawn three agents under `/agent_i` namespaces
-- Controller params live in `agent_control_pkg/config/ros2/agent_controller_default.yaml` (namespaced under `agent_0/agent_controller`); formation params in `other_packages/formation_coordinator_pkg/config/formation_config.yaml`
+
+### Build from Source
+```bash
+# Source ROS2
+source /opt/ros/humble/setup.bash
+
+# Navigate to workspace
+cd /home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances
+
+# Build all required packages
+colcon build --packages-select my_custom_interfaces_pkg formation_coordinator_pkg agent_control_pkg
+
+# Source workspace
+source install/setup.bash
+```
+
+### Launch Options
+
+**Recommended: Full Gazebo Demo** (ROS2 + Gazebo + RViz2):
+```bash
+./scripts/run_demo.sh                    # Full GUI demo with PID controller
+./scripts/run_demo.sh --controller pd    # PD controller
+./scripts/run_demo.sh --headless         # Headless mode (no Gazebo GUI)
+```
+
+**Alternative: ROS2-Only Tests** (No Gazebo):
+```bash
+# Single agent test (controller + coordinator, no physics simulation)
+ros2 launch agent_control_pkg single_agent_test.launch.py
+
+# Multi-agent formation (3 agents under /agent_i namespaces)
+ros2 launch agent_control_pkg multi_agent_formation.launch.py
+```
+
+**Configuration Files:**
+- Controller params: `agent_control_pkg/config/ros2/agent_controller_*.yaml`
+- Formation params: `other_packages/formation_coordinator_pkg/config/formation_config.yaml`
 
 ## Gazebo Simulation (ROS2 + 3D Visualization)
 
-### Quick Start
-```bash
-# Terminal 1: Launch Gazebo simulation (includes gzserver, gzclient, controllers)
-source /opt/ros/humble/setup.bash
-source install/setup.bash
-ros2 launch agent_control_pkg gazebo_single_agent.launch.py
+### 🚀 Quick Start (30 Seconds)
 
-# Terminal 2 (optional): Log simulation data to CSV
-python3 scripts/log_simulation_csv.py --namespace agent_0 --output outputs/logs/run_001.csv
+**One-Command Launch:**
+```bash
+source /opt/ros/humble/setup.bash
+cd /home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances
+source install/setup.bash
+./scripts/run_demo.sh
+```
+
+**Or Step-by-Step:**
+```bash
+# 1. Setup environment
+source /opt/ros/humble/setup.bash
+cd /home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances
+source install/setup.bash
+
+# 2. Clean old processes (automatic in run_demo.sh)
+pkill -9 gzserver gzclient 2>/dev/null || true
+
+# 3. Launch simulation
+ros2 launch agent_control_pkg demo_presentation.launch.py
+```
+
+### 🎛️ Launch Options
+
+**Different Modes:**
+```bash
+# Headless mode (faster, no Gazebo GUI)
+./scripts/run_demo.sh --headless
+
+# No RViz2 (terminal only)
+./scripts/run_demo.sh --no-rviz
+```
+
+**Different Controllers:**
+```bash
+./scripts/run_demo.sh --controller pid        # PID (default, Kp=0.538, Ki=0.145, Kd=1.368)
+./scripts/run_demo.sh --controller p          # P-only controller
+./scripts/run_demo.sh --controller pi         # PI controller
+./scripts/run_demo.sh --controller pd         # PD controller
+./scripts/run_demo.sh --controller pid_fuzzy  # Hybrid PID+Fuzzy (GT2)
+
+# Or directly with ros2 launch:
+ros2 launch agent_control_pkg demo_presentation.launch.py controller_config:=pid
+ros2 launch agent_control_pkg demo_presentation.launch.py controller_config:=p_only
+ros2 launch agent_control_pkg demo_presentation.launch.py controller_config:=pd
+ros2 launch agent_control_pkg demo_presentation.launch.py controller_config:=pi
+ros2 launch agent_control_pkg demo_presentation.launch.py controller_config:=pid_fuzzy
+```
+
+**Different Worlds:**
+```bash
+# Minimal world (fast startup, default)
+ros2 launch agent_control_pkg demo_presentation.launch.py
+
+# Professional world (visual aids, grid, axes, scale markers)
+ros2 launch agent_control_pkg demo_presentation.launch.py world_file:=demo_presentation.world
+```
+
+### 📊 What's Included
+
+- ✅ **RViz2 visualization** with real-time trajectory path tracking
+- ✅ **Real-time metrics publisher** (error, RMSE, IAE, ITAE, settling time)
+- ✅ **Multiple tuned controllers** (P, PI, PD, PID, PID+Fuzzy)
+  - Default PID gains: Kp=0.538, Ki=0.145, Kd=1.368 (~10% overshoot, 4s settling)
+- ✅ **Enhanced quadrotor model** with improved physics and visual indicators
+- ✅ **SimpleDronePlugin** with force-based dynamics, damping, altitude PD control
+- ✅ **Two world options:**
+  - `minimal_test.world` → Fast startup, simple visuals (default)
+  - `demo_presentation.world` → Professional presentation mode with grid/axes
+- ✅ **Path visualizer node** for trajectory recording
+- ✅ **Metrics publisher node** for performance monitoring
+
+### 📈 Monitor Real-Time Metrics
+
+**Terminal 2 (Optional):**
+```bash
+# Performance metrics (error, RMSE, IAE, ITAE, settling time)
+ros2 topic echo /agent_0/metrics
+
+# Trajectory path
+ros2 topic echo /agent_0/path
+
+# Controller diagnostics (PID/Fuzzy contributions)
+ros2 topic echo /agent_0/diagnostics
+
+# Drone position
+ros2 topic echo /agent_0/odom --field pose.pose.position
+
+# Target position
+ros2 topic echo /agent_0/target_pose --field pose.position
 ```
 
 ### System Architecture (3 Layers)
-1. **Formation Coordinator** → Publishes `/agent_0/target_pose` (reference trajectory)
-2. **Agent Controller** → PID/Fuzzy controller, reads odom + target, outputs `/agent_0/cmd_accel`
-3. **Gazebo + SimpleDronePlugin** → Applies F=ma, publishes `/agent_0/odom` (state feedback)
 
-### Configuration
-- **PID Gains**: `agent_control_pkg/config/ros2/agent_controller_default.yaml`
-  - Tuned values: Kp=0.538, Ki=0.145, Kd=1.368 (~10% overshoot, 4s settling)
-- **World File**: `agent_control_pkg/worlds/minimal_test.world`
-  - Drone spawns at (0, 0, 0), rises to z=0.5 m and tracks the point `(5, 5, 0.5)`
-- **Physics Plugin**: `agent_control_pkg/plugins/simple_drone_plugin.cpp`
-  - Adds force-based motion plus linear/attitude damping and altitude PD (Kp≈8, Kd≈3) so the quadrotor stays level and settles without excessive bouncing
-- **Launch Options**:
-  - `gui:=false` → Headless mode (no Gazebo GUI, faster)
-  - `use_sim_time:=true` → Sync with Gazebo clock (default)
+The simulation uses a hierarchical control architecture:
+
+1. **Formation Coordinator Node** (`formation_coordinator_pkg`)
+   - Generates reference trajectories
+   - Publishes `/agent_0/target_pose` (geometry_msgs/PoseStamped)
+   - Configurable via `formation_coordinator_pkg/config/formation_config.yaml`
+
+2. **Agent Controller Node** (`agent_control_pkg`)
+   - Reads odometry: `/agent_0/odom` (nav_msgs/Odometry)
+   - Reads target: `/agent_0/target_pose` (geometry_msgs/PoseStamped)
+   - Computes control using PID/Fuzzy/Hybrid controllers
+   - Publishes acceleration command: `/agent_0/cmd_accel` (geometry_msgs/Accel)
+   - Publishes diagnostics: `/agent_0/diagnostics` (custom diagnostics message)
+
+3. **Gazebo Physics Simulation** + **SimpleDronePlugin**
+   - Applies force-based dynamics (F=ma)
+   - Reads `/agent_0/cmd_accel` and applies forces to drone model
+   - Publishes state feedback: `/agent_0/odom` (nav_msgs/Odometry)
+   - Includes damping, altitude control, and realistic physics
+
+4. **Visualization & Metrics** (Optional)
+   - **Path Visualizer Node**: Records trajectory → `/agent_0/path` (nav_msgs/Path)
+   - **Metrics Publisher Node**: Computes real-time performance → `/agent_0/metrics`
+   - **RViz2**: 3D visualization with custom display configuration
+
+### Configuration Files
+
+**Controller Configurations** (`agent_control_pkg/config/ros2/`):
+- `agent_controller_pid.yaml` → PID controller (Kp=0.538, Ki=0.145, Kd=1.368)
+- `agent_controller_p_only.yaml` → Proportional-only controller
+- `agent_controller_pi.yaml` → PI controller (no derivative)
+- `agent_controller_pd.yaml` → PD controller (no integral)
+- `agent_controller_pid_fuzzy.yaml` → Hybrid PID+Fuzzy (GT2) controller
+- `agent_controller_default.yaml` → Default configuration (alias for PID)
+
+**World Files** (`agent_control_pkg/worlds/`):
+- `minimal_test.world` → Fast startup, basic visuals, single drone at origin
+- `demo_presentation.world` → Professional mode with grid, axes, scale markers
+
+**Key Components**:
+- **Physics Plugin**: [simple_drone_plugin.cpp](agent_control_pkg/plugins/simple_drone_plugin.cpp)
+  - Force-based dynamics (F=ma)
+  - Linear and attitude damping
+  - Altitude PD control (Kp≈8, Kd≈3) for level flight
+- **Launch File**: [demo_presentation.launch.py](agent_control_pkg/launch/demo_presentation.launch.py)
+  - Configurable controller selection via `controller_config` argument
+  - Gazebo server/client management
+  - ROS2 node orchestration with timed startup
+  - RViz2 integration with custom config
 
 ### Monitoring & Debugging
 ```bash
@@ -99,12 +249,19 @@ ros2 topic list | grep agent_0
 ros2 topic echo /agent_0/target_pose  # Formation reference
 ros2 topic echo /agent_0/odom         # Drone state from Gazebo
 ros2 topic echo /agent_0/cmd_accel    # Controller output
+ros2 topic echo /agent_0/metrics      # Performance metrics (RMSE, IAE, ITAE)
+ros2 topic echo /agent_0/path         # Trajectory path visualization
 
 # Verify PID parameters loaded correctly
 ros2 param get /agent_0/agent_controller pid.kp  # Should return 0.538
+ros2 param list | grep agent_0        # List all parameters
 
 # Check controller diagnostics
 ros2 topic echo /agent_0/diagnostics  # PID/Fuzzy contributions
+
+# Node information
+ros2 node list                        # List all active nodes
+ros2 node info /agent_0/agent_controller  # Controller node details
 ```
 
 ### CSV Data Analysis
@@ -118,10 +275,32 @@ python analysis/plot_dynamics_2d.py --csv outputs/logs/test_run.csv
 ```
 
 ### Troubleshooting
-- **Oscillation**: Check if PID gains loaded correctly (`ros2 param get`)
-- **Gazebo frozen**: Kill processes `pkill -9 gzserver gzclient`, restart launch
-- **No movement**: Verify topics active `ros2 topic hz /agent_0/cmd_accel`
-- **Config not loading**: Rebuild after YAML changes `colcon build --packages-select agent_control_pkg`
+
+**Common Issues:**
+- **Oscillation/Instability**:
+  - Check if PID gains loaded correctly: `ros2 param get /agent_0/agent_controller pid.kp`
+  - Try different controller config: `./scripts/run_demo.sh --controller pd`
+  - Verify target is reachable: `ros2 topic echo /agent_0/target_pose`
+
+- **Gazebo frozen/crashed**:
+  - Kill processes: `pkill -9 gzserver gzclient`
+  - Remove lock files: `rm -rf /tmp/.gazebo*`
+  - Restart launch: `./scripts/run_demo.sh`
+
+- **No movement/drone not responding**:
+  - Verify topics are publishing: `ros2 topic hz /agent_0/cmd_accel`
+  - Check if plugin loaded: Look for "SimpleDronePlugin: Loaded" in terminal
+  - Verify odom is publishing: `ros2 topic hz /agent_0/odom`
+
+- **Config changes not applied**:
+  - Rebuild package: `colcon build --packages-select agent_control_pkg`
+  - Re-source workspace: `source install/setup.bash`
+  - Clear CMake cache if needed: `rm -rf build/agent_control_pkg`
+
+- **RViz2 not showing trajectory**:
+  - Check path topic: `ros2 topic hz /agent_0/path`
+  - Verify path_visualizer_node is running: `ros2 node list | grep path_visualizer`
+  - Reload RViz config: File → Open Config → `agent_control_pkg/rviz/formation_demo.rviz`
 
 ## Run
 ```

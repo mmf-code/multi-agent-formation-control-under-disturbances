@@ -254,13 +254,14 @@ namespace gazebo
     double cmd_accel_y_ = 0.0;  ///< Commanded Y acceleration (m/s²)
     double cmd_accel_z_ = 0.0;  ///< Commanded Z acceleration (unused, locked)
 
-    // Damping / stabilization parameters (tuned for 2D hover behavior)
-    double linear_damping_ = 1.5;        ///< Linear velocity damping coefficient
+    // Damping / stabilization parameters (matched to successful C++ simulations)
+    // C++ params: mass=1.5kg, cd_lin=0.12 -> effective damping = 0.12/1.5 = 0.08
+    double linear_damping_ = 0.08;       ///< Linear velocity damping (matches cd_lin=0.12, mass=1.5)
     double angular_damping_ = 0.2;       ///< Angular velocity damping coefficient
     double attitude_stiffness_ = 4.0;    ///< Restoring torque for roll/pitch
     double yaw_damping_ = 0.1;           ///< Yaw damping to prevent spinning
-    double altitude_kp_ = 4.0;           ///< Altitude proportional gain
-    double altitude_kd_ = 4.0;           ///< Altitude velocity damping gain
+    double altitude_kp_ = 12.0;          ///< Altitude proportional gain (aggressive Z response)
+    double altitude_kd_ = 4.0;           ///< Altitude velocity damping gain (critical damping)
   };
 
   // Register this plugin with Gazebo

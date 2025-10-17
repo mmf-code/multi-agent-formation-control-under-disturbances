@@ -1,0 +1,41 @@
+# ROS2 Agent Controller Configuration - PD CONTROLLER
+# Proportional-Derivative control (BEST PERFORMANCE in C++ sims)
+# From successful run_088: Ts5=2.72s, OS=0.13% (EXCELLENT!)
+# Expected: Fast response (~3s), minimal overshoot (~10%)
+
+agent_0:
+  agent_controller:
+    ros__parameters:
+      # Controller type: pd (proportional-derivative)
+      controller_type: pd
+
+      # Timing configuration
+      dt: 0.005
+      control_frequency_hz: 200.0
+
+      # Output limits for acceleration commands (m/s²)
+      output_limits.x.min: -10.0
+      output_limits.x.max: 10.0
+      output_limits.y.min: -8.0
+      output_limits.y.max: 12.0
+
+      # PD controller gains (optimized from C++ simulation run_088)
+      # These parameters achieved: Ts5=2.72s, OS=0.13% in standalone tests
+      pid.kp: 3.50         # Proportional gain (from run_088)
+      pid.ki: 0.0          # DISABLED (no integral action)
+      pid.kd: 3.61         # Derivative gain (from run_088)
+      pid.enable_derivative_filter: true
+      pid.derivative_filter_alpha: 0.1
+
+      # Fuzzy logic controller (disabled for PD)
+      fuzzy.enable: false
+      fuzzy.include_wind: false
+      fuzzy.wind_scalar: 0.0
+      fuzzy.params_file: fuzzy_params.yaml
+
+      # Hybrid controller mixing (not used)
+      mix.k_pid: 1.0
+      mix.k_fuzzy: 1.0
+
+      # Diagnostics
+      diagnostics.enable: true

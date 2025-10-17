@@ -69,8 +69,8 @@ AgentControllerNode::AgentControllerNode(const rclcpp::NodeOptions & options)
 
   RCLCPP_INFO(
     get_logger(),
-    "Agent controller node initialised: type=%s, dt=%.6f s, k_pid=%.2f, k_fuzzy=%.2f",
-    controller_type_.c_str(), configured_dt_, mix_k_pid_, mix_k_fuzzy_);
+    "Agent controller node initialised: type=%s, dt=%.6f s, PID[Kp=%.3f, Ki=%.3f, Kd=%.3f], mix[k_pid=%.2f, k_fuzzy=%.2f]",
+    controller_type_.c_str(), configured_dt_, pid_kp_, pid_ki_, pid_kd_, mix_k_pid_, mix_k_fuzzy_);
 }
 
 void AgentControllerNode::declareParameters()

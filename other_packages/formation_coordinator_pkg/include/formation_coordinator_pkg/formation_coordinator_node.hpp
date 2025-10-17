@@ -40,11 +40,11 @@ private:
   std::vector<std::string> agent_ids_;
 
   double publish_period_{0.1};
-  std::string formation_shape_{"triangle"};
-  double spacing_{4.0};
-  double center_x_{0.0};
-  double center_y_{0.0};
-  double center_z_{0.0};
+  std::string formation_shape_{"line"};
+  double spacing_{0.0};
+  double center_x_{5.0};
+  double center_y_{5.0};
+  double center_z_{0.5};
   double yaw_rad_{0.0};
   std::string frame_id_{"world"};
 

@@ -171,6 +171,31 @@ target_link_libraries(agent_controller_node
   fuzzy_logic_lib
 )
 
+add_executable(path_visualizer_node
+  src/ros/path_visualizer_node.cpp
+)
+target_include_directories(path_visualizer_node PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+ament_target_dependencies(path_visualizer_node
+  rclcpp
+  geometry_msgs
+  nav_msgs
+)
+
+add_executable(metrics_publisher_node
+  src/ros/metrics_publisher_node.cpp
+)
+target_include_directories(metrics_publisher_node PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+ament_target_dependencies(metrics_publisher_node
+  rclcpp
+  geometry_msgs
+  nav_msgs
+  std_msgs
+)
+
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
@@ -229,7 +254,7 @@ install(TARGETS ${_exported_targets}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-install(TARGETS agent_controller_node
+install(TARGETS agent_controller_node path_visualizer_node metrics_publisher_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -240,6 +265,11 @@ install(DIRECTORY launch/
 install(DIRECTORY config/
   DESTINATION share/${PROJECT_NAME}/config
   FILES_MATCHING PATTERN "*.yaml"
+)
+
+install(DIRECTORY rviz/
+  DESTINATION share/${PROJECT_NAME}/rviz
+  FILES_MATCHING PATTERN "*.rviz"
 )
 
 ament_export_targets(agent_control_pkg_targets HAS_LIBRARY_TARGET)
