@@ -122,13 +122,54 @@ def generate_launch_description():
         condition=conditions.IfCondition(gazebo_gui)
     )
 
-    # ===== Controller Configuration Paths =====
-    controller_configs = {
-        '0': PathJoinSubstitution([FindPackageShare('agent_control_pkg'), 'config', 'ros2', 'agent_controller_p_only.yaml']),
-        '1': PathJoinSubstitution([FindPackageShare('agent_control_pkg'), 'config', 'ros2', 'agent_controller_pi.yaml']),
-        '2': PathJoinSubstitution([FindPackageShare('agent_control_pkg'), 'config', 'ros2', 'agent_controller_pd.yaml']),
-        '3': PathJoinSubstitution([FindPackageShare('agent_control_pkg'), 'config', 'ros2', 'agent_controller_pid.yaml']),
-        '4': PathJoinSubstitution([FindPackageShare('agent_control_pkg'), 'config', 'ros2', 'agent_controller_pid_fuzzy.yaml']),
+    # ===== Controller Configurations =====
+    # Define controller parameters for each agent directly
+    controller_params = {
+        0: {  # P-only
+            'controller_type': 'p',
+            'dt': 0.005,
+            'pid.kp': 0.538,
+            'pid.ki': 0.0,
+            'pid.kd': 0.0,
+            'fuzzy.enable': False,
+        },
+        1: {  # PI
+            'controller_type': 'pi',
+            'dt': 0.005,
+            'pid.kp': 0.773,
+            'pid.ki': 0.197,
+            'pid.kd': 0.0,
+            'fuzzy.enable': False,
+        },
+        2: {  # PD
+            'controller_type': 'pd',
+            'dt': 0.005,
+            'pid.kp': 3.50,
+            'pid.ki': 0.0,
+            'pid.kd': 3.61,
+            'pid.enable_derivative_filter': True,
+            'fuzzy.enable': False,
+        },
+        3: {  # PID
+            'controller_type': 'pid',
+            'dt': 0.005,
+            'pid.kp': 3.1,
+            'pid.ki': 0.4,
+            'pid.kd': 2.2,
+            'pid.enable_derivative_filter': True,
+            'fuzzy.enable': False,
+        },
+        4: {  # PID+Fuzzy
+            'controller_type': 'pid_fuzzy',
+            'dt': 0.005,
+            'pid.kp': 0.538,
+            'pid.ki': 0.145,
+            'pid.kd': 1.368,
+            'fuzzy.enable': True,
+            'fuzzy.params_file': 'fuzzy_params.yaml',
+            'mix.k_pid': 1.0,
+            'mix.k_fuzzy': 0.5,
+        },
     }
 
     # ===== Create Agent Controller Nodes =====
@@ -137,6 +178,14 @@ def generate_launch_description():
     for i in range(5):
         agent_namespace = f'agent_{i}'
 
+        # Merge controller-specific params with common params
+        agent_params = controller_params[i].copy()
+        agent_params['use_sim_time'] = use_sim_time
+        agent_params['output_limits.x.min'] = -10.0
+        agent_params['output_limits.x.max'] = 10.0
+        agent_params['output_limits.y.min'] = -8.0
+        agent_params['output_limits.y.max'] = 12.0
+
         # Agent controller node
         agent_controller = Node(
             package='agent_control_pkg',
@@ -144,10 +193,7 @@ def generate_launch_description():
             name='agent_controller',
             namespace=agent_namespace,
             output='screen',
-            parameters=[
-                controller_configs[str(i)],
-                {'use_sim_time': use_sim_time}
-            ],
+            parameters=[agent_params],
             remappings=[
                 ('target_pose', f'/{agent_namespace}/target_pose'),
                 ('odom', f'/{agent_namespace}/odom'),
