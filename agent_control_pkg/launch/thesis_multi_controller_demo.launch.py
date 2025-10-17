@@ -133,13 +133,16 @@ def generate_launch_description():
             'pid.kd': 0.0,
             'fuzzy.enable': False,
         },
-        1: {  # PI
+        1: {  # PI - OPTIMIZED for faster response
             'controller_type': 'pi',
             'dt': 0.005,
-            'pid.kp': 0.773,
-            'pid.ki': 0.197,
-            'pid.kd': 0.0,
+            'pid.kp': 2.5,      # Increased from 0.773 (3.2x)
+            'pid.ki': 0.3,      # Increased from 0.197 (1.5x)
+            'pid.kd': 0.0,      # Still no derivative
             'fuzzy.enable': False,
+            # Anti-windup protection
+            'pid.enable_anti_windup': True,
+            'pid.anti_windup_limit': 5.0,
         },
         2: {  # PD
             'controller_type': 'pd',
@@ -150,13 +153,14 @@ def generate_launch_description():
             'pid.enable_derivative_filter': True,
             'fuzzy.enable': False,
         },
-        3: {  # PID
+        3: {  # PID - OPTIMIZED for faster response
             'controller_type': 'pid',
             'dt': 0.005,
-            'pid.kp': 3.1,
-            'pid.ki': 0.4,
-            'pid.kd': 2.2,
+            'pid.kp': 4.5,      # Increased from 3.1 (1.45x)
+            'pid.ki': 0.5,      # Increased from 0.4 (1.25x)
+            'pid.kd': 3.0,      # Increased from 2.2 (1.36x)
             'pid.enable_derivative_filter': True,
+            'pid.derivative_filter_alpha': 0.15,  # Slightly more filtering
             'fuzzy.enable': False,
         },
         4: {  # PID+Fuzzy
