@@ -272,6 +272,12 @@ install(DIRECTORY rviz/
   FILES_MATCHING PATTERN "*.rviz"
 )
 
+# Install Python scripts
+install(PROGRAMS
+  scripts/metrics_summary.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_export_targets(agent_control_pkg_targets HAS_LIBRARY_TARGET)
 ament_export_include_directories(include)
 

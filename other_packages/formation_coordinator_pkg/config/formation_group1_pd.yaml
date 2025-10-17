@@ -1,0 +1,43 @@
+/formation_1/formation_coordinator_group1:
+  ros__parameters:
+    # GROUP 1: PD Controllers
+    # Agents: agent_3, agent_4, agent_5
+    # Color: Red, Green, Blue
+    agent_ids:
+      - agent_3
+      - agent_4
+      - agent_5
+
+    # Formation shape: triangle
+    formation.shape: triangle
+
+    # Spacing between agents (meters)
+    formation.spacing: 2.5
+
+    # Formation center position (target for group centroid)
+    formation.center.x: 5.0
+    formation.center.y: 0.0
+    formation.center.z: 0.0
+
+    # Formation orientation (degrees)
+    formation.yaw_deg: 0.0
+
+    # Reference frame
+    frame_id: odom
+
+    # Update rate (Hz)
+    publish_frequency_hz: 10.0
+
+    # PSO parameters for formation optimization
+    pso.enable: true
+    pso.num_particles: 20
+    pso.max_iterations: 50
+    pso.inertia_weight: 0.7
+    pso.cognitive_coeff: 1.5
+    pso.social_coeff: 1.5
+
+    # Center motion along X (ramp from start_x to end_x)
+    motion.enable: true
+    motion.vx: 0.8
+    motion.start_x: -10.0
+    motion.end_x: 5.0

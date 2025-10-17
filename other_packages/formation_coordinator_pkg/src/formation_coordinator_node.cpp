@@ -84,7 +84,10 @@ void FormationCoordinatorNode::rebuildPublishers()
   agent_publishers_.reserve(agent_ids_.size());
 
   for (const auto & agent_id : agent_ids_) {
-    auto pub = create_publisher<geometry_msgs::msg::PoseStamped>(agent_id + "/target_pose", 10);
+    // Publish to absolute topics so agent namespaces receive them as intended
+    // Use SensorDataQoS to match controllers' subscribers
+    auto pub = create_publisher<geometry_msgs::msg::PoseStamped>(
+      "/" + agent_id + "/target_pose", rclcpp::SensorDataQoS());
     agent_publishers_.push_back(AgentPublisher{agent_id, pub});
   }
 }
@@ -152,8 +155,8 @@ geometry_msgs::msg::PoseStamped FormationCoordinatorNode::makePoseFromOffset(dou
   const double rotated_x = cos_yaw * dx - sin_yaw * dy;
   const double rotated_y = sin_yaw * dx + cos_yaw * dy;
 
-  pose.pose.position.x = center_x_ + rotated_x;
-  pose.pose.position.y = center_y_ + rotated_y;
+  pose.pose.position.x = center_x_runtime_ + rotated_x;
+  pose.pose.position.y = center_y_runtime_ + rotated_y;
   pose.pose.position.z = center_z_;
 
   pose.pose.orientation.x = 0.0;
@@ -167,6 +170,22 @@ void FormationCoordinatorNode::timerCallback()
 {
   if (agent_publishers_.empty()) {
     return;
+  }
+
+  // Update runtime center (simple x-axis ramp if enabled)
+  if (!started_) {
+    started_ = true;
+    start_time_ = now();
+    center_x_runtime_ = motion_enable_ ? motion_start_x_ : center_x_;
+    center_y_runtime_ = center_y_;
+  } else if (motion_enable_) {
+    const double t = (now() - start_time_).seconds();
+    center_x_runtime_ = motion_start_x_ + motion_vx_ * t;
+    // Clamp to end point based on direction
+    if ((motion_vx_ >= 0.0 && center_x_runtime_ > motion_end_x_) ||
+        (motion_vx_ < 0.0 && center_x_runtime_ < motion_end_x_)) {
+      center_x_runtime_ = motion_end_x_;
+    }
   }
 
   const auto offsets = computeOffsets(agent_publishers_.size());
@@ -187,8 +206,8 @@ void FormationCoordinatorNode::publishState() const
   my_custom_interfaces_pkg::msg::FormationState msg;
   msg.shape = formation_shape_;
   msg.spacing = spacing_;
-  msg.center_x = center_x_;
-  msg.center_y = center_y_;
+  msg.center_x = center_x_runtime_;
+  msg.center_y = center_y_runtime_;
   msg.center_z = center_z_;
   msg.yaw_deg = yaw_rad_ * 180.0 / M_PI;
   msg.agent_ids = agent_ids_;
@@ -233,6 +252,11 @@ void FormationCoordinatorNode::handleSetFormation(
   set_parameter(rclcpp::Parameter("agent_ids", agent_ids_));
 
   rebuildPublishers();
+
+  // Reset runtime center and motion start
+  started_ = false;
+  center_x_runtime_ = center_x_;
+  center_y_runtime_ = center_y_;
 
   response->success = true;
   response->message = "Formation updated.";

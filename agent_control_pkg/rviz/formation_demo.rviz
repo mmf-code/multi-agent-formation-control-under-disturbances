@@ -115,7 +115,7 @@ Visualization Manager:
     - Alpha: 1
       Axes Length: 0.30000001192092896
       Axes Radius: 0.029999999329447746
-      Class: rviz_default_plugins/PoseStamped
+      Class: rviz_default_plugins/Pose
       Color: 50; 205; 50
       Enabled: true
       Head Length: 0.20000000298023224

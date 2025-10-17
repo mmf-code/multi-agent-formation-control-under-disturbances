@@ -331,6 +331,49 @@ python analysis/plot_dynamics_2d.py --csv outputs/logs/test_run.csv
   - Verify path_visualizer_node is running: `ros2 node list | grep path_visualizer`
   - Reload RViz config: File → Open Config → `agent_control_pkg/rviz/formation_demo.rviz`
 
+## Formation Comparison Demo (9 drones, 3 controller groups)
+
+Compare PID+Fuzzy, PD, and PID groups moving as triangle formations along x under wind.
+
+- World: `agent_control_pkg/worlds/formation_comparison.world`
+- Launch: `agent_control_pkg/launch/formation_comparison_demo.launch.py`
+- Coordinators and configs:
+  - Group 0 (PID+Fuzzy): `other_packages/formation_coordinator_pkg/config/formation_group0_fuzzy.yaml` (lane y≈−4)
+  - Group 1 (PD):        `other_packages/formation_coordinator_pkg/config/formation_group1_pd.yaml` (lane y≈0)
+  - Group 2 (PID):       `other_packages/formation_coordinator_pkg/config/formation_group2_pid.yaml` (lane y≈+4)
+
+Dynamic center motion
+- Each group’s formation center moves from x≈−10 → +5 at 0.8 m/s (see `motion.*` parameters in YAMLs).
+- Controllers per group:
+  - PID+Fuzzy (mix.k_fuzzy=0.7, wind input enabled)
+  - PD (derivative filter enabled)
+  - PID (stronger derivative filter alpha)
+
+Run
+```
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install --packages-up-to formation_coordinator_pkg agent_control_pkg
+source install/setup.bash
+ros2 launch agent_control_pkg formation_comparison_demo.launch.py
+```
+
+Headless
+```
+ros2 launch agent_control_pkg formation_comparison_demo.launch.py gazebo_gui:=false rviz:=false
+```
+
+Verify targets
+```
+ros2 param get /formation_0/formation_coordinator_group0 motion.enable  # true
+ros2 topic echo /agent_0/target_pose -n 1            # PoseStamped with increasing x
+ros2 topic info /agent_0/target_pose -v              # Publisher from formation_0, Best Effort
+```
+
+Notes
+- QoS: Coordinators publish Best Effort; controllers subscribe with SensorData QoS. RViz may warn about reliability mismatch; it’s benign.
+- Moving targets: “settled=NO” in metrics is expected; use RMSE/IAE trends to compare tracking.
+- PID+Fuzzy advantage appears under stronger wind bias/gusts; tune `mix.k_fuzzy` (0.5→1.0) and fuzzy output scaling (±6..10 m/s²) for more impact.
+
 ## Run
 ```
 # No-wind

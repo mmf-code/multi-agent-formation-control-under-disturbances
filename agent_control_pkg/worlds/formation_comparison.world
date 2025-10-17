@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <sdf version="1.6">
-  <world name="thesis_multi_drone_world">
+  <world name="formation_comparison_world">
 
-    <!-- Optimized physics for high FPS with multiple drones -->
+    <!-- Optimized physics for high FPS with 9 drones -->
     <physics type="ode">
       <max_step_size>0.002</max_step_size>
       <real_time_factor>1.0</real_time_factor>
@@ -30,23 +30,23 @@
       <cast_shadows>false</cast_shadows>
     </light>
 
-    <!-- Wind Model: Constant + Sinusoidal disturbance -->
+    <!-- Wind Model: Constant wind to test controller robustness -->
     <plugin name="wind_plugin" filename="libgazebo_ros_wind.so">
       <ros>
         <namespace>/wind</namespace>
       </ros>
       <frame_id>world</frame_id>
       <wind_direction>
-        <x>1.0</x>  <!-- Wind direction: +X -->
-        <y>0.5</y>  <!-- Slight Y component -->
+        <x>1.0</x>  <!-- Wind along X-axis (opposing drone motion) -->
+        <y>0.3</y>  <!-- Slight crosswind -->
         <z>0.0</z>
       </wind_direction>
-      <wind_force_mean>2.0</wind_force_mean>  <!-- Base wind: 2.0 N -->
-      <wind_force_variance>0.5</wind_force_variance>  <!-- Random gusts -->
+      <wind_force_mean>2.5</wind_force_mean>  <!-- 2.5N constant wind -->
+      <wind_force_variance>0.8</wind_force_variance>  <!-- Gusts up to 3.3N -->
       <update_rate>10.0</update_rate>
     </plugin>
 
-    <!-- Simple ground -->
+    <!-- Ground plane -->
     <model name="ground">
       <static>true</static>
       <link name="link">
@@ -71,11 +71,14 @@
       </link>
     </model>
 
-    <!-- Drone 0: P-only controller (Red) -->
-    <!-- WIDE Grid layout: 8m spacing to prevent collisions -->
-    <!-- Pattern: Star formation with center at origin -->
+    <!-- ========================================= -->
+    <!-- GROUP 0: PID+Fuzzy Controllers (Cyan/Magenta/Yellow) -->
+    <!-- Lane: Y=-4, Triangle formation -->
+    <!-- ========================================= -->
+
+    <!-- Drone 0: PID+Fuzzy (Cyan) -->
     <model name="agent_0">
-      <pose>-10 0 0 0 0 0</pose>  <!-- Far left -->
+      <pose>-10 -5 0 0 0 0</pose>  <!-- Left vertex of triangle -->
       <static>false</static>
 
       <link name="base_link">
@@ -93,8 +96,8 @@
             <sphere><radius>0.12</radius></sphere>
           </geometry>
           <material>
-            <ambient>0.8 0.1 0.1 1</ambient>
-            <diffuse>0.9 0.2 0.2 1</diffuse>
+            <ambient>0.1 0.8 0.8 1</ambient>
+            <diffuse>0.2 0.9 0.9 1</diffuse>
           </material>
         </visual>
 
@@ -130,180 +133,9 @@
       </plugin>
     </model>
 
-    <!-- Drone 1: PI controller (Green) -->
+    <!-- Drone 1: PID+Fuzzy (Magenta) -->
     <model name="agent_1">
-      <pose>0 -8 0 0 0 0</pose>  <!-- Far bottom -->
-      <static>false</static>
-
-      <link name="base_link">
-        <inertial>
-          <mass>1.5</mass>
-          <inertia>
-            <ixx>0.03</ixx>
-            <iyy>0.03</iyy>
-            <izz>0.05</izz>
-          </inertia>
-        </inertial>
-
-        <visual name="body">
-          <geometry>
-            <sphere><radius>0.12</radius></sphere>
-          </geometry>
-          <material>
-            <ambient>0.1 0.8 0.1 1</ambient>
-            <diffuse>0.2 0.9 0.2 1</diffuse>
-          </material>
-        </visual>
-
-        <visual name="arm_x">
-          <pose>0 0 0 0 1.5708 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
-          </material>
-        </visual>
-
-        <visual name="arm_y">
-          <pose>0 0 0 1.5708 0 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
-          </material>
-        </visual>
-
-        <collision name="collision">
-          <geometry>
-            <sphere><radius>0.2</radius></sphere>
-          </geometry>
-        </collision>
-      </link>
-
-      <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
-        <namespace>agent_1</namespace>
-      </plugin>
-    </model>
-
-    <!-- Drone 2: PD controller (Blue) -->
-    <model name="agent_2">
-      <pose>10 0 0 0 0 0</pose>  <!-- Far right -->
-      <static>false</static>
-
-      <link name="base_link">
-        <inertial>
-          <mass>1.5</mass>
-          <inertia>
-            <ixx>0.03</ixx>
-            <iyy>0.03</iyy>
-            <izz>0.05</izz>
-          </inertia>
-        </inertial>
-
-        <visual name="body">
-          <geometry>
-            <sphere><radius>0.12</radius></sphere>
-          </geometry>
-          <material>
-            <ambient>0.1 0.1 0.8 1</ambient>
-            <diffuse>0.2 0.2 0.9 1</diffuse>
-          </material>
-        </visual>
-
-        <visual name="arm_x">
-          <pose>0 0 0 0 1.5708 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
-          </material>
-        </visual>
-
-        <visual name="arm_y">
-          <pose>0 0 0 1.5708 0 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
-          </material>
-        </visual>
-
-        <collision name="collision">
-          <geometry>
-            <sphere><radius>0.2</radius></sphere>
-          </geometry>
-        </collision>
-      </link>
-
-      <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
-        <namespace>agent_2</namespace>
-      </plugin>
-    </model>
-
-    <!-- Drone 3: PID controller (Yellow) -->
-    <model name="agent_3">
-      <pose>0 8 0 0 0 0</pose>  <!-- Far top -->
-      <static>false</static>
-
-      <link name="base_link">
-        <inertial>
-          <mass>1.5</mass>
-          <inertia>
-            <ixx>0.03</ixx>
-            <iyy>0.03</iyy>
-            <izz>0.05</izz>
-          </inertia>
-        </inertial>
-
-        <visual name="body">
-          <geometry>
-            <sphere><radius>0.12</radius></sphere>
-          </geometry>
-          <material>
-            <ambient>0.8 0.8 0.1 1</ambient>
-            <diffuse>0.9 0.9 0.2 1</diffuse>
-          </material>
-        </visual>
-
-        <visual name="arm_x">
-          <pose>0 0 0 0 1.5708 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
-          </material>
-        </visual>
-
-        <visual name="arm_y">
-          <pose>0 0 0 1.5708 0 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
-          </material>
-        </visual>
-
-        <collision name="collision">
-          <geometry>
-            <sphere><radius>0.2</radius></sphere>
-          </geometry>
-        </collision>
-      </link>
-
-      <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
-        <namespace>agent_3</namespace>
-      </plugin>
-    </model>
-
-    <!-- Drone 4: PID+Fuzzy controller (Magenta) -->
-    <model name="agent_4">
-      <pose>-6 4 0 0 0 0</pose>  <!-- Offset diagonal (upper-left) -->
+      <pose>-8 -5 0 0 0 0</pose>  <!-- Right vertex of triangle -->
       <static>false</static>
 
       <link name="base_link">
@@ -354,7 +186,416 @@
       </link>
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
+        <namespace>agent_1</namespace>
+      </plugin>
+    </model>
+
+    <!-- Drone 2: PID+Fuzzy (Yellow) -->
+    <model name="agent_2">
+      <pose>-9 -3 0 0 0 0</pose>  <!-- Top vertex of triangle -->
+      <static>false</static>
+
+      <link name="base_link">
+        <inertial>
+          <mass>1.5</mass>
+          <inertia>
+            <ixx>0.03</ixx>
+            <iyy>0.03</iyy>
+            <izz>0.05</izz>
+          </inertia>
+        </inertial>
+
+        <visual name="body">
+          <geometry>
+            <sphere><radius>0.12</radius></sphere>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.1 1</ambient>
+            <diffuse>0.9 0.9 0.2 1</diffuse>
+          </material>
+        </visual>
+
+        <visual name="arm_x">
+          <pose>0 0 0 0 1.5708 0</pose>
+          <geometry>
+            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+          </material>
+        </visual>
+
+        <visual name="arm_y">
+          <pose>0 0 0 1.5708 0 0</pose>
+          <geometry>
+            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+          </material>
+        </visual>
+
+        <collision name="collision">
+          <geometry>
+            <sphere><radius>0.2</radius></sphere>
+          </geometry>
+        </collision>
+      </link>
+
+      <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
+        <namespace>agent_2</namespace>
+      </plugin>
+    </model>
+
+    <!-- ========================================= -->
+    <!-- GROUP 1: PD Controllers (Red/Green/Blue) -->
+    <!-- Lane: Y=0, Triangle formation -->
+    <!-- ========================================= -->
+
+    <!-- Drone 3: PD (Red) -->
+    <model name="agent_3">
+      <pose>-10 -1 0 0 0 0</pose>  <!-- Left vertex -->
+      <static>false</static>
+
+      <link name="base_link">
+        <inertial>
+          <mass>1.5</mass>
+          <inertia>
+            <ixx>0.03</ixx>
+            <iyy>0.03</iyy>
+            <izz>0.05</izz>
+          </inertia>
+        </inertial>
+
+        <visual name="body">
+          <geometry>
+            <sphere><radius>0.12</radius></sphere>
+          </geometry>
+          <material>
+            <ambient>0.8 0.1 0.1 1</ambient>
+            <diffuse>0.9 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+
+        <visual name="arm_x">
+          <pose>0 0 0 0 1.5708 0</pose>
+          <geometry>
+            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+          </material>
+        </visual>
+
+        <visual name="arm_y">
+          <pose>0 0 0 1.5708 0 0</pose>
+          <geometry>
+            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+          </material>
+        </visual>
+
+        <collision name="collision">
+          <geometry>
+            <sphere><radius>0.2</radius></sphere>
+          </geometry>
+        </collision>
+      </link>
+
+      <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
+        <namespace>agent_3</namespace>
+      </plugin>
+    </model>
+
+    <!-- Drone 4: PD (Green) -->
+    <model name="agent_4">
+      <pose>-8 -1 0 0 0 0</pose>  <!-- Right vertex -->
+      <static>false</static>
+
+      <link name="base_link">
+        <inertial>
+          <mass>1.5</mass>
+          <inertia>
+            <ixx>0.03</ixx>
+            <iyy>0.03</iyy>
+            <izz>0.05</izz>
+          </inertia>
+        </inertial>
+
+        <visual name="body">
+          <geometry>
+            <sphere><radius>0.12</radius></sphere>
+          </geometry>
+          <material>
+            <ambient>0.1 0.8 0.1 1</ambient>
+            <diffuse>0.2 0.9 0.2 1</diffuse>
+          </material>
+        </visual>
+
+        <visual name="arm_x">
+          <pose>0 0 0 0 1.5708 0</pose>
+          <geometry>
+            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+          </material>
+        </visual>
+
+        <visual name="arm_y">
+          <pose>0 0 0 1.5708 0 0</pose>
+          <geometry>
+            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+          </material>
+        </visual>
+
+        <collision name="collision">
+          <geometry>
+            <sphere><radius>0.2</radius></sphere>
+          </geometry>
+        </collision>
+      </link>
+
+      <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_4</namespace>
+      </plugin>
+    </model>
+
+    <!-- Drone 5: PD (Blue) -->
+    <model name="agent_5">
+      <pose>-9 1 0 0 0 0</pose>  <!-- Top vertex -->
+      <static>false</static>
+
+      <link name="base_link">
+        <inertial>
+          <mass>1.5</mass>
+          <inertia>
+            <ixx>0.03</ixx>
+            <iyy>0.03</iyy>
+            <izz>0.05</izz>
+          </inertia>
+        </inertial>
+
+        <visual name="body">
+          <geometry>
+            <sphere><radius>0.12</radius></sphere>
+          </geometry>
+          <material>
+            <ambient>0.1 0.1 0.8 1</ambient>
+            <diffuse>0.2 0.2 0.9 1</diffuse>
+          </material>
+        </visual>
+
+        <visual name="arm_x">
+          <pose>0 0 0 0 1.5708 0</pose>
+          <geometry>
+            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+          </material>
+        </visual>
+
+        <visual name="arm_y">
+          <pose>0 0 0 1.5708 0 0</pose>
+          <geometry>
+            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+          </material>
+        </visual>
+
+        <collision name="collision">
+          <geometry>
+            <sphere><radius>0.2</radius></sphere>
+          </geometry>
+        </collision>
+      </link>
+
+      <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
+        <namespace>agent_5</namespace>
+      </plugin>
+    </model>
+
+    <!-- ========================================= -->
+    <!-- GROUP 2: PID Controllers (Orange/Purple/White) -->
+    <!-- Lane: Y=+4, Triangle formation -->
+    <!-- ========================================= -->
+
+    <!-- Drone 6: PID (Orange) -->
+    <model name="agent_6">
+      <pose>-10 3 0 0 0 0</pose>  <!-- Left vertex -->
+      <static>false</static>
+
+      <link name="base_link">
+        <inertial>
+          <mass>1.5</mass>
+          <inertia>
+            <ixx>0.03</ixx>
+            <iyy>0.03</iyy>
+            <izz>0.05</izz>
+          </inertia>
+        </inertial>
+
+        <visual name="body">
+          <geometry>
+            <sphere><radius>0.12</radius></sphere>
+          </geometry>
+          <material>
+            <ambient>0.9 0.5 0.1 1</ambient>
+            <diffuse>1.0 0.6 0.2 1</diffuse>
+          </material>
+        </visual>
+
+        <visual name="arm_x">
+          <pose>0 0 0 0 1.5708 0</pose>
+          <geometry>
+            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+          </material>
+        </visual>
+
+        <visual name="arm_y">
+          <pose>0 0 0 1.5708 0 0</pose>
+          <geometry>
+            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+          </material>
+        </visual>
+
+        <collision name="collision">
+          <geometry>
+            <sphere><radius>0.2</radius></sphere>
+          </geometry>
+        </collision>
+      </link>
+
+      <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
+        <namespace>agent_6</namespace>
+      </plugin>
+    </model>
+
+    <!-- Drone 7: PID (Purple) -->
+    <model name="agent_7">
+      <pose>-8 3 0 0 0 0</pose>  <!-- Right vertex -->
+      <static>false</static>
+
+      <link name="base_link">
+        <inertial>
+          <mass>1.5</mass>
+          <inertia>
+            <ixx>0.03</ixx>
+            <iyy>0.03</iyy>
+            <izz>0.05</izz>
+          </inertia>
+        </inertial>
+
+        <visual name="body">
+          <geometry>
+            <sphere><radius>0.12</radius></sphere>
+          </geometry>
+          <material>
+            <ambient>0.5 0.1 0.8 1</ambient>
+            <diffuse>0.6 0.2 0.9 1</diffuse>
+          </material>
+        </visual>
+
+        <visual name="arm_x">
+          <pose>0 0 0 0 1.5708 0</pose>
+          <geometry>
+            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+          </material>
+        </visual>
+
+        <visual name="arm_y">
+          <pose>0 0 0 1.5708 0 0</pose>
+          <geometry>
+            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+          </material>
+        </visual>
+
+        <collision name="collision">
+          <geometry>
+            <sphere><radius>0.2</radius></sphere>
+          </geometry>
+        </collision>
+      </link>
+
+      <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
+        <namespace>agent_7</namespace>
+      </plugin>
+    </model>
+
+    <!-- Drone 8: PID (White) -->
+    <model name="agent_8">
+      <pose>-9 5 0 0 0 0</pose>  <!-- Top vertex -->
+      <static>false</static>
+
+      <link name="base_link">
+        <inertial>
+          <mass>1.5</mass>
+          <inertia>
+            <ixx>0.03</ixx>
+            <iyy>0.03</iyy>
+            <izz>0.05</izz>
+          </inertia>
+        </inertial>
+
+        <visual name="body">
+          <geometry>
+            <sphere><radius>0.12</radius></sphere>
+          </geometry>
+          <material>
+            <ambient>0.9 0.9 0.9 1</ambient>
+            <diffuse>1.0 1.0 1.0 1</diffuse>
+          </material>
+        </visual>
+
+        <visual name="arm_x">
+          <pose>0 0 0 0 1.5708 0</pose>
+          <geometry>
+            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+          </material>
+        </visual>
+
+        <visual name="arm_y">
+          <pose>0 0 0 1.5708 0 0</pose>
+          <geometry>
+            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+          </material>
+        </visual>
+
+        <collision name="collision">
+          <geometry>
+            <sphere><radius>0.2</radius></sphere>
+          </geometry>
+        </collision>
+      </link>
+
+      <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
+        <namespace>agent_8</namespace>
       </plugin>
     </model>
 

@@ -220,6 +220,11 @@ private:
 
   void computeAndPublishMetrics()
   {
+    // Bail out during shutdown to avoid races on destruction
+    if (!rclcpp::ok()) {
+      return;
+    }
+
     if (!has_odom_ || !has_target_ || error_history_.empty())
     {
       return;

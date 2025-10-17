@@ -48,6 +48,18 @@ private:
   double yaw_rad_{0.0};
   std::string frame_id_{"world"};
 
+  // Runtime center (can be time-varying if motion is enabled)
+  double center_x_runtime_{5.0};
+  double center_y_runtime_{5.0};
+  rclcpp::Time start_time_;
+  bool started_{false};
+
+  // Simple motion model for formation center (x-axis ramp)
+  bool motion_enable_{false};
+  double motion_vx_{0.0};
+  double motion_start_x_{0.0};
+  double motion_end_x_{0.0};
+
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<my_custom_interfaces_pkg::msg::FormationState>::SharedPtr state_pub_;
   rclcpp::Service<my_custom_interfaces_pkg::srv::UpdateFormation>::SharedPtr set_formation_srv_;

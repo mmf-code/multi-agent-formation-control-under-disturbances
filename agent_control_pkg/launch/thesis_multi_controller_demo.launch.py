@@ -125,24 +125,24 @@ def generate_launch_description():
     # ===== Controller Configurations =====
     # Define controller parameters for each agent directly
     controller_params = {
-        0: {  # P-only
+        0: {  # P-only - INCREASED for faster response
             'controller_type': 'p',
             'dt': 0.005,
-            'pid.kp': 0.538,
+            'pid.kp': 3.0,      # Increased from 0.538 (5.6x) - match PD speed
             'pid.ki': 0.0,
             'pid.kd': 0.0,
             'fuzzy.enable': False,
         },
-        1: {  # PI - OPTIMIZED for faster response
+        1: {  # PI - Balanced tuning for 5cm threshold
             'controller_type': 'pi',
             'dt': 0.005,
-            'pid.kp': 2.5,      # Increased from 0.773 (3.2x)
-            'pid.ki': 0.3,      # Increased from 0.197 (1.5x)
+            'pid.kp': 3.8,      # Reduced from 5.0 for better stability
+            'pid.ki': 0.7,      # Moderate integral for steady-state removal
             'pid.kd': 0.0,      # Still no derivative
             'fuzzy.enable': False,
             # Anti-windup protection
             'pid.enable_anti_windup': True,
-            'pid.anti_windup_limit': 5.0,
+            'pid.anti_windup_limit': 10.0,
         },
         2: {  # PD
             'controller_type': 'pd',
@@ -153,26 +153,30 @@ def generate_launch_description():
             'pid.enable_derivative_filter': True,
             'fuzzy.enable': False,
         },
-        3: {  # PID - OPTIMIZED for faster response
+        3: {  # PID - Optimized with stronger derivative filtering
             'controller_type': 'pid',
             'dt': 0.005,
-            'pid.kp': 4.5,      # Increased from 3.1 (1.45x)
-            'pid.ki': 0.5,      # Increased from 0.4 (1.25x)
-            'pid.kd': 3.0,      # Increased from 2.2 (1.36x)
+            'pid.kp': 4.2,      # Slightly reduced from 4.5 for stability
+            'pid.ki': 0.45,     # Slightly reduced from 0.5
+            'pid.kd': 3.0,
             'pid.enable_derivative_filter': True,
-            'pid.derivative_filter_alpha': 0.15,  # Slightly more filtering
+            'pid.derivative_filter_alpha': 0.25,  # Increased from 0.15 to reduce overshoot
             'fuzzy.enable': False,
         },
-        4: {  # PID+Fuzzy
+        4: {  # PID+Fuzzy - Increased fuzzy contribution
             'controller_type': 'pid_fuzzy',
             'dt': 0.005,
             'pid.kp': 0.538,
             'pid.ki': 0.145,
             'pid.kd': 1.368,
             'fuzzy.enable': True,
+            # Fuzzy params include a 'wind' variable and rules; enable it to avoid FLS config errors
+            'fuzzy.include_wind': True,
+            # Without a wind estimator, this is a constant scalar fed to 'wind' input
+            'fuzzy.wind_scalar': 0.0,
             'fuzzy.params_file': 'fuzzy_params.yaml',
             'mix.k_pid': 1.0,
-            'mix.k_fuzzy': 0.5,
+            'mix.k_fuzzy': 0.7,  # Increased from 0.5 to 0.7 for stronger fuzzy influence
         },
     }
 
@@ -263,6 +267,8 @@ def generate_launch_description():
                 'formation.center.x': 5.0,
                 'formation.center.y': 4.0,
                 'formation.center.z': 0.5,
+                # Make target poses align with the rest of the system (odom-frame)
+                'frame_id': 'odom',
             }
         ]
     )
