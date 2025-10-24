@@ -26,6 +26,7 @@ set(ROS2_REQUIRED_PACKAGES
   nav_msgs
   std_msgs
   ament_index_cpp
+  my_custom_interfaces_pkg
 )
 foreach(pkg IN LISTS ROS2_REQUIRED_PACKAGES)
   find_package(${pkg} REQUIRED)
@@ -194,6 +195,7 @@ ament_target_dependencies(metrics_publisher_node
   geometry_msgs
   nav_msgs
   std_msgs
+  my_custom_interfaces_pkg
 )
 
 # ---------------------------------------------------------------------------

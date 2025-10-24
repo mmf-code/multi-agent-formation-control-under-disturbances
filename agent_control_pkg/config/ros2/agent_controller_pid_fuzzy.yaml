@@ -19,23 +19,23 @@ agent_0:
       output_limits.y.min: -8.0
       output_limits.y.max: 12.0
 
-      # PID controller gains (baseline from dynamics_2d_test.yaml)
-      # These work well with fuzzy augmentation
-      pid.kp: 0.538        # Conservative baseline (fuzzy will compensate)
-      pid.ki: 0.145        # Minimal integral (fuzzy handles disturbances)
-      pid.kd: 1.368        # Good derivative action
+      # PID controller gains (from C++ run_088, proven wind performance)
+      # Hybrid: PID provides baseline, Fuzzy adapts to disturbances
+      pid.kp: 3.501        # Strong proportional (from velocity tuning)
+      pid.ki: 1.946        # Integral action for steady-state
+      pid.kd: 3.608        # Damping
       pid.enable_derivative_filter: true
       pid.derivative_filter_alpha: 0.1
 
       # Fuzzy logic controller (GT2-FLS for disturbance rejection)
       fuzzy.enable: true
-      fuzzy.include_wind: false    # Start with false, enable for wind tests
-      fuzzy.wind_scalar: 0.0
+      fuzzy.include_wind: true     # ENABLED for wind disturbance detection
+      fuzzy.wind_scalar: 1.0       # Full wind input sensitivity
       fuzzy.params_file: fuzzy_params.yaml
 
-      # Hybrid controller mixing (equal contribution)
-      mix.k_pid: 1.0       # PID contribution weight
-      mix.k_fuzzy: 1.0     # Fuzzy contribution weight
+      # Hybrid controller mixing (fuzzy compensates disturbances)
+      mix.k_pid: 1.0       # PID contribution weight (baseline)
+      mix.k_fuzzy: 0.7     # Fuzzy contribution weight (tuned for formation)
 
       # Diagnostics
       diagnostics.enable: true

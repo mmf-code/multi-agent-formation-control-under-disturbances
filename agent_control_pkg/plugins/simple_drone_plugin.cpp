@@ -92,6 +92,11 @@ namespace gazebo
         cmd_accel_topic, 10,
         std::bind(&SimpleDronePlugin::OnCmdAccel, this, std::placeholders::_1));
 
+      // Subscribe to wind force from Gazebo wind plugin
+      this->wind_sub_ = this->ros_node_->create_subscription<geometry_msgs::msg::Vector3>(
+        "/wind/force", 10,
+        std::bind(&SimpleDronePlugin::OnWindForce, this, std::placeholders::_1));
+
       // Publish odometry at Gazebo physics rate (~1kHz)
       std::string odom_topic = "/" + this->namespace_ + "/odom";
       this->odom_pub_ = this->ros_node_->create_publisher<nav_msgs::msg::Odometry>(
@@ -123,6 +128,19 @@ namespace gazebo
     }
 
     /**
+     * @brief Callback for wind force from Gazebo wind plugin
+     * @param msg Vector3 containing wind force in Newtons (N)
+     *
+     * Stores the current wind disturbance force to be applied in physics update.
+     */
+    void OnWindForce(const geometry_msgs::msg::Vector3::SharedPtr msg)
+    {
+      this->wind_force_x_ = msg->x;
+      this->wind_force_y_ = msg->y;
+      this->wind_force_z_ = msg->z;
+    }
+
+    /**
      * @brief Main physics update loop (called every Gazebo timestep)
      *
      * This function applies forces to the drone model based on:
@@ -143,6 +161,10 @@ namespace gazebo
         this->mass_ * this->cmd_accel_y_,
         0.0
       );
+
+      // Add wind disturbance force (from Gazebo wind plugin)
+      force.X(force.X() + this->wind_force_x_);
+      force.Y(force.Y() + this->wind_force_y_);
 
       // Linear damping to suppress oscillations (acts like air drag)
       auto linear_vel = this->link_->WorldLinearVel();
@@ -240,6 +262,7 @@ namespace gazebo
     // ===== ROS2 Interface =====
     gazebo_ros::Node::SharedPtr ros_node_;  ///< ROS2 node handle
     rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr cmd_accel_sub_;  ///< Acceleration command subscriber
+    rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr wind_sub_;  ///< Wind force subscriber
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;  ///< Odometry publisher
 
     // ===== Gazebo Event Connection =====
@@ -253,6 +276,11 @@ namespace gazebo
     double cmd_accel_x_ = 0.0;  ///< Commanded X acceleration (m/s²)
     double cmd_accel_y_ = 0.0;  ///< Commanded Y acceleration (m/s²)
     double cmd_accel_z_ = 0.0;  ///< Commanded Z acceleration (unused, locked)
+
+    // ===== Wind Disturbance State =====
+    double wind_force_x_ = 0.0;  ///< Wind force X component (N)
+    double wind_force_y_ = 0.0;  ///< Wind force Y component (N)
+    double wind_force_z_ = 0.0;  ///< Wind force Z component (N, unused)
 
     // Damping / stabilization parameters (matched to successful C++ simulations)
     // C++ params: mass=1.5kg, cd_lin=0.12 -> effective damping = 0.12/1.5 = 0.08

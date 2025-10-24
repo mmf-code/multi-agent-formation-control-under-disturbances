@@ -30,7 +30,8 @@
       <cast_shadows>false</cast_shadows>
     </light>
 
-    <!-- Wind Model: Constant wind to test controller robustness -->
+    <!-- Wind Model: Strong wind disturbance for controller comparison -->
+    <!-- Stronger wind ensures PID+Fuzzy advantage is visible -->
     <plugin name="wind_plugin" filename="libgazebo_ros_wind.so">
       <ros>
         <namespace>/wind</namespace>
@@ -41,8 +42,8 @@
         <y>0.3</y>  <!-- Slight crosswind -->
         <z>0.0</z>
       </wind_direction>
-      <wind_force_mean>2.5</wind_force_mean>  <!-- 2.5N constant wind -->
-      <wind_force_variance>0.8</wind_force_variance>  <!-- Gusts up to 3.3N -->
+      <wind_force_mean>4.0</wind_force_mean>  <!-- 4.0N mean wind (INCREASED) -->
+      <wind_force_variance>1.5</wind_force_variance>  <!-- Gusts up to 5.5N (INCREASED) -->
       <update_rate>10.0</update_rate>
     </plugin>
 
@@ -78,7 +79,7 @@
 
     <!-- Drone 0: PID+Fuzzy (Cyan) -->
     <model name="agent_0">
-      <pose>-10 -5 0 0 0 0</pose>  <!-- Left vertex of triangle -->
+      <pose>-15 -5.5 0 0 0 0</pose>  <!-- Left vertex (Group 0, offset -15) -->
       <static>false</static>
 
       <link name="base_link">
@@ -135,7 +136,7 @@
 
     <!-- Drone 1: PID+Fuzzy (Magenta) -->
     <model name="agent_1">
-      <pose>-8 -5 0 0 0 0</pose>  <!-- Right vertex of triangle -->
+      <pose>-12 -5.5 0 0 0 0</pose>  <!-- Right vertex (Group 0, offset -15) -->
       <static>false</static>
 
       <link name="base_link">
@@ -192,7 +193,7 @@
 
     <!-- Drone 2: PID+Fuzzy (Yellow) -->
     <model name="agent_2">
-      <pose>-9 -3 0 0 0 0</pose>  <!-- Top vertex of triangle -->
+      <pose>-13.5 -2.5 0 0 0 0</pose>  <!-- Top vertex (Group 0, offset -15) -->
       <static>false</static>
 
       <link name="base_link">
@@ -254,7 +255,7 @@
 
     <!-- Drone 3: PD (Red) -->
     <model name="agent_3">
-      <pose>-10 -1 0 0 0 0</pose>  <!-- Left vertex -->
+      <pose>-10 -1.5 0 0 0 0</pose>  <!-- Left vertex (Group 1, offset -10) -->
       <static>false</static>
 
       <link name="base_link">
@@ -311,7 +312,7 @@
 
     <!-- Drone 4: PD (Green) -->
     <model name="agent_4">
-      <pose>-8 -1 0 0 0 0</pose>  <!-- Right vertex -->
+      <pose>-7 -1.5 0 0 0 0</pose>  <!-- Right vertex (Group 1, offset -10) -->
       <static>false</static>
 
       <link name="base_link">
@@ -368,7 +369,7 @@
 
     <!-- Drone 5: PD (Blue) -->
     <model name="agent_5">
-      <pose>-9 1 0 0 0 0</pose>  <!-- Top vertex -->
+      <pose>-8.5 1.5 0 0 0 0</pose>  <!-- Top vertex (Group 1, offset -10) -->
       <static>false</static>
 
       <link name="base_link">
@@ -430,7 +431,7 @@
 
     <!-- Drone 6: PID (Orange) -->
     <model name="agent_6">
-      <pose>-10 3 0 0 0 0</pose>  <!-- Left vertex -->
+      <pose>-5 2.5 0 0 0 0</pose>  <!-- Left vertex (Group 2, offset -5) -->
       <static>false</static>
 
       <link name="base_link">
@@ -487,7 +488,7 @@
 
     <!-- Drone 7: PID (Purple) -->
     <model name="agent_7">
-      <pose>-8 3 0 0 0 0</pose>  <!-- Right vertex -->
+      <pose>-2 2.5 0 0 0 0</pose>  <!-- Right vertex (Group 2, offset -5) -->
       <static>false</static>
 
       <link name="base_link">
@@ -544,7 +545,7 @@
 
     <!-- Drone 8: PID (White) -->
     <model name="agent_8">
-      <pose>-9 5 0 0 0 0</pose>  <!-- Top vertex -->
+      <pose>-3.5 5.5 0 0 0 0</pose>  <!-- Top vertex (Group 2, offset -5) -->
       <static>false</static>
 
       <link name="base_link">

@@ -19,11 +19,11 @@ agent_0:
       output_limits.y.min: -8.0
       output_limits.y.max: 12.0
 
-      # PID controller gains (optimized for multi-agent formation control)
-      # These parameters were validated in multi-agent scenarios with wind
-      pid.kp: 3.1          # Proportional gain (formation-tested)
-      pid.ki: 0.4          # Integral gain (minimal but effective)
-      pid.kd: 2.2          # Derivative gain (good damping)
+      # PID controller gains (optimized from C++ simulation run_088 basis)
+      # Expected: Better wind rejection than PD, balanced performance
+      pid.kp: 3.501        # Proportional gain (from velocity-based tuning)
+      pid.ki: 1.946        # Integral gain (handles persistent disturbances)
+      pid.kd: 3.608        # Derivative gain (damping)
       pid.enable_derivative_filter: true
       pid.derivative_filter_alpha: 0.1
 

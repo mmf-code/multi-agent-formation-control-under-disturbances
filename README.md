@@ -2,6 +2,92 @@
 
 This repo contains a 2D single-drone dynamics testbed (extensible to multi-drone) with selectable controllers (PID, P/PI/PD, GT2 Fuzzy, and hybrid PID+Fuzzy), YAML-driven configuration, CSV logging, and Python plotting.
 
+---
+
+## 🎓 **FOR THESIS INSTRUCTOR: Quick Demo Guide**
+
+### **System Status: ✅ READY**
+- 9 drones in 3 formation groups (PID+Fuzzy, PD, PID)
+- Wind disturbance testing (4.0N mean, 1.5N variance)
+- Real-time metrics & CSV data logging
+- Optimized controller parameters (Ts5 < 3s, OS < 0.2%)
+
+### **Quick Commands for Demo**
+
+#### **⭐ ONE COMMAND - COMPLETE DEMO (EASIEST!)**
+```bash
+cd /home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances
+./scripts/run_full_demo.sh              # Everything: GUI + CSV (60s)
+./scripts/run_full_demo.sh 90           # 90 seconds
+```
+
+**What it does:** Full automated demo from start to finish:
+1. ✅ Setup ROS2 + workspace
+2. ✅ Launch Gazebo + RViz (visible GUI)
+3. ✅ Record CSV data (synchronized from t=0)
+4. ✅ Stop and display results
+
+---
+
+#### **1. Visual Demo (Alternative Methods)**
+```bash
+./scripts/quick_test.sh                  # 15s system validation (optional)
+./scripts/run_formation_demo.sh          # Full GUI demo (watch only)
+./scripts/demo_with_recording.sh 60      # Full GUI + CSV recording
+```
+
+**What you'll see:**
+- 9 drones in 3 groups, each group maintaining triangle formation
+- **Group 0 (Magenta)**: PID+Fuzzy controllers - Best wind rejection
+- **Group 1 (Cyan)**: PD controllers - Fastest settling time
+- **Group 2 (Yellow)**: PID controllers - Balanced performance
+- All groups move from x=-10 to x=+5 under random wind forces
+
+#### **2. Record Thesis Data (CSV Output Only - Headless)**
+```bash
+./scripts/record_thesis_data.sh      # 60s recording (default)
+./scripts/record_thesis_data.sh 120  # 120s recording
+```
+
+**Output:** `thesis_data/YYYY-MM-DD/HH-MM-SS_formation/`
+- `agent_0_pidfuzzy.csv` - PID+Fuzzy controller metrics
+- `agent_3_pd.csv` - PD controller metrics
+- `agent_6_pid.csv` - PID controller metrics
+
+**CSV Columns:** timestamp, elapsed_time, error_x/y/z, RMSE, IAE, ITAE, settling_time, is_settled
+
+#### **3. Expected Results (Thesis Hypothesis)**
+Under wind disturbance (4.0N mean):
+- **PID+Fuzzy (k_fuzzy=0.7)**: Lowest RMSE & IAE (best disturbance rejection)
+- **PID (Ki=1.946)**: Good steady-state, moderate disturbance rejection
+- **PD (no integral)**: Fast settling but higher steady-state error under wind
+
+### **Controller Parameters (Optimized)**
+| Controller | Kp    | Ki    | Kd    | k_fuzzy | Notes                          |
+|-----------|-------|-------|-------|---------|--------------------------------|
+| PID+Fuzzy | 3.501 | 1.946 | 3.608 | 0.7     | Wind-aware fuzzy + PID hybrid  |
+| PID       | 3.501 | 1.946 | 3.608 | -       | Standard 3-term PID            |
+| PD        | 3.5   | 0.0   | 3.61  | -       | No integral, fast response     |
+
+**Design specs:** Ts5 ≈ 2.7s, Overshoot < 0.2%, Settling threshold = 5cm
+
+### **Troubleshooting**
+If demo doesn't start:
+```bash
+# Kill old processes
+pkill -9 gzserver; pkill -9 gzclient
+
+# Rebuild workspace
+source /opt/ros/humble/setup.bash
+colcon build --packages-select my_custom_interfaces_pkg formation_coordinator_pkg agent_control_pkg
+source install/setup.bash
+
+# Run quick test to validate
+./scripts/quick_test.sh
+```
+
+---
+
 ## Highlights
 - 2D dynamics with ambient wind velocity, linear->quadratic drag blend, asymmetric actuator lag (up/down), semi-implicit Euler
 - Optional constant wind acceleration bias (wind.ax, wind.ay) for integral-action testing

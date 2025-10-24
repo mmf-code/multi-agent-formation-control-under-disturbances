@@ -21,7 +21,8 @@ agent_0:
 
       # PD controller gains (optimized from C++ simulation run_088)
       # These parameters achieved: Ts5=2.72s, OS=0.13% in standalone tests
-      pid.kp: 3.50         # Proportional gain (from run_088)
+      # BEST performance in no-wind scenarios
+      pid.kp: 3.5          # Proportional gain (from run_088)
       pid.ki: 0.0          # DISABLED (no integral action)
       pid.kd: 3.61         # Derivative gain (from run_088)
       pid.enable_derivative_filter: true

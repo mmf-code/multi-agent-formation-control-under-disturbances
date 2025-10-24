@@ -14,7 +14,7 @@
  *   - /agent_X/target_pose (geometry_msgs/PoseStamped): Desired position
  *
  * Publishes:
- *   - /agent_X/metrics (std_msgs/Float64MultiArray): Real-time metrics
+ *   - /agent_X/metrics (my_custom_interfaces_pkg/MetricsData): Real-time metrics
  *
  * @author Multi-Agent Formation Control Team
  * @date 2025-10-17
@@ -23,7 +23,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
-#include <std_msgs/msg/float64_multi_array.hpp>
+#include <my_custom_interfaces_pkg/msg/metrics_data.hpp>
 
 #include <cmath>
 #include <memory>
@@ -72,8 +72,8 @@ public:
       std::bind(&MetricsPublisherNode::targetCallback, this, std::placeholders::_1)
     );
 
-    // Publisher
-    metrics_pub_ = this->create_publisher<std_msgs::msg::Float64MultiArray>("metrics", 10);
+    // Publisher (using proper MetricsData message type)
+    metrics_pub_ = this->create_publisher<my_custom_interfaces_pkg::msg::MetricsData>("metrics", 10);
 
     // Timer
     const auto period = std::chrono::duration<double>(1.0 / publish_rate);
@@ -274,37 +274,32 @@ private:
       }
     }
 
-    // Publish metrics
-    std_msgs::msg::Float64MultiArray msg;
-    msg.data = {
-      // [0-2] Instantaneous errors (x, y, z)
-      latest.error_x,
-      latest.error_y,
-      latest.error_z,
-      // [3] Instantaneous error magnitude
-      current_error,
-      // [4-6] RMSE (x, y, z)
-      rmse_x,
-      rmse_y,
-      rmse_z,
-      // [7] RMSE total
-      rmse_total,
-      // [8-9] IAE (x, y)
-      iae_x_,
-      iae_y_,
-      // [10-11] ITAE (x, y)
-      itae_x_,
-      itae_y_,
-      // [12-13] Max overshoot (x, y)
-      max_overshoot_x_,
-      max_overshoot_y_,
-      // [14] Settling time (seconds)
-      settling_time_,
-      // [15] Elapsed time (seconds)
-      elapsed,
-      // [16] Is settled flag (0 or 1)
-      is_settled ? 1.0 : 0.0
-    };
+    // Publish metrics using proper MetricsData message
+    my_custom_interfaces_pkg::msg::MetricsData msg;
+
+    // Position errors
+    msg.error_x = latest.error_x;
+    msg.error_y = latest.error_y;
+    msg.error_z = latest.error_z;
+    msg.error_magnitude = current_error;
+
+    // RMSE
+    msg.rmse_x = rmse_x;
+    msg.rmse_y = rmse_y;
+    msg.rmse_z = rmse_z;
+    msg.rmse_total = rmse_total;
+
+    // Integral metrics
+    msg.iae_x = iae_x_;
+    msg.iae_y = iae_y_;
+    msg.itae_x = itae_x_;
+    msg.itae_y = itae_y_;
+
+    // Response characteristics
+    msg.settling_time = settling_time_;
+    msg.is_settled = is_settled;
+    msg.max_overshoot_x = max_overshoot_x_;
+    msg.max_overshoot_y = max_overshoot_y_;
 
     metrics_pub_->publish(msg);
 
@@ -324,7 +319,7 @@ private:
   // ROS2 interfaces
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr target_sub_;
-  rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr metrics_pub_;
+  rclcpp::Publisher<my_custom_interfaces_pkg::msg::MetricsData>::SharedPtr metrics_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
 
   // State

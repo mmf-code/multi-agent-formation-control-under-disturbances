@@ -11,8 +11,8 @@
     # Formation shape: triangle
     formation.shape: triangle
 
-    # Spacing between agents (meters)
-    formation.spacing: 2.5
+    # Spacing between agents (meters) - INCREASED for collision avoidance
+    formation.spacing: 3.0
 
     # Formation center position (target for group centroid)
     formation.center.x: 5.0

@@ -115,18 +115,19 @@ def generate_launch_description():
     # Define controller parameters for each group
 
     # GROUP 0: PID+Fuzzy (agent_0, agent_1, agent_2)
+    # Updated with optimal parameters from C++ run_088
     fuzzy_controller_params = {
         'controller_type': 'pid_fuzzy',
         'dt': 0.005,
-        'pid.kp': 0.538,
-        'pid.ki': 0.145,
-        'pid.kd': 1.368,
+        'pid.kp': 3.501,    # UPDATED from velocity tuning
+        'pid.ki': 1.946,    # UPDATED for wind rejection
+        'pid.kd': 3.608,    # UPDATED for damping
         'fuzzy.enable': True,
         'fuzzy.include_wind': True,
-        'fuzzy.wind_scalar': 0.0,
+        'fuzzy.wind_scalar': 1.0,  # UPDATED: full wind sensitivity
         'fuzzy.params_file': 'fuzzy_params.yaml',
         'mix.k_pid': 1.0,
-        'mix.k_fuzzy': 0.7,  # Strong fuzzy influence
+        'mix.k_fuzzy': 0.7,  # Strong fuzzy influence for disturbance rejection
         'use_sim_time': use_sim_time,
         'output_limits.x.min': -10.0,
         'output_limits.x.max': 10.0,
@@ -151,14 +152,15 @@ def generate_launch_description():
     }
 
     # GROUP 2: PID (agent_6, agent_7, agent_8)
+    # Updated with optimal parameters from C++ run_088
     pid_controller_params = {
         'controller_type': 'pid',
         'dt': 0.005,
-        'pid.kp': 4.2,
-        'pid.ki': 0.45,
-        'pid.kd': 3.0,
+        'pid.kp': 3.501,    # UPDATED from velocity tuning
+        'pid.ki': 1.946,    # UPDATED for wind rejection
+        'pid.kd': 3.608,    # UPDATED for damping
         'pid.enable_derivative_filter': True,
-        'pid.derivative_filter_alpha': 0.25,
+        'pid.derivative_filter_alpha': 0.1,
         'fuzzy.enable': False,
         'use_sim_time': use_sim_time,
         'output_limits.x.min': -10.0,
