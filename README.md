@@ -276,7 +276,7 @@ With the long scenario, you'll be able to:
   - `cleanup_runs.py`: move clutter runs to `outputs/simulations/dynamics2d/_trash/<day>`
 
 ## Repo Map
-- Dynamics core: agent_control_pkg/include/agent_control_pkg/drone_dynamics_2d.hpp, agent_control_pkg/src/drone_dynamics_2d.cpp
+- Physics core (header-only): agent_control_pkg/include/agent_control_pkg/core/physics_types.hpp, agent_control_pkg/include/agent_control_pkg/core/drone_physics_core.hpp
 - Controllers
   - PID core: agent_control_pkg/include/agent_control_pkg/pid_controller.hpp, agent_control_pkg/src/pid_controller.cpp
   - Interface: agent_control_pkg/include/agent_control_pkg/controllers/controller_base.hpp
@@ -284,15 +284,17 @@ With the long scenario, you'll be able to:
   - GT2 fuzzy: agent_control_pkg/include/agent_control_pkg/gt2_fuzzy_logic_system.hpp, agent_control_pkg/src/gt2_fuzzy_logic_system.cpp
   - Fuzzy adapter: agent_control_pkg/include/agent_control_pkg/controllers/fuzzy_gt2_adapter.hpp, agent_control_pkg/src/controllers/fuzzy_gt2_adapter.cpp
   - Hybrid PID+Fuzzy: agent_control_pkg/include/agent_control_pkg/controllers/combined_pid_fuzzy_adapter.hpp, agent_control_pkg/src/controllers/combined_pid_fuzzy_adapter.cpp
-- Tester: agent_control_pkg/src/dynamics_2d_test_main.cpp
-- Configs: agent_control_pkg/config/dynamics_2d_test.yaml, agent_control_pkg/config/dynamics_2d_wind.yaml, agent_control_pkg/config/fuzzy_params.yaml
-- Plotting: analysis/plot_dynamics_2d.py
-- Docs: docs/dynamics/quickstart_dynamics2d.md, docs/dynamics/dynamics2d_system_and_control.md
+- ROS2 Nodes: agent_control_pkg/src/ros/agent_controller_node.cpp, agent_control_pkg/plugins/simple_drone_plugin.cpp
+- Configs: agent_control_pkg/config/ros2/*.yaml, agent_control_pkg/config/fuzzy_params.yaml
+- Docs: docs/dynamics/quickstart_dynamics2d.md (deprecated), docs/dynamics/dynamics2d_system_and_control.md (deprecated)
 
-## Build (Windows, VS 2022)
-```
-cmake -S agent_control_pkg -B build -G "Visual Studio 17 2022"
-cmake --build build --config Debug --target dynamics_2d_tester
+## Build (ROS2 Development)
+```bash
+# Build all packages
+colcon build --packages-select my_custom_interfaces_pkg formation_coordinator_pkg agent_control_pkg
+
+# Or build single package
+colcon build --packages-select agent_control_pkg
 ```
 
 ## ROS2 Build & Launch (Linux, ROS 2 Humble)
@@ -671,7 +673,7 @@ Use provided YAMLs under `agent_control_pkg/config/experiments/`:
 
 ## Physics and Configuration
 - Core files
-  - Dynamics: `agent_control_pkg/include/agent_control_pkg/drone_dynamics_2d.hpp`, `agent_control_pkg/src/drone_dynamics_2d.cpp`
+  - Physics (header-only): `agent_control_pkg/include/agent_control_pkg/core/physics_types.hpp`, `agent_control_pkg/include/agent_control_pkg/core/drone_physics_core.hpp`
   - Controllers: PID, GT2 FLS adapters under `include/agent_control_pkg/controllers/` and `src/controllers/`
   - Tuning: `analysis/compute_pid_from_specs.py`, `analysis/compute_pid_from_velocity.py`, `analysis/auto_tune_pid.py`
 - Model: position double-integrator with first-order actuator lag (separate up/down), drag blend (linear->quadratic by speed threshold)
