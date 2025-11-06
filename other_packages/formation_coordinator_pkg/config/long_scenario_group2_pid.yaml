@@ -1,0 +1,62 @@
+/formation_2/formation_coordinator_group2:
+  ros__parameters:
+    # GROUP 2: PID Controllers
+    # Agents: agent_6, agent_7, agent_8
+    # Long Zigzag Scenario (5 minutes simulation time)
+    agent_ids:
+      - agent_6
+      - agent_7
+      - agent_8
+
+    # Formation shape: triangle
+    formation.spacing: 3.0
+
+    # Initial formation center position (upper lane)
+    formation.center.x: -15.0
+    formation.center.y: 4.0
+    formation.center.z: 1.0
+
+    # Formation orientation (degrees)
+    formation.yaw_deg: 0.0
+
+    # Reference frame
+    frame_id: odom
+
+    # Update rate (Hz)
+    publish_frequency_hz: 10.0
+
+    # PSO parameters
+    pso.enable: true
+    pso.num_particles: 20
+    pso.max_iterations: 50
+    pso.inertia_weight: 0.7
+    pso.cognitive_coeff: 1.5
+    pso.social_coeff: 1.5
+
+    # Legacy motion (DISABLED - using waypoints instead)
+    motion.enable: false
+    motion.vx: 0.0
+    motion.start_x: 0.0
+    motion.end_x: 0.0
+
+    # WAYPOINT-BASED ZIGZAG TRAJECTORY (5 phases, 300 seconds)
+    waypoints.enable: true
+
+    # Waypoint times (end time for each segment, seconds)
+    waypoints.times: [60.0, 120.0, 180.0, 240.0, 300.0]
+
+    # X coordinates (forward/backward motion)
+    waypoints.x: [-5.0, 5.0, 10.0, 0.0, 5.0]
+
+    # Y coordinates (lateral zigzag pattern)
+    waypoints.y: [2.0, -2.0, 3.0, 0.0, 4.0]
+
+    # Z coordinates (altitude changes)
+    waypoints.z: [2.0, 3.0, 1.5, 2.5, 2.0]
+
+    # PHASE BREAKDOWN (Same path as Group 0, upper lane):
+    # Phase 1 (0-60s):   Start (-15, 4, 1.0) → WP1 (-5, 2, 2.0)
+    # Phase 2 (60-120s): WP1 → WP2 (5, -2, 3.0)
+    # Phase 3 (120-180s): WP2 → WP3 (10, 3, 1.5)
+    # Phase 4 (180-240s): WP3 → WP4 (0, 0, 2.5)
+    # Phase 5 (240-300s): WP4 → WP5 (5, 4, 2.0)
