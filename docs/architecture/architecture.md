@@ -9,8 +9,8 @@ flowchart LR
     CY[Config YAML\nagent_control_pkg/config/*.yaml] --> CR[Config Reader\nconfig_reader.{hpp,cpp}]
     CR --> RUN[Simulation Runner\nmulti_drone_pid_test_main.cpp]
 
-    FPY[Fuzzy Params YAML\nfuzzy_params.yaml] --> FL[ Fuzzy Params Loader\nfuzzy_params_loader.{hpp,cpp}]
-    FL --> FLS[GT2‑FLS\ngt2_fuzzy_logic_system.{hpp,cpp}]
+    FPY[Fuzzy Params YAML\nfuzzy_params.yaml] --> CR
+    CR --> FLS[GT2‑FLS\ngt2_fuzzy_logic_system.{hpp,cpp}]
 
     RUN --> PID[PID Logic\npid_controller.{hpp,cpp}]
     RUN --> FLS
@@ -39,14 +39,12 @@ flowchart TB
         H1[pid_controller.hpp]
         H2[gt2_fuzzy_logic_system.hpp]
         H3[config_reader.hpp]
-        H4[fuzzy_params_loader.hpp]
-        H5[agent_controller_node.hpp (placeholder)]
+        H5[agent_controller_node.hpp]
       end
       subgraph AS[src]
         C1[pid_controller.cpp]
         C2[gt2_fuzzy_logic_system.cpp]
         C3[config_reader.cpp]
-        C4[fuzzy_params_loader.cpp]
         C5[multi_drone_pid_test_main.cpp]
       end
       subgraph AT[test]
