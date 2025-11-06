@@ -95,14 +95,6 @@ target_include_directories(fuzzy_logic_lib PUBLIC
   $<INSTALL_INTERFACE:include>
 )
 
-add_library(dynamics_2d_lib
-  src/drone_dynamics_2d.cpp
-)
-target_include_directories(dynamics_2d_lib PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
-
 add_library(controller_adapters_lib
   src/controllers/fuzzy_gt2_adapter.cpp
   src/controllers/combined_pid_fuzzy_adapter.cpp
@@ -127,21 +119,6 @@ if(BUILD_STANDALONE_TOOLS)
     ${CMAKE_CURRENT_SOURCE_DIR}/include
   )
   target_link_libraries(multi_drone_pid_tester PRIVATE
-    pid_logic_lib
-    fuzzy_logic_lib
-    config_reader_lib
-    dynamics_2d_lib
-    controller_adapters_lib
-  )
-
-  add_executable(dynamics_2d_tester
-    src/dynamics_2d_test_main.cpp
-  )
-  target_include_directories(dynamics_2d_tester PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-  )
-  target_link_libraries(dynamics_2d_tester PRIVATE
-    dynamics_2d_lib
     pid_logic_lib
     fuzzy_logic_lib
     config_reader_lib
@@ -238,14 +215,12 @@ set(_exported_targets
   config_reader_lib
   pid_logic_lib
   fuzzy_logic_lib
-  dynamics_2d_lib
   controller_adapters_lib
 )
 
 if(BUILD_STANDALONE_TOOLS)
   list(APPEND _exported_targets
     multi_drone_pid_tester
-    dynamics_2d_tester
   )
 endif()
 
