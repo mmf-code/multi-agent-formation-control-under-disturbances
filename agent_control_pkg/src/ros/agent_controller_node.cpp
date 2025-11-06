@@ -50,6 +50,10 @@ AgentControllerNode::AgentControllerNode(const rclcpp::NodeOptions & options)
     "odom", rclcpp::SensorDataQoS(),
     std::bind(&AgentControllerNode::odomCallback, this, _1));
 
+  wind_sub_ = create_subscription<geometry_msgs::msg::Vector3>(
+    "/wind/velocity", 10,
+    std::bind(&AgentControllerNode::windCallback, this, _1));
+
   cmd_pub_ = create_publisher<geometry_msgs::msg::Vector3>("cmd_accel", 10);
 
   if (publish_diagnostics_) {
@@ -99,6 +103,16 @@ void AgentControllerNode::declareParameters()
   declare_parameter<double>("mix.k_fuzzy", 1.0);
 
   declare_parameter<bool>("diagnostics.enable", publish_diagnostics_);
+
+  // Feed-forward parameters
+  declare_parameter<bool>("feedforward.enable_drag", false);
+  declare_parameter<bool>("feedforward.enable_wind", false);
+  declare_parameter<double>("feedforward.k_drag", 0.8);
+  declare_parameter<double>("feedforward.k_wind", 1.0);
+  declare_parameter<double>("feedforward.mass_estimate", 1.5);
+  declare_parameter<double>("feedforward.drag_coeff_lin_estimate", 0.12);
+  declare_parameter<double>("feedforward.drag_coeff_quad_estimate", 0.05);
+  declare_parameter<double>("feedforward.drag_speed_threshold_estimate", 1.0);
 }
 
 void AgentControllerNode::loadParameters()
@@ -142,6 +156,16 @@ void AgentControllerNode::loadParameters()
   mix_k_fuzzy_ = get_parameter("mix.k_fuzzy").as_double();
 
   publish_diagnostics_ = get_parameter("diagnostics.enable").as_bool();
+
+  // Load feed-forward parameters
+  ff_params_.enable_drag_ff = get_parameter("feedforward.enable_drag").as_bool();
+  ff_params_.enable_wind_ff = get_parameter("feedforward.enable_wind").as_bool();
+  ff_params_.k_drag = get_parameter("feedforward.k_drag").as_double();
+  ff_params_.k_wind = get_parameter("feedforward.k_wind").as_double();
+  ff_params_.mass_estimate = get_parameter("feedforward.mass_estimate").as_double();
+  ff_params_.drag_coeff_lin_estimate = get_parameter("feedforward.drag_coeff_lin_estimate").as_double();
+  ff_params_.drag_coeff_quad_estimate = get_parameter("feedforward.drag_coeff_quad_estimate").as_double();
+  ff_params_.drag_speed_threshold_estimate = get_parameter("feedforward.drag_speed_threshold_estimate").as_double();
 }
 
 void AgentControllerNode::ensureFuzzyParamsLoaded()
@@ -310,6 +334,16 @@ void AgentControllerNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr 
   has_odom_.store(true, std::memory_order_release);
 }
 
+void AgentControllerNode::windCallback(const geometry_msgs::msg::Vector3::SharedPtr msg)
+{
+  // Update wind environment for feed-forward prediction
+  // Note: This assumes /wind/velocity publishes wind velocity in m/s
+  // and /wind/force publishes constant acceleration bias (handled separately)
+  wind_env_.vx = msg->x;
+  wind_env_.vy = msg->y;
+  // Wind bias (ax_bias, ay_bias) could be set from a separate topic if needed
+}
+
 void AgentControllerNode::controlLoop()
 {
   if (!axis_x_.controller || !axis_y_.controller) {
@@ -358,8 +392,24 @@ void AgentControllerNode::controlLoop()
   const double target_x = target.pose.position.x;
   const double target_y = target.pose.position.y;
 
+  // Get current velocity for feed-forward prediction
+  const double vx = odom.twist.twist.linear.x;
+  const double vy = odom.twist.twist.linear.y;
+
+  // Step 1: Compute feedback control (PID/Fuzzy)
   double ax = axis_x_.controller->compute(current_x, target_x, dt);
   double ay = axis_y_.controller->compute(current_y, target_y, dt);
+
+  // Step 2: Add feed-forward compensation (drag + wind cancellation)
+  if (ff_params_.enable_drag_ff || ff_params_.enable_wind_ff) {
+    double ax_ff = 0.0;
+    double ay_ff = 0.0;
+    core::DronePhysicsCore::computeFeedForwardCompensation(
+      vx, vy, wind_env_, ff_params_, ax_ff, ay_ff
+    );
+    ax += ax_ff;
+    ay += ay_ff;
+  }
 
   axis_x_.last_total_output = ax;
   axis_y_.last_total_output = ay;
