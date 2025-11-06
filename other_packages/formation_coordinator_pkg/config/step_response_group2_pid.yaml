@@ -1,0 +1,48 @@
+/formation_2/formation_coordinator_group2:
+  ros__parameters:
+    # GROUP 2: PID Controllers - STEP RESPONSE TEST
+    # Agents: agent_6, agent_7, agent_8
+    # Fast step response scenario (60 seconds)
+    agent_ids:
+      - agent_6
+      - agent_7
+      - agent_8
+
+    # Formation shape: triangle
+    formation.shape: triangle
+
+    # Spacing between agents (meters)
+    formation.spacing: 3.0
+
+    # Initial formation center position (northern lane)
+    formation.center.x: -15.0
+    formation.center.y: 5.0
+    formation.center.z: 1.0
+
+    # Formation orientation (degrees)
+    formation.yaw_deg: 0.0
+
+    # Reference frame
+    frame_id: odom
+
+    # Update rate (Hz)
+    publish_frequency_hz: 10.0
+
+    # PSO parameters (disabled for step response)
+    pso.enable: false
+
+    # STEP RESPONSE MOTION (fast, constant velocity)
+    motion.enable: true
+    motion.vx: 2.0          # 2 m/s forward velocity (fast but stable)
+    motion.start_x: -15.0   # Starting X position
+    motion.end_x: 5.0       # Target X position (20m distance)
+
+    # Waypoints DISABLED for step response
+    waypoints.enable: false
+
+    # STEP RESPONSE SCENARIO:
+    # Initial:  (-15, 5, 1.0) - Formation at rest
+    # Step 1:   Motion starts at t=0, target (5, 5, 1.0)
+    # Duration: ~10s to reach target at 2 m/s
+    # Settling: System settles to target
+    # Total:    60s scenario for complete analysis
