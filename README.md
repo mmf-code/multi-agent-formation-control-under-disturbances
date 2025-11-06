@@ -4,13 +4,60 @@ This repo contains a 2D single-drone dynamics testbed (extensible to multi-drone
 
 ---
 
+## 🎓 **Status Update (2025‑11‑06)**
+
+### **Current State — Step Response Demo**
+- Positives
+  - Launch files now use tuned gains: `Kp=5.0, Ki=2.5/0.0, Kd=5.0` per group.
+  - Altitude lanes respected: Gazebo plugin holds each drone at its spawn Z or optional `<target_altitude>`.
+  - Visual aids in world: checkpoint markers and wind‑direction arrow.
+  - Enhanced logging scripts (RELIABLE QoS) and better DDS fallback in launch scripts.
+  - Wind control utility: `scripts/wind_tool.py` to set live wind forces.
+- Known Issues (active)
+  - `/agent_X/odom` has 0 publishers intermittently → drones don’t move, logger shows `Samples: 0`.
+  - Root cause: `gzserver` sometimes fails to load the Gazebo model plugin (or exits early). When the plugin loads, it publishes odom; when it doesn’t, odom remains subscriber‑only.
+
+### **Quick Recovery (Headless)**
+```bash
+# 1) Clean stale processes + Fast‑DDS SHM
+pkill -9 gzserver gzclient rviz2 ros2 2>/dev/null || true
+rm -f /dev/shm/fastrtps_* 2>/dev/null || true
+
+# 2) Rebuild + source
+source /opt/ros/humble/setup.bash
+colcon build --packages-select agent_control_pkg --symlink-install
+source install/setup.bash
+
+# 3) Run headless (scripts set DDS + Gazebo PATHs)
+./scripts/run_step_response_demo.sh --headless --no-rviz
+
+# 4) Verify odom publisher present (must be 1)
+ros2 topic info -v /agent_0/odom
+```
+
+If `Publisher count: 0`, the plugin isn’t active. Check run log for clues:
+`tail -n 200 thesis_data/*/*_step_response/simulation.log`
+
+Temporarily export explicit paths and launch again to force plugin discovery:
+```bash
+export GAZEBO_PLUGIN_PATH="$(pwd)/install/agent_control_pkg/lib:$GAZEBO_PLUGIN_PATH"
+export GAZEBO_MODEL_PATH="$(pwd)/agent_control_pkg/models:$GAZEBO_MODEL_PATH"
+export LD_LIBRARY_PATH="$(pwd)/install/agent_control_pkg/lib:$LD_LIBRARY_PATH"
+ros2 launch agent_control_pkg formation_step_response_demo.launch.py gazebo_gui:=false rviz:=false
+```
+
+Optional isolation (if `gzserver` still exits):
+- Launch without RViz (`--no-rviz`, already defaulted above) to avoid unrelated Qt/GLIBC issues.
+- Temporarily comment out the `<plugin name="wind_plugin" ...>` block in `agent_control_pkg/worlds/formation_comparison.world` to rule out wind plugin issues.
+- Run `gzserver --verbose` on the world to capture Gazebo’s plugin load errors.
+
+---
+
 ## 🎓 **FOR THESIS INSTRUCTOR: Quick Demo Guide**
 
-### **System Status: ✅ READY**
-- 9 drones in 3 formation groups (PID+Fuzzy, PD, PID)
-- Wind disturbance testing (4.0N mean, 1.5N variance)
-- Real-time metrics & CSV data logging
-- Optimized controller parameters (Ts5 < 3s, OS < 0.2%)
+### **System Status: ⚠ In Progress**
+- Formation pipeline, logging, and visuals are wired; tuning applied.
+- Gazebo odom publisher intermittenly missing due to plugin load — use the recovery steps above.
 
 ### **Quick Commands for Demo**
 

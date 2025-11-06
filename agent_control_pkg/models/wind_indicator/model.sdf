@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="wind_indicator">
+    <static>true</static>
+    <link name="arrow">
+      <!-- Arrow shaft -->
+      <visual name="shaft">
+        <geometry>
+          <cylinder>
+            <radius>0.05</radius>
+            <length>2.0</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.1 0.7 1.0 1</ambient>
+          <diffuse>0.1 0.7 1.0 1</diffuse>
+          <emissive>0.05 0.35 0.5 1</emissive>
+        </material>
+        <pose>1.0 0 1.0 0 1.5708 0</pose>
+      </visual>
+      <!-- Arrow head -->
+      <visual name="head">
+        <geometry>
+          <cone>
+            <radius>0.15</radius>
+            <length>0.5</length>
+          </cone>
+        </geometry>
+        <material>
+          <ambient>0.1 0.7 1.0 1</ambient>
+          <diffuse>0.1 0.7 1.0 1</diffuse>
+        </material>
+        <pose>2.25 0 1.0 0 1.5708 0</pose>
+      </visual>
+    </link>
+  </model>
+</sdf>
+

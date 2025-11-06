@@ -99,8 +99,9 @@ namespace gazebo
 
       // Publish odometry at Gazebo physics rate (~1kHz)
       std::string odom_topic = "/" + this->namespace_ + "/odom";
+      // Use SensorDataQoS to match subscribers in controllers/metrics nodes
       this->odom_pub_ = this->ros_node_->create_publisher<nav_msgs::msg::Odometry>(
-        odom_topic, 10);
+        odom_topic, rclcpp::SensorDataQoS());
 
       // Connect to Gazebo world update event (called every physics step)
       this->update_connection_ = event::Events::ConnectWorldUpdateBegin(

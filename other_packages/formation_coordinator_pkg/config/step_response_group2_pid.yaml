@@ -14,10 +14,10 @@
     # Spacing between agents (meters)
     formation.spacing: 3.0
 
-    # Initial formation center position (northern lane)
+    # Initial formation center position (northern lane, highest altitude)
     formation.center.x: -15.0
     formation.center.y: 5.0
-    formation.center.z: 1.0
+    formation.center.z: 7.0
 
     # Formation orientation (degrees)
     formation.yaw_deg: 0.0
@@ -31,18 +31,28 @@
     # PSO parameters (disabled for step response)
     pso.enable: false
 
-    # STEP RESPONSE MOTION (fast, constant velocity)
-    motion.enable: true
-    motion.vx: 2.0          # 2 m/s forward velocity (fast but stable)
-    motion.start_x: -15.0   # Starting X position
-    motion.end_x: 5.0       # Target X position (20m distance)
+    # MOTION DISABLED for multi-checkpoint step response
+    motion.enable: false
+    motion.vx: 0.0
+    motion.start_x: 0.0
+    motion.end_x: 0.0
 
-    # Waypoints DISABLED for step response
-    waypoints.enable: false
+    # 3D ZIGZAG TRAJECTORY WITH DISTURBANCES (5 waypoints, 4 maneuvers, 60s)
+    # GROUP 2 (PID): HIGHEST ALTITUDE LANE (Z offset: +6.0m)
+    waypoints.enable: true
+    waypoints.times: [0.0, 15.0, 30.0, 45.0, 60.0]
+    # Zigzag pattern: forward-left-up, forward-right-down, forward-left-up, forward-center
+    waypoints.x: [-15.0, -10.0, -5.0, 0.0, 5.0]      # Forward progression
+    waypoints.y: [5.0, 2.0, 5.0, 2.0, 3.5]           # Left-right zigzag (upper lane)
+    waypoints.z: [7.0, 7.5, 7.0, 7.8, 7.5]           # Altitude variation (highest lane, +6m offset)
 
-    # STEP RESPONSE SCENARIO:
-    # Initial:  (-15, 5, 1.0) - Formation at rest
-    # Step 1:   Motion starts at t=0, target (5, 5, 1.0)
-    # Duration: ~10s to reach target at 2 m/s
-    # Settling: System settles to target
-    # Total:    60s scenario for complete analysis
+    # 3D ZIGZAG SCENARIO WITH PROGRESSIVE DISTURBANCES:
+    # t=0-15s:  Checkpoint 1: Move left+up (X=-15→-10, Y=5→2, Z=1→1.5)
+    #           Light disturbance (stabilization phase)
+    # t=15-30s: Checkpoint 2: Move right+down (X=-10→-5, Y=2→5, Z=1.5→1)
+    #           Medium disturbance (zigzag maneuver)
+    # t=30-45s: Checkpoint 3: Move left+up (X=-5→0, Y=5→2, Z=1→1.8)
+    #           Heavy disturbance (altitude change + lateral)
+    # t=45-60s: Checkpoint 4: Stabilize center (X=0→5, Y=2→3.5, Z=1.8→1.5)
+    #           Variable disturbance (final positioning under stress)
+    # Each 15s interval allows settling before next challenging maneuver

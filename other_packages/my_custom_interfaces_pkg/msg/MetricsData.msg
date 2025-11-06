@@ -1,5 +1,13 @@
 # MetricsData message for controller performance monitoring
 
+# Current and target positions (for step response analysis)
+float64 current_x
+float64 current_y
+float64 current_z
+float64 target_x
+float64 target_y
+float64 target_z
+
 # Position errors
 float64 error_x
 float64 error_y

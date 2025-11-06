@@ -120,12 +120,13 @@ def generate_launch_description():
     # Define controller parameters for each group
 
     # GROUP 0: PID+Fuzzy (agent_0, agent_1, agent_2)
+    # TUNED FOR FASTER RESPONSE (43% increase from 3.5 to 5.0)
     fuzzy_controller_params = {
         'controller_type': 'pid_fuzzy',
         'dt': 0.005,
-        'pid.kp': 3.501,
-        'pid.ki': 1.946,
-        'pid.kd': 3.608,
+        'pid.kp': 5.0,        # Tuned: 3.501 → 5.0 (+43%)
+        'pid.ki': 2.5,        # Tuned: 1.946 → 2.5 (+28%)
+        'pid.kd': 5.0,        # Tuned: 3.608 → 5.0 (+39%)
         'fuzzy.enable': True,
         'fuzzy.include_wind': True,
         'fuzzy.wind_scalar': 1.0,
@@ -140,12 +141,13 @@ def generate_launch_description():
     }
 
     # GROUP 1: PD (agent_3, agent_4, agent_5)
+    # TUNED FOR FASTER RESPONSE (43% increase from 3.5 to 5.0)
     pd_controller_params = {
         'controller_type': 'pd',
         'dt': 0.005,
-        'pid.kp': 3.50,
-        'pid.ki': 0.0,
-        'pid.kd': 3.61,
+        'pid.kp': 5.0,        # Tuned: 3.50 → 5.0 (+43%)
+        'pid.ki': 0.0,        # PD: No integral
+        'pid.kd': 5.0,        # Tuned: 3.61 → 5.0 (+38%)
         'pid.enable_derivative_filter': True,
         'fuzzy.enable': False,
         'use_sim_time': use_sim_time,
@@ -156,12 +158,13 @@ def generate_launch_description():
     }
 
     # GROUP 2: PID (agent_6, agent_7, agent_8)
+    # TUNED FOR FASTER RESPONSE (43% increase from 3.5 to 5.0)
     pid_controller_params = {
         'controller_type': 'pid',
         'dt': 0.005,
-        'pid.kp': 3.501,
-        'pid.ki': 1.946,
-        'pid.kd': 3.608,
+        'pid.kp': 5.0,        # Tuned: 3.501 → 5.0 (+43%)
+        'pid.ki': 2.5,        # Tuned: 1.946 → 2.5 (+28%)
+        'pid.kd': 5.0,        # Tuned: 3.608 → 5.0 (+39%)
         'pid.enable_derivative_filter': True,
         'pid.derivative_filter_alpha': 0.1,
         'fuzzy.enable': False,

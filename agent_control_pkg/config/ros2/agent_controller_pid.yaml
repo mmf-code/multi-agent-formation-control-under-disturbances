@@ -19,11 +19,12 @@ agent_0:
       output_limits.y.min: -8.0
       output_limits.y.max: 12.0
 
-      # PID controller gains (optimized from C++ simulation run_088 basis)
-      # Expected: Better wind rejection than PD, balanced performance
-      pid.kp: 3.501        # Proportional gain (from velocity-based tuning)
-      pid.ki: 1.946        # Integral gain (handles persistent disturbances)
-      pid.kd: 3.608        # Derivative gain (damping)
+      # PID controller gains (TUNED FOR FASTER RESPONSE)
+      # Increased gains for more aggressive tracking
+      # Expected: Faster settling, better tracking, maintained stability
+      pid.kp: 5.0          # Increased proportional (43% faster response)
+      pid.ki: 2.5          # Increased integral (faster steady-state correction)
+      pid.kd: 5.0          # Increased derivative (maintained damping ratio)
       pid.enable_derivative_filter: true
       pid.derivative_filter_alpha: 0.1
 

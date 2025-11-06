@@ -82,6 +82,12 @@ public:
       std::bind(&MetricsPublisherNode::computeAndPublishMetrics, this)
     );
 
+    // Periodic status reporting to help diagnose missing inputs
+    status_timer_ = this->create_wall_timer(
+      std::chrono::seconds(1),
+      std::bind(&MetricsPublisherNode::statusReport, this)
+    );
+
     RCLCPP_INFO(
       this->get_logger(),
       "Metrics Publisher initialized: rate=%.1f Hz, settling_threshold=%.3f m",
@@ -277,6 +283,14 @@ private:
     // Publish metrics using proper MetricsData message
     my_custom_interfaces_pkg::msg::MetricsData msg;
 
+    // Current and target positions (for step response analysis)
+    msg.current_x = current_odom_->pose.pose.position.x;
+    msg.current_y = current_odom_->pose.pose.position.y;
+    msg.current_z = current_odom_->pose.pose.position.z;
+    msg.target_x = current_target_->pose.position.x;
+    msg.target_y = current_target_->pose.position.y;
+    msg.target_z = current_target_->pose.position.z;
+
     // Position errors
     msg.error_x = latest.error_x;
     msg.error_y = latest.error_y;
@@ -316,11 +330,25 @@ private:
     }
   }
 
+  void statusReport()
+  {
+    // Report if upstream feeds are missing so users can spot why metrics are empty
+    if (!has_odom_) {
+      RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
+        "No odom received yet on '%s/odom'", this->get_namespace());
+    }
+    if (!has_target_) {
+      RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
+        "No target_pose received yet on '%s/target_pose'", this->get_namespace());
+    }
+  }
+
   // ROS2 interfaces
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr target_sub_;
   rclcpp::Publisher<my_custom_interfaces_pkg::msg::MetricsData>::SharedPtr metrics_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::TimerBase::SharedPtr status_timer_;
 
   // State
   nav_msgs::msg::Odometry::SharedPtr current_odom_;

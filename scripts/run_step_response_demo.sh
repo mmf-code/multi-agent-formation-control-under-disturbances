@@ -1,19 +1,23 @@
 #!/bin/bash
 ################################################################################
-# Step Response Demo - Fast Controller Comparison
+# Multi-Checkpoint Step Response Demo
 #
 # Features:
-#   - Fast step response (60 seconds)
-#   - Direct motion (no waypoints)
+#   - 4 sequential step responses per controller (60 seconds total)
+#   - Adaptive time windowing (15s intervals)
 #   - 9 drones in 3 groups (PID+Fuzzy, PD, PID)
-#   - MATLAB stepinfo() equivalent analysis
-#   - Publication-ready results
+#   - MATLAB stepinfo() equivalent analysis per step
+#   - Publication-ready results with statistical comparison
 #
-# Step Characteristics:
-#   - Initial: X=-15m (3 lanes: Y=-5, 0, +5)
-#   - Target: X=5m (20m forward step)
-#   - Velocity: 2 m/s (fast but stable)
-#   - Duration: 60s (settling analysis)
+# Multi-Checkpoint Trajectory:
+#   - Step 1 (t=0-15s):   X=-15 → X=-10 (5m step)
+#   - Step 2 (t=15-30s):  X=-10 → X=-5  (5m step)
+#   - Step 3 (t=30-45s):  X=-5  → X=0   (5m step)
+#   - Step 4 (t=45-60s):  X=0   → X=5   (5m step)
+#   - 15s intervals allow all controllers to settle (even slow ones)
+#   - Fast controllers reach target early and wait at checkpoint
+#
+# Lanes: Group 0 (Y=-5m), Group 1 (Y=0m), Group 2 (Y=+5m)
 #
 # Usage:
 #   ./scripts/run_step_response_demo.sh [OPTIONS]
@@ -22,15 +26,17 @@
 #   --duration SECONDS    Recording duration (default: 60)
 #   --headless            No Gazebo GUI (faster)
 #   --no-rviz             No RViz visualization
-#   --quick-test          Ultra-fast 30s test
+#   --quick-test          Ultra-fast 30s test (2 steps only)
 #
 # Examples:
-#   ./scripts/run_step_response_demo.sh                  # Full 60s demo
-#   ./scripts/run_step_response_demo.sh --quick-test     # 30s test
+#   ./scripts/run_step_response_demo.sh                  # Full 60s (4 steps)
+#   ./scripts/run_step_response_demo.sh --quick-test     # 30s (2 steps)
 #   ./scripts/run_step_response_demo.sh --headless       # Headless (max FPS)
 ################################################################################
 
 set -e
+
+# DDS middleware selection happens after ROS is sourced (see below)
 
 # Colors
 RED='\033[0;31m'
@@ -85,7 +91,7 @@ clear 2>/dev/null || true
 echo -e "${MAGENTA}${BOLD}"
 echo "╔════════════════════════════════════════════════════════════════╗"
 echo "║                                                                ║"
-echo "║         STEP RESPONSE DEMO - Fast Controller Comparison       ║"
+echo "║      MULTI-CHECKPOINT STEP RESPONSE - Controller Comparison   ║"
 echo "║         Multi-Agent Formation Control Under Disturbances       ║"
 echo "║                                                                ║"
 echo "╚════════════════════════════════════════════════════════════════╝"
@@ -96,15 +102,23 @@ echo -e "  Duration:     ${YELLOW}${DURATION}s${NC}"
 echo -e "  Gazebo GUI:   ${YELLOW}${GAZEBO_GUI}${NC}"
 echo -e "  RViz:         ${YELLOW}${RVIZ}${NC}"
 echo ""
-echo -e "${CYAN}Step Response Scenario:${NC}"
-echo -e "  • Fast forward step: -15m → +5m (20m distance)"
-echo -e "  • Velocity: 2 m/s (constant)"
-echo -e "  • 3 formation groups in parallel lanes"
-echo -e "  • ${MAGENTA}Group 0${NC}: PID+Fuzzy (agents 0,1,2) - Lane Y=-5m"
-echo -e "  • ${CYAN}Group 1${NC}: PD (agents 3,4,5) - Lane Y=0m"
-echo -e "  • ${YELLOW}Group 2${NC}: PID (agents 6,7,8) - Lane Y=+5m"
+echo -e "${CYAN}3D Zigzag Trajectory (4 Maneuvers, 60s):${NC}"
+echo -e "  • ${YELLOW}Maneuver 1 (t=0-15s):${NC}   Forward+Right+Up   (light disturbance)"
+echo -e "  • ${YELLOW}Maneuver 2 (t=15-30s):${NC}  Forward+Left+Down  (medium disturbance)"
+echo -e "  • ${YELLOW}Maneuver 3 (t=30-45s):${NC}  Forward+Right+Up   (heavy disturbance)"
+echo -e "  • ${YELLOW}Maneuver 4 (t=45-60s):${NC}  Forward+Center     (variable disturbance)"
 echo ""
-echo -e "${CYAN}Metrics Analyzed:${NC}"
+echo -e "${CYAN}Trajectory Details:${NC}"
+echo -e "  • X-axis: -15m → 5m (forward progression)"
+echo -e "  • Y-axis: Zigzag pattern (±3m lateral)"
+echo -e "  • Z-axis: Three altitude lanes (separated to prevent collisions)"
+echo ""
+echo -e "${CYAN}Formation Groups (3 altitude lanes):${NC}"
+echo -e "  • ${MAGENTA}Group 0${NC}: PID+Fuzzy (agents 0,1,2) - Y=-5m, Z=1.0-1.8m (lowest)"
+echo -e "  • ${CYAN}Group 1${NC}: PD (agents 3,4,5) - Y=0m, Z=4.0-4.8m (middle, +3m)"
+echo -e "  • ${YELLOW}Group 2${NC}: PID (agents 6,7,8) - Y=+5m, Z=7.0-7.8m (highest, +6m)"
+echo ""
+echo -e "${CYAN}Metrics per Step:${NC}"
 echo -e "  • Rise time (10%-90%)"
 echo -e "  • Overshoot (%)"
 echo -e "  • Settling time (±2% band)"
@@ -130,7 +144,27 @@ echo ""
 # ROS2 Setup
 echo -e "${CYAN}[2/8] Setting up ROS2 environment...${NC}"
 source /opt/ros/humble/setup.bash 2>/dev/null || true
+
+# Choose DDS implementation with fallback
+if ros2 pkg prefix rmw_cyclonedds_cpp >/dev/null 2>&1; then
+    export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+else
+    export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+    export FASTDDS_SHM_DISABLE=${FASTDDS_SHM_DISABLE:-1}
+    export FASTDDS_SHM_ON=0
+    export RMW_FASTRTPS_USE_SHM=0
+    rm -f /dev/shm/fastrtps_* 2>/dev/null || true
+fi
+
 source install/setup.bash 2>/dev/null || true
+
+# Ensure Gazebo can find our models and plugins explicitly (belt-and-suspenders)
+PKG_PREFIX=$(ros2 pkg prefix agent_control_pkg 2>/dev/null || echo "")
+if [ -n "$PKG_PREFIX" ]; then
+  export GAZEBO_MODEL_PATH="${PKG_PREFIX}/share/agent_control_pkg/models:${GAZEBO_MODEL_PATH}"
+  export GAZEBO_PLUGIN_PATH="${PKG_PREFIX}/lib:${GAZEBO_PLUGIN_PATH}"
+  export LD_LIBRARY_PATH="${PKG_PREFIX}/lib:${LD_LIBRARY_PATH}"
+fi
 echo -e "${GREEN}✓ ROS2 environment ready${NC}"
 echo ""
 
@@ -148,6 +182,12 @@ echo -e "${CYAN}[4/8] Cleaning up old processes...${NC}"
 pkill -9 gzserver 2>/dev/null || true
 pkill -9 gzclient 2>/dev/null || true
 pkill -9 rviz2 2>/dev/null || true
+pkill -9 -f agent_controller_node 2>/dev/null || true
+pkill -9 -f metrics_publisher_node 2>/dev/null || true
+pkill -9 -f formation_coordinator_node 2>/dev/null || true
+pkill -9 -f path_visualizer_node 2>/dev/null || true
+pkill -9 -f enhanced_metrics_logger.py 2>/dev/null || true
+rm -f /dev/shm/fastrtps_* 2>/dev/null || true
 sleep 2
 echo -e "${GREEN}✓ Clean slate${NC}"
 echo ""
@@ -173,13 +213,35 @@ sleep 15
 echo -e "${GREEN}✓ Simulation running (PID: ${SIM_PID})${NC}"
 echo ""
 
-# Verify topics
+# Verify topics (odom + target_pose + metrics)
 echo -e "${CYAN}[6/8] Verifying ROS2 topics...${NC}"
-TOPIC_COUNT=$(ros2 topic list 2>/dev/null | grep -E "/agent_[036]/metrics" | wc -l)
-if [ "$TOPIC_COUNT" -eq 3 ]; then
-    echo -e "${GREEN}✓ All 3 metrics topics active${NC}"
+
+check_topic() {
+    local T="$1"; local LABEL="$2"
+    if ros2 topic list 2>/dev/null | grep -q "$T"; then
+        echo -e "  ${GREEN}• Found${NC} ${LABEL}: ${T}"
+        return 0
+    else
+        echo -e "  ${RED}• Missing${NC} ${LABEL}: ${T}"
+        return 1
+    fi
+}
+
+OK=0
+check_topic "/agent_0/odom" "odom a0" || OK=1
+check_topic "/agent_3/odom" "odom a3" || OK=1
+check_topic "/agent_6/odom" "odom a6" || OK=1
+check_topic "/agent_0/target_pose" "target a0" || OK=1
+check_topic "/agent_3/target_pose" "target a3" || OK=1
+check_topic "/agent_6/target_pose" "target a6" || OK=1
+check_topic "/agent_0/metrics" "metrics a0" || OK=1
+check_topic "/agent_3/metrics" "metrics a3" || OK=1
+check_topic "/agent_6/metrics" "metrics a6" || OK=1
+
+if [ "$OK" -eq 0 ]; then
+    echo -e "${GREEN}✓ All required topics detected${NC}"
 else
-    echo -e "${YELLOW}⚠ Found ${TOPIC_COUNT}/3 topics (may still work)${NC}"
+    echo -e "${YELLOW}⚠ Some topics not detected. Continuing; logger may show 0 samples.${NC}"
 fi
 echo ""
 
@@ -210,20 +272,21 @@ echo ""
 echo ""
 echo -e "${CYAN}[8/8] Stopping simulation...${NC}"
 kill $SIM_PID 2>/dev/null || true
-sleep 1
+sleep 2
 pkill -9 gzserver 2>/dev/null || true
 pkill -9 gzclient 2>/dev/null || true
 pkill -9 rviz2 2>/dev/null || true
-sleep 1
+sleep 2
 
-# Run step response analysis
+# Run trajectory tracking analysis
 echo ""
-echo -e "${CYAN}Running Step Response Analysis...${NC}"
+echo -e "${CYAN}Running Trajectory Tracking Analysis...${NC}"
 echo ""
-python3 scripts/analyze_step_response.py "$OUTPUT_DIR/final_results" --output-dir "$OUTPUT_DIR/analysis"
+python3 scripts/analyze_trajectory_tracking.py "$OUTPUT_DIR/final_results"
 
-# Results
-clear 2>/dev/null || true
+# Show results (don't clear - keep analysis visible)
+echo ""
+echo ""
 echo -e "${GREEN}${BOLD}"
 echo "╔════════════════════════════════════════════════════════════════╗"
 echo "║                                                                ║"
@@ -236,25 +299,20 @@ echo -e "${CYAN}Data Location:${NC}"
 echo -e "${YELLOW}${OUTPUT_DIR}${NC}"
 echo ""
 echo -e "${CYAN}Output Structure:${NC}"
-echo -e "  ${GREEN}raw_data/${NC}         - Full CSV files (60s)"
-echo -e "  ${GREEN}final_results/${NC}    - Summary + complete datasets"
-echo -e "  ${GREEN}analysis/${NC}         - Step response metrics + plots"
+echo -e "  ${GREEN}raw_data/${NC}              - Full CSV files (60s, 20Hz sampling)"
+echo -e "  ${GREEN}final_results/${NC}         - Summary + complete datasets"
+echo -e "  ${GREEN}final_results/analysis/${NC} - Trajectory tracking metrics + plots"
 echo ""
 
-# Show analysis results
-if [ -f "$OUTPUT_DIR/analysis/step_response_summary.txt" ]; then
-    echo -e "${CYAN}Step Response Results:${NC}"
-    echo ""
-    cat "$OUTPUT_DIR/analysis/step_response_summary.txt"
-    echo ""
-fi
-
-# List plots
-if [ -d "$OUTPUT_DIR/analysis" ]; then
-    echo -e "${CYAN}Generated Plots:${NC}"
-    ls -1 "$OUTPUT_DIR/analysis"/*.png 2>/dev/null | while read plot; do
+# List generated files
+if [ -d "$OUTPUT_DIR/final_results/analysis" ]; then
+    echo -e "${CYAN}Generated Files:${NC}"
+    ls -1 "$OUTPUT_DIR/final_results/analysis"/*.png 2>/dev/null | while read plot; do
         echo -e "  ${GREEN}✓${NC} $(basename $plot)"
     done
+    if [ -f "$OUTPUT_DIR/final_results/analysis/trajectory_tracking_comparison.csv" ]; then
+        echo -e "  ${GREEN}✓${NC} trajectory_tracking_comparison.csv"
+    fi
     echo ""
 fi
 
@@ -262,17 +320,19 @@ fi
 echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
 echo -e "${YELLOW}${BOLD}Next Steps:${NC}"
 echo ""
-echo -e "${CYAN}1. View Step Response Plots:${NC}"
-echo -e "   xdg-open $OUTPUT_DIR/analysis/step_response_error_magnitude.png"
+echo -e "${CYAN}1. View Trajectory Tracking Plots:${NC}"
+echo -e "   xdg-open $OUTPUT_DIR/final_results/analysis/tracking_errors_time.png"
+echo -e "   xdg-open $OUTPUT_DIR/final_results/analysis/trajectory_3d.png"
 echo ""
-echo -e "${CYAN}2. Detailed Metrics CSV:${NC}"
-echo -e "   cat $OUTPUT_DIR/analysis/step_response_metrics.csv"
+echo -e "${CYAN}2. View Performance Comparison:${NC}"
+echo -e "   xdg-open $OUTPUT_DIR/final_results/analysis/rmse_comparison.png"
+echo -e "   xdg-open $OUTPUT_DIR/final_results/analysis/iae_comparison.png"
 echo ""
-echo -e "${CYAN}3. Compare with Long Scenario:${NC}"
-echo -e "   python3 scripts/compare_controllers.py $OUTPUT_DIR [LONG_SCENARIO_DIR]"
+echo -e "${CYAN}3. Detailed Metrics CSV:${NC}"
+echo -e "   cat $OUTPUT_DIR/final_results/analysis/trajectory_tracking_comparison.csv"
 echo ""
 echo -e "${CYAN}4. Re-analyze (if needed):${NC}"
-echo -e "   python3 scripts/analyze_step_response.py $OUTPUT_DIR/final_results"
+echo -e "   python3 scripts/analyze_trajectory_tracking.py $OUTPUT_DIR/final_results"
 echo ""
 echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
 echo ""

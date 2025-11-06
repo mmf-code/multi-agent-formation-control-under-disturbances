@@ -29,6 +29,11 @@
 
 set -e
 
+# Prefer CycloneDDS to avoid Fast-DDS SHM port lock issues
+export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
+# If Fast-DDS is used, disable SHM to prevent port lock errors
+export FASTDDS_SHM_DISABLE=${FASTDDS_SHM_DISABLE:-1}
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -120,7 +125,27 @@ echo ""
 # ROS2 Setup
 echo -e "${CYAN}[2/8] Setting up ROS2 environment...${NC}"
 source /opt/ros/humble/setup.bash 2>/dev/null || true
+
+# Choose DDS implementation with fallback
+if ros2 pkg prefix rmw_cyclonedds_cpp >/dev/null 2>&1; then
+    export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+else
+    export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+    export FASTDDS_SHM_DISABLE=${FASTDDS_SHM_DISABLE:-1}
+    export FASTDDS_SHM_ON=0
+    export RMW_FASTRTPS_USE_SHM=0
+    rm -f /dev/shm/fastrtps_* 2>/dev/null || true
+fi
+
 source install/setup.bash 2>/dev/null || true
+
+# Ensure Gazebo can find our models and plugins
+PKG_PREFIX=$(ros2 pkg prefix agent_control_pkg 2>/dev/null || echo "")
+if [ -n "$PKG_PREFIX" ]; then
+  export GAZEBO_MODEL_PATH="${PKG_PREFIX}/share/agent_control_pkg/models:${GAZEBO_MODEL_PATH}"
+  export GAZEBO_PLUGIN_PATH="${PKG_PREFIX}/lib:${GAZEBO_PLUGIN_PATH}"
+  export LD_LIBRARY_PATH="${PKG_PREFIX}/lib:${LD_LIBRARY_PATH}"
+fi
 echo -e "${GREEN}✓ ROS2 environment ready${NC}"
 echo ""
 

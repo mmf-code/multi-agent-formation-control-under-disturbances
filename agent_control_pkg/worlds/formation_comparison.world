@@ -79,7 +79,7 @@
 
     <!-- Drone 0: PID+Fuzzy (Cyan) -->
     <model name="agent_0">
-      <pose>-15 -5.5 0 0 0 0</pose>  <!-- Left vertex (Group 0, offset -15) -->
+      <pose>-15 -5.5 1.0 0 0 0</pose>  <!-- Left vertex (Group 0, Z=1.0m lowest) -->
       <static>false</static>
 
       <link name="base_link">
@@ -131,12 +131,13 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_0</namespace>
+        <target_altitude>1.0</target_altitude>
       </plugin>
     </model>
 
     <!-- Drone 1: PID+Fuzzy (Magenta) -->
     <model name="agent_1">
-      <pose>-12 -5.5 0 0 0 0</pose>  <!-- Right vertex (Group 0, offset -15) -->
+      <pose>-12 -5.5 1.0 0 0 0</pose>  <!-- Right vertex (Group 0, Z=1.0m lowest) -->
       <static>false</static>
 
       <link name="base_link">
@@ -188,12 +189,13 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_1</namespace>
+        <target_altitude>1.0</target_altitude>
       </plugin>
     </model>
 
     <!-- Drone 2: PID+Fuzzy (Yellow) -->
     <model name="agent_2">
-      <pose>-13.5 -2.5 0 0 0 0</pose>  <!-- Top vertex (Group 0, offset -15) -->
+      <pose>-13.5 -2.5 1.0 0 0 0</pose>  <!-- Top vertex (Group 0, Z=1.0m lowest) -->
       <static>false</static>
 
       <link name="base_link">
@@ -245,6 +247,7 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_2</namespace>
+        <target_altitude>1.0</target_altitude>
       </plugin>
     </model>
 
@@ -255,7 +258,7 @@
 
     <!-- Drone 3: PD (Red) -->
     <model name="agent_3">
-      <pose>-10 -1.5 0 0 0 0</pose>  <!-- Left vertex (Group 1, offset -10) -->
+      <pose>-10 -1.5 4.0 0 0 0</pose>  <!-- Left vertex (Group 1, Z=4.0m middle +3m) -->
       <static>false</static>
 
       <link name="base_link">
@@ -307,12 +310,13 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_3</namespace>
+        <target_altitude>4.0</target_altitude>
       </plugin>
     </model>
 
     <!-- Drone 4: PD (Green) -->
     <model name="agent_4">
-      <pose>-7 -1.5 0 0 0 0</pose>  <!-- Right vertex (Group 1, offset -10) -->
+      <pose>-7 -1.5 4.0 0 0 0</pose>  <!-- Right vertex (Group 1, Z=4.0m middle +3m) -->
       <static>false</static>
 
       <link name="base_link">
@@ -364,12 +368,13 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_4</namespace>
+        <target_altitude>4.0</target_altitude>
       </plugin>
     </model>
 
     <!-- Drone 5: PD (Blue) -->
     <model name="agent_5">
-      <pose>-8.5 1.5 0 0 0 0</pose>  <!-- Top vertex (Group 1, offset -10) -->
+      <pose>-8.5 1.5 4.0 0 0 0</pose>  <!-- Top vertex (Group 1, Z=4.0m middle +3m) -->
       <static>false</static>
 
       <link name="base_link">
@@ -421,6 +426,7 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_5</namespace>
+        <target_altitude>4.0</target_altitude>
       </plugin>
     </model>
 
@@ -431,7 +437,7 @@
 
     <!-- Drone 6: PID (Orange) -->
     <model name="agent_6">
-      <pose>-5 2.5 0 0 0 0</pose>  <!-- Left vertex (Group 2, offset -5) -->
+      <pose>-5 2.5 7.0 0 0 0</pose>  <!-- Left vertex (Group 2, Z=7.0m highest +6m) -->
       <static>false</static>
 
       <link name="base_link">
@@ -483,12 +489,13 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_6</namespace>
+        <target_altitude>7.0</target_altitude>
       </plugin>
     </model>
 
     <!-- Drone 7: PID (Purple) -->
     <model name="agent_7">
-      <pose>-2 2.5 0 0 0 0</pose>  <!-- Right vertex (Group 2, offset -5) -->
+      <pose>-2 2.5 7.0 0 0 0</pose>  <!-- Right vertex (Group 2, Z=7.0m highest +6m) -->
       <static>false</static>
 
       <link name="base_link">
@@ -540,12 +547,13 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_7</namespace>
+        <target_altitude>7.0</target_altitude>
       </plugin>
     </model>
 
     <!-- Drone 8: PID (White) -->
     <model name="agent_8">
-      <pose>-3.5 5.5 0 0 0 0</pose>  <!-- Top vertex (Group 2, offset -5) -->
+      <pose>-3.5 5.5 7.0 0 0 0</pose>  <!-- Top vertex (Group 2, Z=7.0m highest +6m) -->
       <static>false</static>
 
       <link name="base_link">
@@ -597,8 +605,38 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_8</namespace>
+        <target_altitude>7.0</target_altitude>
       </plugin>
-    </model>
+  </model>
+
+    <!-- ===== Visual Aids: Wind + Checkpoints ===== -->
+    <!-- Wind direction indicator (approx yaw atan2(0.3,1.0)=0.291 rad) -->
+    <include>
+      <uri>model://wind_indicator</uri>
+      <name>wind_indicator</name>
+      <pose>0 0 0 0 0 0.291</pose>
+    </include>
+
+    <!-- Group 0 Checkpoints -->
+    <include><uri>model://checkpoint_marker</uri><name>g0_p1</name><pose>-15 -5 1.0 0 0 0</pose></include>
+    <include><uri>model://checkpoint_marker</uri><name>g0_p2</name><pose>-10 -2 1.5 0 0 0</pose></include>
+    <include><uri>model://checkpoint_marker</uri><name>g0_p3</name><pose> -5 -5 1.0 0 0 0</pose></include>
+    <include><uri>model://checkpoint_marker</uri><name>g0_p4</name><pose>  0 -2 1.8 0 0 0</pose></include>
+    <include><uri>model://checkpoint_marker</uri><name>g0_p5</name><pose>  5 -3.5 1.5 0 0 0</pose></include>
+
+    <!-- Group 1 Checkpoints -->
+    <include><uri>model://checkpoint_marker</uri><name>g1_p1</name><pose>-15 0 4.0 0 0 0</pose></include>
+    <include><uri>model://checkpoint_marker</uri><name>g1_p2</name><pose>-10 3 4.5 0 0 0</pose></include>
+    <include><uri>model://checkpoint_marker</uri><name>g1_p3</name><pose> -5 0 4.0 0 0 0</pose></include>
+    <include><uri>model://checkpoint_marker</uri><name>g1_p4</name><pose>  0 3 4.8 0 0 0</pose></include>
+    <include><uri>model://checkpoint_marker</uri><name>g1_p5</name><pose>  5 1.5 4.5 0 0 0</pose></include>
+
+    <!-- Group 2 Checkpoints -->
+    <include><uri>model://checkpoint_marker</uri><name>g2_p1</name><pose>-15 5 7.0 0 0 0</pose></include>
+    <include><uri>model://checkpoint_marker</uri><name>g2_p2</name><pose>-10 2 7.5 0 0 0</pose></include>
+    <include><uri>model://checkpoint_marker</uri><name>g2_p3</name><pose> -5 5 7.0 0 0 0</pose></include>
+    <include><uri>model://checkpoint_marker</uri><name>g2_p4</name><pose>  0 2 7.8 0 0 0</pose></include>
+    <include><uri>model://checkpoint_marker</uri><name>g2_p5</name><pose>  5 3.5 7.5 0 0 0</pose></include>
 
   </world>
 </sdf>
