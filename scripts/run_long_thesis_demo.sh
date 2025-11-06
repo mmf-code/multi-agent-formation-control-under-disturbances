@@ -153,8 +153,6 @@ fi
 echo -e "${CYAN}[5/8] Launching Gazebo + RViz (Long Scenario)...${NC}"
 TOTAL_TIME=$((DURATION + 20))
 
-# Launch the formation comparison demo
-timeout ${TOTAL_TIME} ros2 launch agent_control_pkg formation_comparison_demo.launch.py \
     gazebo_gui:=${GAZEBO_GUI} rviz:=${RVIZ} > "$OUTPUT_DIR/simulation.log" 2>&1 &
 SIM_PID=$!
 

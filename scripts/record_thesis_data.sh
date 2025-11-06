@@ -47,8 +47,15 @@ DURATION=${1:-60}
 echo -e "${CYAN}Recording Duration: ${YELLOW}${DURATION}s${NC}"
 echo ""
 
-# Workspace kontrolü
-WORKSPACE_DIR="/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances"
+# Workspace (resolve repo root based on this script's location)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Prefer Git repo root if available; otherwise use parent of scripts/
+if ROOT_DIR_GIT=$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null); then
+    WORKSPACE_DIR="$ROOT_DIR_GIT"
+else
+    WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
+
 if [ ! -d "$WORKSPACE_DIR" ]; then
     echo -e "${RED}ERROR: Workspace not found at $WORKSPACE_DIR${NC}"
     exit 1
