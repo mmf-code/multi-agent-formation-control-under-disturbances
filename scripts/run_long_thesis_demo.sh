@@ -102,8 +102,14 @@ echo -e "  • ${CYAN}Group 1${NC}: PD (agents 3,4,5)"
 echo -e "  • ${YELLOW}Group 2${NC}: PID (agents 6,7,8)"
 echo ""
 
-# Workspace
-WORKSPACE_DIR="/home/user/multi-agent-formation-control-under-disturbances"
+# Workspace (resolve repo root based on this script's location)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Prefer Git repo root if available; otherwise use parent of scripts/
+if ROOT_DIR_GIT=$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null); then
+    WORKSPACE_DIR="$ROOT_DIR_GIT"
+else
+    WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
 
 # Navigate
 echo -e "${CYAN}[1/8] Navigating to workspace...${NC}"
@@ -147,10 +153,7 @@ fi
 echo -e "${CYAN}[5/8] Launching Gazebo + RViz (Long Scenario)...${NC}"
 TOTAL_TIME=$((DURATION + 20))
 
-# TODO: Create formation_comparison_demo_long.launch.py with long scenario configs
-# For now, we'll note this needs to be created
-echo -e "${YELLOW}Note: Using existing demo launch (will be updated with long scenario configs)${NC}"
-
+# Launch the formation comparison demo
 timeout ${TOTAL_TIME} ros2 launch agent_control_pkg formation_comparison_demo.launch.py \
     gazebo_gui:=${GAZEBO_GUI} rviz:=${RVIZ} > "$OUTPUT_DIR/simulation.log" 2>&1 &
 SIM_PID=$!
