@@ -16,6 +16,8 @@
 #include "agent_control_pkg/controllers/combined_pid_fuzzy_adapter.hpp"
 #include "agent_control_pkg/controllers/fuzzy_gt2_adapter.hpp"
 #include "agent_control_pkg/controllers/pid_adapter.hpp"
+#include "agent_control_pkg/core/physics_types.hpp"
+#include "agent_control_pkg/core/drone_physics_core.hpp"
 
 namespace agent_control_pkg
 {
@@ -49,6 +51,7 @@ private:
   AxisController createAxisController(const std::string & axis_name, const AxisLimits & limits);
   void targetCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
   void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+  void windCallback(const geometry_msgs::msg::Vector3::SharedPtr msg);
   void controlLoop();
   void publishDiagnostics();
   void ensureFuzzyParamsLoaded();
@@ -75,11 +78,16 @@ private:
 
   std::optional<agent_control_pkg::FuzzyParams> fuzzy_params_;
 
+  // Feed-forward control parameters
+  core::FeedForwardParams ff_params_;
+  core::WindEnvironment wind_env_;
+
   AxisController axis_x_;
   AxisController axis_y_;
 
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr target_sub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr wind_sub_;
   rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr cmd_pub_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr diag_pub_;
   rclcpp::TimerBase::SharedPtr timer_;

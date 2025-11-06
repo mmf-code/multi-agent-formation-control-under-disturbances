@@ -302,6 +302,10 @@ add_library(simple_drone_plugin SHARED
   plugins/simple_drone_plugin.cpp
 )
 
+target_include_directories(simple_drone_plugin PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
 target_link_libraries(simple_drone_plugin
   ${GAZEBO_LIBRARIES}
   ${gazebo_ros_LIBRARIES}

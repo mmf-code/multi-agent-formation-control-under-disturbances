@@ -28,6 +28,9 @@
 #include <geometry_msgs/msg/vector3.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
+#include "agent_control_pkg/core/physics_types.hpp"
+#include "agent_control_pkg/core/drone_physics_core.hpp"
+
 namespace gazebo
 {
   /**
@@ -67,6 +70,30 @@ namespace gazebo
 
       // Get drone mass from inertial properties (used for F=ma)
       this->mass_ = this->link_->GetInertial()->Mass();
+
+      // Initialize physics parameters from SDF (with defaults from physics_types.hpp)
+      this->physics_params_.mass = this->mass_;
+      if (_sdf->HasElement("actuator_tau")) {
+        this->physics_params_.actuator_tau = _sdf->Get<double>("actuator_tau");
+      }
+      if (_sdf->HasElement("actuator_tau_up")) {
+        this->physics_params_.actuator_tau_up = _sdf->Get<double>("actuator_tau_up");
+      }
+      if (_sdf->HasElement("actuator_tau_down")) {
+        this->physics_params_.actuator_tau_down = _sdf->Get<double>("actuator_tau_down");
+      }
+      if (_sdf->HasElement("max_accel")) {
+        this->physics_params_.max_accel = _sdf->Get<double>("max_accel");
+      }
+      if (_sdf->HasElement("drag_coeff_lin")) {
+        this->physics_params_.drag_coeff_lin = _sdf->Get<double>("drag_coeff_lin");
+      }
+      if (_sdf->HasElement("drag_coeff_quad")) {
+        this->physics_params_.drag_coeff_quad = _sdf->Get<double>("drag_coeff_quad");
+      }
+      if (_sdf->HasElement("drag_speed_threshold")) {
+        this->physics_params_.drag_speed_threshold = _sdf->Get<double>("drag_speed_threshold");
+      }
 
       // Get namespace from SDF (e.g., "agent_0" for multi-agent support)
       if (_sdf->HasElement("namespace"))
@@ -133,19 +160,25 @@ namespace gazebo
      * @param msg Vector3 containing wind force in Newtons (N)
      *
      * Stores the current wind disturbance force to be applied in physics update.
+     * Also converts force to acceleration bias for physics core.
      */
     void OnWindForce(const geometry_msgs::msg::Vector3::SharedPtr msg)
     {
       this->wind_force_x_ = msg->x;
       this->wind_force_y_ = msg->y;
       this->wind_force_z_ = msg->z;
+
+      // Convert wind force to acceleration bias for physics core
+      // F = m * a  =>  a = F / m
+      this->wind_env_.ax_bias = msg->x / this->mass_;
+      this->wind_env_.ay_bias = msg->y / this->mass_;
     }
 
     /**
      * @brief Main physics update loop (called every Gazebo timestep)
      *
      * This function applies forces to the drone model based on:
-     * 1. X-Y acceleration commands from the controller (F = m*a)
+     * 1. Advanced 2D dynamics: actuator lag + drag blend + wind bias
      * 2. Automatic gravity compensation and altitude hold at Z=0.5m
      *
      * Update rate: Synchronized with Gazebo physics (typically ~1kHz)
@@ -155,21 +188,43 @@ namespace gazebo
       if (!this->link_)
         return;
 
-      // Apply force = mass * acceleration for X-Y plane motion
-      // This is the core of the 2D dynamics: F = ma
-      ignition::math::Vector3d force(
-        this->mass_ * this->cmd_accel_x_,
-        this->mass_ * this->cmd_accel_y_,
-        0.0
+      // Get current time and compute dt
+      rclcpp::Time now = this->ros_node_->get_clock()->now();
+      double dt = 0.001;  // Default 1ms (Gazebo physics rate)
+      if (!this->first_physics_update_) {
+        dt = (now - this->last_physics_update_time_).seconds();
+        dt = std::clamp(dt, 0.0001, 0.01);  // Clamp to reasonable range
+      } else {
+        this->first_physics_update_ = false;
+      }
+      this->last_physics_update_time_ = now;
+
+      // Get current velocity from Gazebo
+      auto linear_vel = this->link_->WorldLinearVel();
+      const double vx = linear_vel.X();
+      const double vy = linear_vel.Y();
+
+      // Compute advanced 2D physics using core library
+      // This includes: actuator lag, drag blend, wind bias
+      double ax_total, ay_total;
+      agent_control_pkg::core::DronePhysicsCore::computePhysicsStep(
+        this->cmd_accel_x_,         // Commanded acceleration X
+        this->cmd_accel_y_,         // Commanded acceleration Y
+        vx, vy,                      // Current velocity
+        this->actuator_state_,       // Actuator filter state (updated in-place)
+        this->wind_env_,             // Wind environment
+        this->physics_params_,       // Physics parameters
+        dt,                          // Time step
+        ax_total, ay_total,          // Output: total acceleration
+        &this->physics_diag_         // Optional diagnostics
       );
 
-      // Add wind disturbance force (from Gazebo wind plugin)
-      force.X(force.X() + this->wind_force_x_);
-      force.Y(force.Y() + this->wind_force_y_);
-
-      // Linear damping to suppress oscillations (acts like air drag)
-      auto linear_vel = this->link_->WorldLinearVel();
-      force -= linear_vel * this->linear_damping_;
+      // Convert acceleration to force: F = m * a
+      ignition::math::Vector3d force(
+        this->mass_ * ax_total,
+        this->mass_ * ay_total,
+        0.0
+      );
 
       // Z-axis altitude hold system:
       // 1. Cancel gravity: F_gravity_comp = m * g (9.81 m/s²)
@@ -283,6 +338,12 @@ namespace gazebo
     double wind_force_y_ = 0.0;  ///< Wind force Y component (N)
     double wind_force_z_ = 0.0;  ///< Wind force Z component (N, unused)
 
+    // ===== Advanced Physics Core =====
+    agent_control_pkg::core::PhysicsParams physics_params_;      ///< Physics model parameters
+    agent_control_pkg::core::ActuatorState actuator_state_;      ///< Actuator filter state
+    agent_control_pkg::core::WindEnvironment wind_env_;          ///< Wind environment
+    agent_control_pkg::core::PhysicsDiagnostics physics_diag_;   ///< Physics diagnostics
+
     // Damping / stabilization parameters (matched to successful C++ simulations)
     // C++ params: mass=1.5kg, cd_lin=0.12 -> effective damping = 0.12/1.5 = 0.08
     double linear_damping_ = 0.08;       ///< Linear velocity damping (matches cd_lin=0.12, mass=1.5)
@@ -291,6 +352,10 @@ namespace gazebo
     double yaw_damping_ = 0.1;           ///< Yaw damping to prevent spinning
     double altitude_kp_ = 12.0;          ///< Altitude proportional gain (aggressive Z response)
     double altitude_kd_ = 4.0;           ///< Altitude velocity damping gain (critical damping)
+
+    // ===== Physics Update Timing =====
+    rclcpp::Time last_physics_update_time_;  ///< Last physics update timestamp
+    bool first_physics_update_ = true;       ///< Flag for first update
   };
 
   // Register this plugin with Gazebo

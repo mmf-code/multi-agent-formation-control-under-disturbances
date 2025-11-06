@@ -35,5 +35,15 @@ agent_0:
       mix.k_pid: 1.0
       mix.k_fuzzy: 1.0
 
+      # Feed-forward control (drag and wind disturbance cancellation)
+      feedforward.enable_drag: false
+      feedforward.enable_wind: false
+      feedforward.k_drag: 0.8         # Drag compensation gain (0.0 to 1.0+)
+      feedforward.k_wind: 1.0         # Wind bias compensation gain
+      feedforward.mass_estimate: 1.5  # Must match Gazebo model mass
+      feedforward.drag_coeff_lin_estimate: 0.12
+      feedforward.drag_coeff_quad_estimate: 0.05
+      feedforward.drag_speed_threshold_estimate: 1.0
+
       # Diagnostics
       diagnostics.enable: true
