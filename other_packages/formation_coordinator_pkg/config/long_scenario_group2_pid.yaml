@@ -9,11 +9,12 @@
       - agent_8
 
     # Formation shape: triangle
+    formation.shape: triangle
     formation.spacing: 3.0
 
     # Initial formation center position (upper lane)
     formation.center.x: -15.0
-    formation.center.y: 4.0
+    formation.center.y: 5.0
     formation.center.z: 1.0
 
     # Formation orientation (degrees)
@@ -49,7 +50,7 @@
     waypoints.x: [-5.0, 5.0, 10.0, 0.0, 5.0]
 
     # Y coordinates (lateral zigzag pattern)
-    waypoints.y: [2.0, -2.0, 3.0, 0.0, 4.0]
+    waypoints.y: [7.0, 3.0, 8.0, 5.0, 9.0]
 
     # Z coordinates (altitude changes)
     waypoints.z: [2.0, 3.0, 1.5, 2.5, 2.0]

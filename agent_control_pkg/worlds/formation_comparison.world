@@ -5,7 +5,7 @@
     <!-- Optimized physics for high FPS with 9 drones -->
     <physics type="ode">
       <max_step_size>0.002</max_step_size>
-      <real_time_factor>1.0</real_time_factor>
+      <real_time_factor>5.0</real_time_factor>
       <real_time_update_rate>500</real_time_update_rate>
       <ode>
         <solver>

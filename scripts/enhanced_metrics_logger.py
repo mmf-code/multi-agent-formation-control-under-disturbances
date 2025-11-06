@@ -296,6 +296,10 @@ class EnhancedMetricsLogger(Node):
         self.get_logger().info(f'Recording complete! Wall time: {elapsed:.1f}s')
         self.get_logger().info(f'Data saved to: {self.output_dir}')
 
+        # Exit cleanly to prevent script hanging
+        import sys
+        sys.exit(0)
+
     def _create_final_summary(self):
         """Create final summary report"""
         summary_path = self.output_dir / 'final_results' / 'summary.txt'
