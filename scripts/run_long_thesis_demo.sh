@@ -147,11 +147,8 @@ fi
 echo -e "${CYAN}[5/8] Launching Gazebo + RViz (Long Scenario)...${NC}"
 TOTAL_TIME=$((DURATION + 20))
 
-# TODO: Create formation_comparison_demo_long.launch.py with long scenario configs
-# For now, we'll note this needs to be created
-echo -e "${YELLOW}Note: Using existing demo launch (will be updated with long scenario configs)${NC}"
-
-timeout ${TOTAL_TIME} ros2 launch agent_control_pkg formation_comparison_demo.launch.py \
+# Launch long scenario demo (with waypoint trajectories)
+timeout ${TOTAL_TIME} ros2 launch agent_control_pkg formation_long_scenario_demo.launch.py \
     gazebo_gui:=${GAZEBO_GUI} rviz:=${RVIZ} > "$OUTPUT_DIR/simulation.log" 2>&1 &
 SIM_PID=$!
 

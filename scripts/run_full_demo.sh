@@ -50,8 +50,14 @@ echo ""
 echo -e "${CYAN}Duration: ${YELLOW}${DURATION} seconds${NC}"
 echo ""
 
-# Workspace
-WORKSPACE_DIR="/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances"
+# Workspace (resolve repo root based on this script's location)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Prefer Git repo root if available; otherwise use parent of scripts/
+if ROOT_DIR_GIT=$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null); then
+    WORKSPACE_DIR="$ROOT_DIR_GIT"
+else
+    WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
 
 # 1. CD to workspace
 echo -e "${CYAN}[1/7] Navigating to workspace...${NC}"
