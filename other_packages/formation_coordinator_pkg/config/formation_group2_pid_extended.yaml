@@ -1,0 +1,28 @@
+/formation_2/formation_coordinator_group2:
+  ros__parameters:
+    agent_ids:
+      - agent_6
+      - agent_7
+      - agent_8
+
+    formation.shape: triangle
+    formation.spacing: 3.0
+    formation.center.x: 15.0
+    formation.center.y: 4.0
+    formation.center.z: 0.0
+    formation.yaw_deg: 0.0
+
+    frame_id: odom
+    publish_frequency_hz: 10.0
+
+    pso.enable: true
+    pso.num_particles: 20
+    pso.max_iterations: 50
+    pso.inertia_weight: 0.7
+    pso.cognitive_coeff: 1.5
+    pso.social_coeff: 1.5
+
+    motion.enable: true
+    motion.vx: 0.8
+    motion.start_x: -20.0
+    motion.end_x: 15.0
