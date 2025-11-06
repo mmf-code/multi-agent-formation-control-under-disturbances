@@ -51,14 +51,31 @@ private:
   // Runtime center (can be time-varying if motion is enabled)
   double center_x_runtime_{5.0};
   double center_y_runtime_{5.0};
+  double center_z_runtime_{0.5};
   rclcpp::Time start_time_;
   bool started_{false};
 
-  // Simple motion model for formation center (x-axis ramp)
+  // Simple motion model for formation center (x-axis ramp) - LEGACY
   bool motion_enable_{false};
   double motion_vx_{0.0};
   double motion_start_x_{0.0};
   double motion_end_x_{0.0};
+
+  // Waypoint-based trajectory system for zigzag patterns
+  struct Waypoint {
+    double t_start;  // Time to start moving to this waypoint (seconds)
+    double t_end;    // Time to reach this waypoint (seconds)
+    double x;
+    double y;
+    double z;
+  };
+
+  bool waypoints_enable_{false};
+  std::vector<Waypoint> waypoints_;
+  size_t current_waypoint_idx_{0};
+
+  void loadWaypoints();
+  void updatePositionFromWaypoints(double elapsed_time);
 
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<my_custom_interfaces_pkg::msg::FormationState>::SharedPtr state_pub_;

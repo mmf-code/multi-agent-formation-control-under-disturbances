@@ -88,6 +88,115 @@ source install/setup.bash
 
 ---
 
+## 🚀 **NEW: Long Scenario Demo (5-Minute Zigzag Trajectory)**
+
+### **Enhanced Thesis Demo - Advanced Features**
+
+**NEW in this version:**
+- ✅ **Waypoint-based zigzag trajectory** (5 phases, 300 seconds)
+- ✅ **3D motion** with altitude changes (1m → 3m → 1.5m → 2.5m → 2m)
+- ✅ **Checkpoint system** (automatic saves every 60s)
+- ✅ **Enhanced metrics logging** (IAE, ITAE, ISE, step info)
+- ✅ **Phase-by-phase analysis** tools
+- ✅ **Real-time dashboard** with progress indicators
+
+### **Quick Start - Long Scenario**
+
+```bash
+cd /home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances
+
+# Full 5-minute demo (all features)
+./scripts/run_long_thesis_demo.sh
+
+# Quick 1-minute test
+./scripts/run_long_thesis_demo.sh --test-mode
+
+# Headless mode (maximum FPS)
+./scripts/run_long_thesis_demo.sh --headless
+```
+
+### **What's Different?**
+
+**Trajectory:**
+- **Phase 1 (0-60s)**:   Start → WP1 | Forward 10m, lateral 6m, climb 1m | Light wind (2N)
+- **Phase 2 (60-120s)**: WP1 → WP2   | Forward 10m, zigzag 4m, climb 1m  | Medium wind (4N)
+- **Phase 3 (120-180s)**: WP2 → WP3   | Forward 5m, zigzag 5m, descend 1.5m | Heavy gusts (6N)
+- **Phase 4 (180-240s)**: WP3 → WP4   | **Backward 10m**, return 3m, climb 1m | Variable wind
+- **Phase 5 (240-300s)**: WP4 → Final | Forward 5m, stabilize | Stress test
+
+**Output Structure:**
+```
+thesis_data/YYYY-MM-DD/HH-MM-SS_long_scenario/
+├── raw_data/                    # Full 300s CSV files
+│   ├── agent_0_pidfuzzy_full.csv
+│   ├── agent_3_pd_full.csv
+│   └── agent_6_pid_full.csv
+├── checkpoints/                 # Phase-by-phase snapshots
+│   ├── phase1_60s/
+│   ├── phase2_120s/
+│   ├── phase3_180s/
+│   ├── phase4_240s/
+│   └── phase5_300s/
+└── final_results/               # Summary + analysis
+    ├── summary.txt
+    └── *.csv (complete datasets)
+```
+
+### **Analysis Tools**
+
+After running the demo:
+
+```bash
+# 1. Checkpoint analysis (phase-by-phase metrics)
+python3 analysis/analyze_checkpoint_data.py thesis_data/YYYY-MM-DD/HH-MM-SS_long_scenario
+
+# 2. Generate plots (trajectory, error, comparison)
+python3 analysis/plot_long_scenario.py thesis_data/YYYY-MM-DD/HH-MM-SS_long_scenario
+
+# 3. Thesis report (LaTeX tables + markdown summary)
+python3 analysis/generate_thesis_report.py thesis_data/YYYY-MM-DD/HH-MM-SS_long_scenario
+
+# 4. Controller comparison (all phases)
+python3 analysis/compare_phases.py thesis_data/YYYY-MM-DD/HH-MM-SS_long_scenario
+```
+
+### **Technical Details**
+
+**Waypoint System:**
+- Linear interpolation between waypoints
+- Smooth transitions (no discontinuities)
+- 3D trajectory support (X, Y, Z)
+- Configurable via YAML (`waypoints.times`, `waypoints.x`, `waypoints.y`, `waypoints.z`)
+
+**Enhanced Metrics:**
+- **IAE** (Integral Absolute Error) - accumulated tracking error
+- **ITAE** (Integral Time-weighted Absolute Error) - penalizes late errors
+- **ISE** (Integral Square Error) - penalizes large errors
+- **Step Info** - overshoot, settling time, rise time
+
+**Configuration Files:**
+```
+other_packages/formation_coordinator_pkg/config/
+├── long_scenario_group0_fuzzy.yaml   # PID+Fuzzy waypoints
+├── long_scenario_group1_pd.yaml      # PD waypoints
+└── long_scenario_group2_pid.yaml     # PID waypoints
+```
+
+### **Expected Results**
+
+With the long scenario, you'll be able to:
+- **Compare controllers** across different trajectory segments
+- **Analyze phase transitions** (how each controller adapts)
+- **Measure disturbance rejection** under varying wind conditions
+- **Generate publication-ready figures** for thesis
+
+**Hypothesis:**
+- PID+Fuzzy should outperform in **heavy wind phases** (Phase 3, 5)
+- PD should have **fastest response** in clean trajectory segments
+- PID should provide **best overall balance** across all phases
+
+---
+
 ## Highlights
 - 2D dynamics with ambient wind velocity, linear->quadratic drag blend, asymmetric actuator lag (up/down), semi-implicit Euler
 - Optional constant wind acceleration bias (wind.ax, wind.ay) for integral-action testing
