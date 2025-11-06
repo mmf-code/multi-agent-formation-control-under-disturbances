@@ -95,6 +95,21 @@ namespace gazebo
         this->physics_params_.drag_speed_threshold = _sdf->Get<double>("drag_speed_threshold");
       }
 
+      // Load initial wind parameters from SDF (optional fallback)
+      // These can be overridden by /wind/velocity and /wind/force topics
+      if (_sdf->HasElement("wind_velocity_x")) {
+        this->wind_env_.vx = _sdf->Get<double>("wind_velocity_x");
+      }
+      if (_sdf->HasElement("wind_velocity_y")) {
+        this->wind_env_.vy = _sdf->Get<double>("wind_velocity_y");
+      }
+      if (_sdf->HasElement("wind_accel_bias_x")) {
+        this->wind_env_.ax_bias = _sdf->Get<double>("wind_accel_bias_x");
+      }
+      if (_sdf->HasElement("wind_accel_bias_y")) {
+        this->wind_env_.ay_bias = _sdf->Get<double>("wind_accel_bias_y");
+      }
+
       // Get namespace from SDF (e.g., "agent_0" for multi-agent support)
       if (_sdf->HasElement("namespace"))
       {
@@ -110,8 +125,14 @@ namespace gazebo
       this->ros_node_ = gazebo_ros::Node::Get(_sdf);
 
       RCLCPP_INFO(this->ros_node_->get_logger(),
-                  "SimpleDronePlugin loading for namespace: %s, mass: %.2f kg",
-                  this->namespace_.c_str(), this->mass_);
+                  "SimpleDronePlugin loading for namespace: %s, mass: %.2f kg, "
+                  "physics[tau_up=%.3f, tau_down=%.3f, cd_lin=%.3f, cd_quad=%.3f], "
+                  "wind[vx=%.2f, vy=%.2f, ax_bias=%.3f, ay_bias=%.3f]",
+                  this->namespace_.c_str(), this->mass_,
+                  this->physics_params_.actuator_tau_up, this->physics_params_.actuator_tau_down,
+                  this->physics_params_.drag_coeff_lin, this->physics_params_.drag_coeff_quad,
+                  this->wind_env_.vx, this->wind_env_.vy,
+                  this->wind_env_.ax_bias, this->wind_env_.ay_bias);
 
       // Subscribe to acceleration commands from agent_controller_node
       std::string cmd_accel_topic = "/" + this->namespace_ + "/cmd_accel";
@@ -119,8 +140,13 @@ namespace gazebo
         cmd_accel_topic, 10,
         std::bind(&SimpleDronePlugin::OnCmdAccel, this, std::placeholders::_1));
 
-      // Subscribe to wind force from Gazebo wind plugin
-      this->wind_sub_ = this->ros_node_->create_subscription<geometry_msgs::msg::Vector3>(
+      // Subscribe to wind velocity (for drag calculation with relative airspeed)
+      this->wind_velocity_sub_ = this->ros_node_->create_subscription<geometry_msgs::msg::Vector3>(
+        "/wind/velocity", 10,
+        std::bind(&SimpleDronePlugin::OnWindVelocity, this, std::placeholders::_1));
+
+      // Subscribe to wind force (for constant acceleration bias)
+      this->wind_force_sub_ = this->ros_node_->create_subscription<geometry_msgs::msg::Vector3>(
         "/wind/force", 10,
         std::bind(&SimpleDronePlugin::OnWindForce, this, std::placeholders::_1));
 
@@ -156,11 +182,38 @@ namespace gazebo
     }
 
     /**
-     * @brief Callback for wind force from Gazebo wind plugin
+     * @brief Callback for wind velocity (dynamic wind environment)
+     * @param msg Vector3 containing wind velocity in m/s
+     *
+     * Updates the wind environment for drag calculation (relative airspeed).
+     * This enables time-varying wind scenarios (sinusoid, step, gust).
+     *
+     * Topic: /wind/velocity
+     * Message format: geometry_msgs/Vector3
+     *   - x: Wind velocity X component [m/s]
+     *   - y: Wind velocity Y component [m/s]
+     *   - z: Wind velocity Z component [m/s] (unused for 2D)
+     */
+    void OnWindVelocity(const geometry_msgs::msg::Vector3::SharedPtr msg)
+    {
+      this->wind_env_.vx = msg->x;
+      this->wind_env_.vy = msg->y;
+      // Note: Drag force is computed as F_drag = -cd * (v - v_wind)
+      // Updating wind velocity affects relative airspeed in physics core
+    }
+
+    /**
+     * @brief Callback for wind force (constant acceleration bias)
      * @param msg Vector3 containing wind force in Newtons (N)
      *
      * Stores the current wind disturbance force to be applied in physics update.
      * Also converts force to acceleration bias for physics core.
+     *
+     * Topic: /wind/force
+     * Message format: geometry_msgs/Vector3
+     *   - x: Wind force X component [N]
+     *   - y: Wind force Y component [N]
+     *   - z: Wind force Z component [N] (unused for 2D)
      */
     void OnWindForce(const geometry_msgs::msg::Vector3::SharedPtr msg)
     {
@@ -318,7 +371,8 @@ namespace gazebo
     // ===== ROS2 Interface =====
     gazebo_ros::Node::SharedPtr ros_node_;  ///< ROS2 node handle
     rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr cmd_accel_sub_;  ///< Acceleration command subscriber
-    rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr wind_sub_;  ///< Wind force subscriber
+    rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr wind_velocity_sub_;  ///< Wind velocity subscriber
+    rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr wind_force_sub_;  ///< Wind force subscriber
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;  ///< Odometry publisher
 
     // ===== Gazebo Event Connection =====
@@ -344,9 +398,9 @@ namespace gazebo
     agent_control_pkg::core::WindEnvironment wind_env_;          ///< Wind environment
     agent_control_pkg::core::PhysicsDiagnostics physics_diag_;   ///< Physics diagnostics
 
-    // Damping / stabilization parameters (matched to successful C++ simulations)
-    // C++ params: mass=1.5kg, cd_lin=0.12 -> effective damping = 0.12/1.5 = 0.08
-    double linear_damping_ = 0.08;       ///< Linear velocity damping (matches cd_lin=0.12, mass=1.5)
+    // ===== Attitude/Altitude Stabilization Parameters =====
+    // Note: Linear drag is handled by physics_params_ (cd_lin, cd_quad)
+    // These parameters only control attitude (roll/pitch/yaw) and altitude (Z)
     double angular_damping_ = 0.2;       ///< Angular velocity damping coefficient
     double attitude_stiffness_ = 4.0;    ///< Restoring torque for roll/pitch
     double yaw_damping_ = 0.1;           ///< Yaw damping to prevent spinning
