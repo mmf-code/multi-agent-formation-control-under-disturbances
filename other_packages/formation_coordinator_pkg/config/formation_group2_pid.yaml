@@ -17,7 +17,7 @@
     # Formation center position (target for group centroid)
     formation.center.x: 5.0
     formation.center.y: 4.0
-    formation.center.z: 0.0
+    formation.center.z: 7.0  # FIXED: Match drone spawn altitude (Group 2 at Z=7.0m)
 
     # Formation orientation (degrees)
     formation.yaw_deg: 0.0
@@ -39,5 +39,5 @@
     # Center motion along X (ramp from start_x to end_x)
     motion.enable: true
     motion.vx: 0.8
-    motion.start_x: -5.0   # starting center X (updated to match drone positions)
+    motion.start_x: -3.5  # FIXED: Match actual centroid of Group 2 spawn positions (-5, -2, -3.5)
     motion.end_x: 5.0

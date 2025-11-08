@@ -110,6 +110,12 @@ namespace gazebo
         this->wind_env_.ay_bias = _sdf->Get<double>("wind_accel_bias_y");
       }
 
+      // Get target altitude from SDF (for altitude lane separation)
+      if (_sdf->HasElement("target_altitude"))
+      {
+        this->target_altitude_ = _sdf->Get<double>("target_altitude");
+      }
+
       // Get namespace from SDF (e.g., "agent_0" for multi-agent support)
       if (_sdf->HasElement("namespace"))
       {
@@ -125,10 +131,10 @@ namespace gazebo
       this->ros_node_ = gazebo_ros::Node::Get(_sdf);
 
       RCLCPP_INFO(this->ros_node_->get_logger(),
-                  "SimpleDronePlugin loading for namespace: %s, mass: %.2f kg, "
+                  "SimpleDronePlugin loading for namespace: %s, mass: %.2f kg, target_altitude: %.2f m, "
                   "physics[tau_up=%.3f, tau_down=%.3f, cd_lin=%.3f, cd_quad=%.3f], "
                   "wind[vx=%.2f, vy=%.2f, ax_bias=%.3f, ay_bias=%.3f]",
-                  this->namespace_.c_str(), this->mass_,
+                  this->namespace_.c_str(), this->mass_, this->target_altitude_,
                   this->physics_params_.actuator_tau_up, this->physics_params_.actuator_tau_down,
                   this->physics_params_.drag_coeff_lin, this->physics_params_.drag_coeff_quad,
                   this->wind_env_.vx, this->wind_env_.vy,
@@ -281,10 +287,10 @@ namespace gazebo
 
       // Z-axis altitude hold system:
       // 1. Cancel gravity: F_gravity_comp = m * g (9.81 m/s²)
-      // 2. Add proportional control to maintain target altitude (0.5m)
+      // 2. Add proportional control to maintain target altitude (from SDF parameter)
       auto pose = this->link_->WorldPose();
       double current_z = pose.Pos().Z();
-      double target_z = 0.5;  // Target altitude (meters)
+      double target_z = this->target_altitude_;  // Target altitude from SDF (meters)
       double z_error = target_z - current_z;
       double vel_z = linear_vel.Z();
 
@@ -410,6 +416,9 @@ namespace gazebo
     // ===== Physics Update Timing =====
     rclcpp::Time last_physics_update_time_;  ///< Last physics update timestamp
     bool first_physics_update_ = true;       ///< Flag for first update
+
+    // ===== Target Altitude (from SDF) =====
+    double target_altitude_ = 0.5;  ///< Target altitude for this drone (meters), configurable from world file
   };
 
   // Register this plugin with Gazebo
