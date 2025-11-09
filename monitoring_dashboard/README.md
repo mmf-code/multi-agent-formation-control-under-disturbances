@@ -138,6 +138,37 @@ The dashboard automatically discovers and subscribes to:
 - `/wind/force` (geometry_msgs/Vector3) - Wind force/bias
 - `/formation_coordinator_node/state` (my_custom_interfaces_pkg/FormationState) - Formation state
 
+## 🧪 Testing Without Simulation
+
+You can start and test the dashboard **without running the simulation**:
+
+```bash
+# Terminal 1: Start backend
+cd monitoring_dashboard
+source /opt/ros/humble/setup.bash
+./scripts/run_backend.sh
+
+# Terminal 2: Start frontend
+cd monitoring_dashboard
+./scripts/run_frontend.sh
+
+# Open browser: http://localhost:3000
+```
+
+**Expected behavior without simulation:**
+- ✅ Dashboard opens successfully
+- ✅ Connection status: "Connected" (green)
+- ✅ System shows "No agents detected"
+- ✅ Topic buttons are available but grayed out
+- ⚠️ No data displayed (expected - start simulation to see data)
+
+**When you start the simulation**, the dashboard will automatically:
+- Discover agents (agent_0, agent_1, etc.)
+- Enable active topics
+- Start streaming real-time data
+
+This allows you to verify the installation before running heavy simulations!
+
 ## 🎮 Usage Guide
 
 ### Selecting Topics
