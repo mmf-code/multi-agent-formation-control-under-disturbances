@@ -56,11 +56,18 @@ def generate_launch_description():
 
     # Gazebo paths
     model_path = os.path.join(pkg_agent_control, 'models')
-    plugin_path = os.path.join(pkg_agent_control, '..', '..', 'lib')
+    # Resolve both common install layouts for the plugin:
+    #  - install/agent_control_pkg/lib (observed in this workspace via symlink)
+    #  - install/lib (standard ament install path)
+    pkg_root = os.path.dirname(os.path.dirname(pkg_agent_control))            # .../install/agent_control_pkg
+    plugin_path_pkg = os.path.join(pkg_root, 'lib')                           # .../install/agent_control_pkg/lib
+    plugin_path_std = os.path.join(os.path.dirname(pkg_root), 'lib')          # .../install/lib
 
     # Set environment variables for Gazebo
-    os.environ['GAZEBO_MODEL_PATH'] = f"{model_path}:{os.environ.get('GAZEBO_MODEL_PATH', '')}"
-    os.environ['GAZEBO_PLUGIN_PATH'] = f"{plugin_path}:{os.environ.get('GAZEBO_PLUGIN_PATH', '')}"
+    merged_model_path = ":".join([p for p in [model_path, os.environ.get('GAZEBO_MODEL_PATH', '')] if p])
+    merged_plugin_path = ":".join([p for p in [plugin_path_pkg, plugin_path_std, os.environ.get('GAZEBO_PLUGIN_PATH', '')] if p])
+    os.environ['GAZEBO_MODEL_PATH'] = merged_model_path
+    os.environ['GAZEBO_PLUGIN_PATH'] = merged_plugin_path
 
     # Launch arguments
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')

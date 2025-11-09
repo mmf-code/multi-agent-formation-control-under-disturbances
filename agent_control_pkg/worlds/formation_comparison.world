@@ -123,6 +123,12 @@
           </material>
         </visual>
 
+        <!-- Propeller visuals (non-physical) -->
+        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+
         <collision name="collision">
           <geometry>
             <sphere><radius>0.2</radius></sphere>
@@ -136,7 +142,7 @@
       </plugin>
     </model>
 
-    <!-- Drone 1: PID+Fuzzy (Magenta) -->
+    <!-- Drone 1: PID+Fuzzy (Group 0 color unified: Cyan) -->
     <model name="agent_1">
       <pose>-12 -5.5 1.0 0 0 0</pose>  <!-- Right vertex (Group 0, Z=1.0m lowest) -->
       <static>false</static>
@@ -156,8 +162,8 @@
             <sphere><radius>0.12</radius></sphere>
           </geometry>
           <material>
-            <ambient>0.8 0.1 0.8 1</ambient>
-            <diffuse>0.9 0.2 0.9 1</diffuse>
+            <ambient>0.1 0.8 0.8 1</ambient>
+            <diffuse>0.2 0.9 0.9 1</diffuse>
           </material>
         </visual>
 
@@ -181,6 +187,12 @@
           </material>
         </visual>
 
+        <!-- Propeller visuals (non-physical) -->
+        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+
         <collision name="collision">
           <geometry>
             <sphere><radius>0.2</radius></sphere>
@@ -194,7 +206,7 @@
       </plugin>
     </model>
 
-    <!-- Drone 2: PID+Fuzzy (Yellow) -->
+    <!-- Drone 2: PID+Fuzzy (Group 0 color unified: Cyan) -->
     <model name="agent_2">
       <pose>-13.5 -2.5 1.0 0 0 0</pose>  <!-- Top vertex (Group 0, Z=1.0m lowest) -->
       <static>false</static>
@@ -214,8 +226,8 @@
             <sphere><radius>0.12</radius></sphere>
           </geometry>
           <material>
-            <ambient>0.8 0.8 0.1 1</ambient>
-            <diffuse>0.9 0.9 0.2 1</diffuse>
+            <ambient>0.1 0.8 0.8 1</ambient>
+            <diffuse>0.2 0.9 0.9 1</diffuse>
           </material>
         </visual>
 
@@ -239,6 +251,12 @@
           </material>
         </visual>
 
+        <!-- Propeller visuals (non-physical) -->
+        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+
         <collision name="collision">
           <geometry>
             <sphere><radius>0.2</radius></sphere>
@@ -253,11 +271,11 @@
     </model>
 
     <!-- ========================================= -->
-    <!-- GROUP 1: PD Controllers (Red/Green/Blue) -->
+    <!-- GROUP 1: PD Controllers (Group 1 color unified: Red) -->
     <!-- Lane: Y=0, Triangle formation -->
     <!-- ========================================= -->
 
-    <!-- Drone 3: PD (Red) -->
+    <!-- Drone 3: PD (Group 1 color unified: Red) -->
     <model name="agent_3">
       <pose>-10 -1.5 4.0 0 0 0</pose>  <!-- Left vertex (Group 1, Z=4.0m middle +3m) -->
       <static>false</static>
@@ -302,6 +320,12 @@
           </material>
         </visual>
 
+        <!-- Propeller visuals (non-physical) -->
+        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+
         <collision name="collision">
           <geometry>
             <sphere><radius>0.2</radius></sphere>
@@ -315,7 +339,7 @@
       </plugin>
     </model>
 
-    <!-- Drone 4: PD (Green) -->
+    <!-- Drone 4: PD (Group 1 color unified: Red) -->
     <model name="agent_4">
       <pose>-7 -1.5 4.0 0 0 0</pose>  <!-- Right vertex (Group 1, Z=4.0m middle +3m) -->
       <static>false</static>
@@ -335,8 +359,8 @@
             <sphere><radius>0.12</radius></sphere>
           </geometry>
           <material>
-            <ambient>0.1 0.8 0.1 1</ambient>
-            <diffuse>0.2 0.9 0.2 1</diffuse>
+            <ambient>0.8 0.1 0.1 1</ambient>
+            <diffuse>0.9 0.2 0.2 1</diffuse>
           </material>
         </visual>
 
@@ -360,6 +384,12 @@
           </material>
         </visual>
 
+        <!-- Propeller visuals (non-physical) -->
+        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+
         <collision name="collision">
           <geometry>
             <sphere><radius>0.2</radius></sphere>
@@ -373,7 +403,7 @@
       </plugin>
     </model>
 
-    <!-- Drone 5: PD (Blue) -->
+    <!-- Drone 5: PD (Group 1 color unified: Red) -->
     <model name="agent_5">
       <pose>-8.5 1.5 4.0 0 0 0</pose>  <!-- Top vertex (Group 1, Z=4.0m middle +3m) -->
       <static>false</static>
@@ -393,8 +423,8 @@
             <sphere><radius>0.12</radius></sphere>
           </geometry>
           <material>
-            <ambient>0.1 0.1 0.8 1</ambient>
-            <diffuse>0.2 0.2 0.9 1</diffuse>
+            <ambient>0.8 0.1 0.1 1</ambient>
+            <diffuse>0.9 0.2 0.2 1</diffuse>
           </material>
         </visual>
 
@@ -418,6 +448,12 @@
           </material>
         </visual>
 
+        <!-- Propeller visuals (non-physical) -->
+        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+
         <collision name="collision">
           <geometry>
             <sphere><radius>0.2</radius></sphere>
@@ -432,7 +468,7 @@
     </model>
 
     <!-- ========================================= -->
-    <!-- GROUP 2: PID Controllers (Orange/Purple/White) -->
+    <!-- GROUP 2: PID Controllers (Group 2 color unified: Orange) -->
     <!-- Lane: Y=+4, Triangle formation -->
     <!-- ========================================= -->
 
@@ -481,6 +517,12 @@
           </material>
         </visual>
 
+        <!-- Propeller visuals (non-physical) -->
+        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+
         <collision name="collision">
           <geometry>
             <sphere><radius>0.2</radius></sphere>
@@ -494,7 +536,7 @@
       </plugin>
     </model>
 
-    <!-- Drone 7: PID (Purple) -->
+    <!-- Drone 7: PID (Group 2 color unified: Orange) -->
     <model name="agent_7">
       <pose>-2 2.5 7.0 0 0 0</pose>  <!-- Right vertex (Group 2, Z=7.0m highest +6m) -->
       <static>false</static>
@@ -514,8 +556,8 @@
             <sphere><radius>0.12</radius></sphere>
           </geometry>
           <material>
-            <ambient>0.5 0.1 0.8 1</ambient>
-            <diffuse>0.6 0.2 0.9 1</diffuse>
+            <ambient>0.9 0.5 0.1 1</ambient>
+            <diffuse>1.0 0.6 0.2 1</diffuse>
           </material>
         </visual>
 
@@ -539,6 +581,12 @@
           </material>
         </visual>
 
+        <!-- Propeller visuals (non-physical) -->
+        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+
         <collision name="collision">
           <geometry>
             <sphere><radius>0.2</radius></sphere>
@@ -552,7 +600,7 @@
       </plugin>
     </model>
 
-    <!-- Drone 8: PID (White) -->
+    <!-- Drone 8: PID (Group 2 color unified: Orange) -->
     <model name="agent_8">
       <pose>-3.5 5.5 7.0 0 0 0</pose>  <!-- Top vertex (Group 2, Z=7.0m highest +6m) -->
       <static>false</static>
@@ -572,8 +620,8 @@
             <sphere><radius>0.12</radius></sphere>
           </geometry>
           <material>
-            <ambient>0.9 0.9 0.9 1</ambient>
-            <diffuse>1.0 1.0 1.0 1</diffuse>
+            <ambient>0.9 0.5 0.1 1</ambient>
+            <diffuse>1.0 0.6 0.2 1</diffuse>
           </material>
         </visual>
 
@@ -596,6 +644,12 @@
             <ambient>0.05 0.05 0.05 1</ambient>
           </material>
         </visual>
+
+        <!-- Propeller visuals (non-physical) -->
+        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
 
         <collision name="collision">
           <geometry>
