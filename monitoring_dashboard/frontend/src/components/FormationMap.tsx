@@ -69,7 +69,7 @@ export const FormationMap: React.FC<FormationMapProps> = ({
           mode: 'lines' as const,
           type: 'scatter' as const,
           showlegend: false,
-          line: { color: '#6b7280', width: 1, dash: 'dot' },
+          line: { color: '#6b7280', width: 1, dash: 'dot' as const },
         },
       ];
     });
@@ -86,6 +86,7 @@ export const FormationMap: React.FC<FormationMapProps> = ({
             size: 8,
             color: '#f59e0b',
             symbol: 'diamond',
+            line: { width: 1, color: '#000' },
           },
         }
       : null;
@@ -148,7 +149,7 @@ export const FormationMap: React.FC<FormationMapProps> = ({
       </div>
 
       <Plot
-        data={plotData}
+        data={plotData as any}
         layout={{
           autosize: true,
           height: 500,
