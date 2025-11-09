@@ -93,11 +93,14 @@ export type DataUpdateCallback = (
   data: any
 ) => void;
 
+export type ConnectionStatusCallback = (connected: boolean) => void;
+
 export class WebSocketClient {
   private ws: WebSocket | null = null;
   private reconnectInterval = 2000;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private callbacks: Set<DataUpdateCallback> = new Set();
+  private statusCallbacks: Set<ConnectionStatusCallback> = new Set();
   private url: string;
   private fallbackTried = false;
 
@@ -126,6 +129,7 @@ export class WebSocketClient {
     this.ws.onopen = () => {
       console.log('WebSocket connected');
       this.connected = true;
+      this.notifyStatusChange(true);
       if (this.reconnectTimer) {
         clearTimeout(this.reconnectTimer);
         this.reconnectTimer = null;
@@ -135,6 +139,7 @@ export class WebSocketClient {
     this.ws.onclose = () => {
       console.log('WebSocket disconnected');
       this.connected = false;
+      this.notifyStatusChange(false);
       // Fallback: if using localhost and initial connect failed, try 127.0.0.1
       try {
         const u = new URL(this.url);
@@ -211,6 +216,18 @@ export class WebSocketClient {
     };
   }
 
+  onConnectionStatusChange(callback: ConnectionStatusCallback): () => void {
+    this.statusCallbacks.add(callback);
+
+    // Immediately notify of current status
+    callback(this.connected);
+
+    // Return unsubscribe function
+    return () => {
+      this.statusCallbacks.delete(callback);
+    };
+  }
+
   private notifyCallbacks(
     dataType: string,
     agentId: string | null,
@@ -221,6 +238,16 @@ export class WebSocketClient {
         callback(dataType, agentId, data);
       } catch (error) {
         console.error('Error in update callback:', error);
+      }
+    });
+  }
+
+  private notifyStatusChange(connected: boolean): void {
+    this.statusCallbacks.forEach((callback) => {
+      try {
+        callback(connected);
+      } catch (error) {
+        console.error('Error in status callback:', error);
       }
     });
   }

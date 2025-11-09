@@ -2,7 +2,7 @@
  * Main App Component
  * Multi-Agent Formation Control Monitoring Dashboard
  */
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Activity } from 'lucide-react';
 import {
   wsClient,
@@ -28,7 +28,7 @@ function App() {
   const [metrics, setMetrics] = useState<Record<string, MetricsData>>({});
   const [odom, setOdom] = useState<Record<string, OdometryData>>({});
   const [targets, setTargets] = useState<Record<string, any>>({});
-  const [wind, setWind] = useState<WindData | null>(null);
+  const [_wind, setWind] = useState<WindData | null>(null);
   const [formation, setFormation] = useState<FormationState | null>(null);
 
   // History data
@@ -57,6 +57,16 @@ function App() {
   useEffect(() => {
     wsClient.connect();
 
+    // Subscribe to connection status changes
+    const unsubscribeStatus = wsClient.onConnectionStatusChange((connected) => {
+      setConnected(connected);
+      if (connected) {
+        addLog('info', 'Connected to backend');
+      } else {
+        addLog('warning', 'Disconnected from backend');
+      }
+    });
+
     const unsubscribe = wsClient.onUpdate((dataType, agentId, data) => {
       if (dataType === 'snapshot') {
         handleSnapshot(data as SnapshotData);
@@ -73,17 +83,12 @@ function App() {
       }
     });
 
-    // Connection status check
-    const statusInterval = setInterval(() => {
-      setConnected(wsClient.connected);
-    }, 1000);
-
     return () => {
       unsubscribe();
-      clearInterval(statusInterval);
+      unsubscribeStatus();
       wsClient.disconnect();
     };
-  }, []);
+  }, [addLog]);
 
   // Fallback: poll REST status so UI doesn't stay in "Connecting" if snapshot is delayed
   useEffect(() => {
@@ -116,15 +121,15 @@ function App() {
     return () => clearInterval(poll);
   }, []);
 
-  // Subscribe to topics when selection changes
+  // Subscribe to topics when selection changes or when connected
   useEffect(() => {
-    if (wsClient.connected) {
+    if (connected && wsClient.connected) {
       wsClient.subscribe(
         Array.from(selectedTopics),
         selectedAgents.size > 0 ? Array.from(selectedAgents) : undefined
       );
     }
-  }, [selectedTopics, selectedAgents]);
+  }, [connected, selectedTopics, selectedAgents]);
 
   // Handlers
   const handleSnapshot = (snapshot: SnapshotData) => {

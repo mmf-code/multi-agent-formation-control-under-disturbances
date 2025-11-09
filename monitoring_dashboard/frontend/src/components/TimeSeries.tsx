@@ -74,7 +74,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
             type: 'scatter' as const,
             mode: 'lines' as const,
             name: `${agent} - Error Y`,
-            line: { width: 2, dash: 'dot' },
+            line: { width: 2, dash: 'dot' as const },
           },
         ];
       });
@@ -112,7 +112,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
             type: 'scatter' as const,
             mode: 'lines' as const,
             name: `${agent} - IAE Y`,
-            line: { width: 2, dash: 'dot' },
+            line: { width: 2, dash: 'dot' as const },
           },
         ];
       });
@@ -149,7 +149,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
             type: 'scatter' as const,
             mode: 'lines' as const,
             name: `${agent} - RMSE Total`,
-            line: { width: 2, dash: 'dot' },
+            line: { width: 2, dash: 'dot' as const },
           },
         ];
       });
@@ -174,7 +174,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
   return (
     <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
       <Plot
-        data={plotData.data}
+        data={plotData.data as any}
         layout={{
           ...plotData.layout,
           autosize: true,
