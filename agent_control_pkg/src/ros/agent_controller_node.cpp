@@ -342,6 +342,17 @@ void AgentControllerNode::windCallback(const geometry_msgs::msg::Vector3::Shared
   wind_env_.vx = msg->x;
   wind_env_.vy = msg->y;
   // Wind bias (ax_bias, ay_bias) could be set from a separate topic if needed
+
+  // Also propagate per-axis wind projection to fuzzy controllers when enabled.
+  // Our GT2 FLS uses a single scalar "wind" input; feed X wind to X-axis fuzzy and Y wind to Y-axis fuzzy.
+  if (fuzzy_enable_ && fuzzy_include_wind_) {
+    if (axis_x_.fuzzy) {
+      axis_x_.fuzzy->setWindScalar(msg->x);
+    }
+    if (axis_y_.fuzzy) {
+      axis_y_.fuzzy->setWindScalar(msg->y);
+    }
+  }
 }
 
 void AgentControllerNode::controlLoop()

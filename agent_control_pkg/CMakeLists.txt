@@ -97,7 +97,6 @@ target_include_directories(fuzzy_logic_lib PUBLIC
 
 add_library(controller_adapters_lib
   src/controllers/fuzzy_gt2_adapter.cpp
-  src/controllers/combined_pid_fuzzy_adapter.cpp
 )
 target_include_directories(controller_adapters_lib PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

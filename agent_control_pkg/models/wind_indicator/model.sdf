@@ -18,13 +18,13 @@
         </material>
         <pose>1.0 0 1.0 0 1.5708 0</pose>
       </visual>
-      <!-- Arrow head -->
+      <!-- Arrow head (cone not supported in Gazebo Classic) -->
       <visual name="head">
         <geometry>
-          <cone>
+          <cylinder>
             <radius>0.15</radius>
-            <length>0.5</length>
-          </cone>
+            <length>0.3</length>
+          </cylinder>
         </geometry>
         <material>
           <ambient>0.1 0.7 1.0 1</ambient>
@@ -35,4 +35,3 @@
     </link>
   </model>
 </sdf>
-
