@@ -1,0 +1,130 @@
+"""
+Data schemas for ROS2 messages
+Pydantic models for type safety and JSON serialization
+"""
+from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
+
+
+class Vector3(BaseModel):
+    """3D vector"""
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+
+
+class MetricsData(BaseModel):
+    """Performance metrics for controller evaluation"""
+    agent_id: str
+    timestamp: float
+
+    # Current and target positions
+    current_x: float
+    current_y: float
+    current_z: float
+    target_x: float
+    target_y: float
+    target_z: float
+
+    # Position errors
+    error_x: float
+    error_y: float
+    error_z: float
+    error_magnitude: float
+
+    # RMSE
+    rmse_x: float
+    rmse_y: float
+    rmse_z: float
+    rmse_total: float
+
+    # Integral metrics
+    iae_x: float
+    iae_y: float
+    itae_x: float
+    itae_y: float
+
+    # Response characteristics
+    settling_time: float
+    is_settled: bool
+    max_overshoot_x: float
+    max_overshoot_y: float
+
+
+class OdometryData(BaseModel):
+    """Drone odometry data"""
+    agent_id: str
+    timestamp: float
+
+    # Position
+    position: Vector3
+
+    # Velocity
+    velocity: Vector3
+
+    # Orientation (quaternion)
+    orientation_x: float = 0.0
+    orientation_y: float = 0.0
+    orientation_z: float = 0.0
+    orientation_w: float = 1.0
+
+
+class TargetPoseData(BaseModel):
+    """Target pose for drone"""
+    agent_id: str
+    timestamp: float
+    position: Vector3
+
+
+class FormationState(BaseModel):
+    """Formation coordinator state"""
+    timestamp: float
+    shape: str
+    spacing: float
+    center_x: float
+    center_y: float
+    center_z: float
+    yaw_deg: float
+    agent_ids: list[str]
+
+
+class WindData(BaseModel):
+    """Wind environment data"""
+    timestamp: float
+    velocity: Vector3
+    force: Optional[Vector3] = None
+
+
+class DiagnosticsData(BaseModel):
+    """Controller diagnostics (PID/Fuzzy contributions)"""
+    agent_id: str
+    timestamp: float
+
+    # X-axis controller outputs
+    x_total: float
+    x_pid: float
+    x_fuzzy: float
+
+    # Y-axis controller outputs
+    y_total: float
+    y_pid: float
+    y_fuzzy: float
+
+
+class TopicInfo(BaseModel):
+    """Information about available ROS2 topics"""
+    name: str
+    msg_type: str
+    publisher_count: int
+    subscription_count: int
+
+
+class SystemStatus(BaseModel):
+    """Overall system status"""
+    timestamp: float
+    ros_ok: bool
+    active_agents: list[str]
+    available_topics: list[str]
+    wind_active: bool
+    formation_active: bool
