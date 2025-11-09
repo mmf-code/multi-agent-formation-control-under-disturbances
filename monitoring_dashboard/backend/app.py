@@ -34,8 +34,9 @@ def ros_spin_thread():
     logger.info("ROS2 spin thread started")
     try:
         rclpy.spin(ros_bridge)
-    except Exception as e:
-        logger.error(f"ROS2 spin error: {e}")
+    except Exception:
+        # Log full traceback to identify exact failure line
+        logger.exception("ROS2 spin error")
     finally:
         logger.info("ROS2 spin thread stopped")
 
@@ -67,8 +68,16 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down monitoring dashboard backend...")
     if ros_bridge:
-        ros_bridge.destroy_node()
-    rclpy.shutdown()
+        try:
+            ros_bridge.destroy_node()
+        except Exception:
+            logger.debug("ROS bridge destroy_node raised; continuing shutdown", exc_info=True)
+    # Avoid double-shutdown errors if context is already down
+    try:
+        if rclpy.ok():
+            rclpy.shutdown()
+    except Exception:
+        logger.debug("rclpy.shutdown raised (possibly already shut down)", exc_info=True)
 
 
 # Create FastAPI app

@@ -85,6 +85,37 @@ function App() {
     };
   }, []);
 
+  // Fallback: poll REST status so UI doesn't stay in "Connecting" if snapshot is delayed
+  useEffect(() => {
+    const poll = setInterval(async () => {
+      try {
+        const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+        let res: Response | null = null;
+        try {
+          res = await fetch(`http://${host}:8000/api/status`);
+        } catch (_) {
+          // Fallback to 127.0.0.1 if localhost/::1 fails
+          if (host === 'localhost' || host === '::1') {
+            res = await fetch(`http://127.0.0.1:8000/api/status`);
+          } else {
+            throw _;
+          }
+        }
+        if (res.ok) {
+          const s: SystemStatus = await res.json();
+          setStatus(s);
+          // If ROS is up and WS is open, mark connected
+          if (wsClient.connected) {
+            setConnected(true);
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }, 1500);
+    return () => clearInterval(poll);
+  }, []);
+
   // Subscribe to topics when selection changes
   useEffect(() => {
     if (wsClient.connected) {

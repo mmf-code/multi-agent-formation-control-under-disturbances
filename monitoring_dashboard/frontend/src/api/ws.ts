@@ -99,11 +99,19 @@ export class WebSocketClient {
   private reconnectTimer: NodeJS.Timeout | null = null;
   private callbacks: Set<DataUpdateCallback> = new Set();
   private url: string;
+  private fallbackTried = false;
 
   public connected = false;
 
-  constructor(url: string = 'ws://localhost:8000/ws') {
-    this.url = url;
+  constructor(url?: string) {
+    // Allow explicit override via Vite env
+    const envUrl = (typeof import.meta !== 'undefined' && (import.meta as any).env)
+      ? (import.meta as any).env.VITE_BACKEND_WS_URL
+      : undefined;
+    const defaultUrl = typeof window !== 'undefined'
+      ? `ws://${window.location.hostname}:8000/ws`
+      : 'ws://localhost:8000/ws';
+    this.url = url || envUrl || defaultUrl;
   }
 
   connect(): void {
@@ -127,6 +135,18 @@ export class WebSocketClient {
     this.ws.onclose = () => {
       console.log('WebSocket disconnected');
       this.connected = false;
+      // Fallback: if using localhost and initial connect failed, try 127.0.0.1
+      try {
+        const u = new URL(this.url);
+        if (!this.fallbackTried && (u.hostname === 'localhost' || u.hostname === '::1')) {
+          this.fallbackTried = true;
+          u.hostname = '127.0.0.1';
+          this.url = u.toString();
+          console.log('Retrying WebSocket with fallback host:', this.url);
+        }
+      } catch (_) {
+        // ignore parse errors
+      }
       this.scheduleReconnect();
     };
 

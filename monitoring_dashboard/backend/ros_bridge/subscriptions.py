@@ -69,8 +69,8 @@ class ROSBridge(Node):
             depth=10
         )
 
-        # Subscriptions storage
-        self.subscriptions: Dict[str, Any] = {}
+        # Subscriptions registry (avoid clashing with rclpy Node internals: `subscriptions` and `_subscriptions`)
+        self._subs_registry: Dict[str, Any] = {}
 
         # Data update callbacks (for WebSocket notifications)
         self.update_callbacks: List[Callable] = []
@@ -100,7 +100,7 @@ class ROSBridge(Node):
         topic_list = self.get_topic_names_and_types()
 
         for topic_name, msg_types in topic_list:
-            if topic_name in self.subscriptions:
+            if topic_name in self._subs_registry:
                 continue  # Already subscribed
 
             msg_type = msg_types[0] if msg_types else ""
@@ -126,8 +126,11 @@ class ROSBridge(Node):
                 self.subscribe_wind_velocity()
             elif topic_name == '/wind/force':
                 self.subscribe_wind_force()
-            elif topic_name == '/formation_coordinator_node/state':
-                self.subscribe_formation_state()
+            else:
+                # Formation state can be under different namespaces, match by msg type or suffix
+                if msg_type.endswith('my_custom_interfaces_pkg/msg/FormationState') or \
+                   (topic_name.endswith('/state') and 'formation_' in topic_name):
+                    self.subscribe_formation_state(topic_name)
 
             self.discovered_topics[topic_name] = msg_type
 
@@ -140,7 +143,7 @@ class ROSBridge(Node):
     def subscribe_metrics(self, agent_id: str):
         """Subscribe to agent metrics topic"""
         topic = f'/{agent_id}/metrics'
-        if topic in self.subscriptions:
+        if topic in self._subs_registry:
             return
 
         sub = self.create_subscription(
@@ -149,13 +152,13 @@ class ROSBridge(Node):
             lambda msg: self._on_metrics(agent_id, msg),
             10
         )
-        self.subscriptions[topic] = sub
+        self._subs_registry[topic] = sub
         logger.info(f"Subscribed to {topic}")
 
     def subscribe_odom(self, agent_id: str):
         """Subscribe to agent odometry topic"""
         topic = f'/{agent_id}/odom'
-        if topic in self.subscriptions:
+        if topic in self._subs_registry:
             return
 
         sub = self.create_subscription(
@@ -164,13 +167,13 @@ class ROSBridge(Node):
             lambda msg: self._on_odom(agent_id, msg),
             self.sensor_qos
         )
-        self.subscriptions[topic] = sub
+        self._subs_registry[topic] = sub
         logger.info(f"Subscribed to {topic}")
 
     def subscribe_target_pose(self, agent_id: str):
         """Subscribe to agent target pose topic"""
         topic = f'/{agent_id}/target_pose'
-        if topic in self.subscriptions:
+        if topic in self._subs_registry:
             return
 
         sub = self.create_subscription(
@@ -179,13 +182,13 @@ class ROSBridge(Node):
             lambda msg: self._on_target_pose(agent_id, msg),
             self.sensor_qos
         )
-        self.subscriptions[topic] = sub
+        self._subs_registry[topic] = sub
         logger.info(f"Subscribed to {topic}")
 
     def subscribe_diagnostics(self, agent_id: str):
         """Subscribe to agent diagnostics topic"""
         topic = f'/{agent_id}/diagnostics'
-        if topic in self.subscriptions:
+        if topic in self._subs_registry:
             return
 
         sub = self.create_subscription(
@@ -194,13 +197,13 @@ class ROSBridge(Node):
             lambda msg: self._on_diagnostics(agent_id, msg),
             10
         )
-        self.subscriptions[topic] = sub
+        self._subs_registry[topic] = sub
         logger.info(f"Subscribed to {topic}")
 
     def subscribe_wind_velocity(self):
         """Subscribe to wind velocity topic"""
         topic = '/wind/velocity'
-        if topic in self.subscriptions:
+        if topic in self._subs_registry:
             return
 
         sub = self.create_subscription(
@@ -209,13 +212,13 @@ class ROSBridge(Node):
             self._on_wind_velocity,
             10
         )
-        self.subscriptions[topic] = sub
+        self._subs_registry[topic] = sub
         logger.info(f"Subscribed to {topic}")
 
     def subscribe_wind_force(self):
         """Subscribe to wind force topic"""
         topic = '/wind/force'
-        if topic in self.subscriptions:
+        if topic in self._subs_registry:
             return
 
         sub = self.create_subscription(
@@ -224,13 +227,12 @@ class ROSBridge(Node):
             self._on_wind_force,
             10
         )
-        self.subscriptions[topic] = sub
+        self._subs_registry[topic] = sub
         logger.info(f"Subscribed to {topic}")
 
-    def subscribe_formation_state(self):
-        """Subscribe to formation state topic"""
-        topic = '/formation_coordinator_node/state'
-        if topic in self.subscriptions:
+    def subscribe_formation_state(self, topic: str):
+        """Subscribe to formation state topic (namespaced)"""
+        if topic in self._subs_registry:
             return
 
         sub = self.create_subscription(
@@ -239,7 +241,7 @@ class ROSBridge(Node):
             self._on_formation_state,
             10
         )
-        self.subscriptions[topic] = sub
+        self._subs_registry[topic] = sub
         logger.info(f"Subscribed to {topic}")
 
     # =========================================================================
@@ -278,6 +280,8 @@ class ROSBridge(Node):
         )
 
         with self.data_lock:
+            if not isinstance(self.metrics_data.get(agent_id), deque):
+                self.metrics_data[agent_id] = deque(maxlen=self.max_history)
             self.metrics_data[agent_id].append(data)
             self.latest_metrics[agent_id] = data
 
@@ -307,6 +311,8 @@ class ROSBridge(Node):
         )
 
         with self.data_lock:
+            if not isinstance(self.odom_data.get(agent_id), deque):
+                self.odom_data[agent_id] = deque(maxlen=self.max_history)
             self.odom_data[agent_id].append(data)
             self.latest_odom[agent_id] = data
 
@@ -327,6 +333,8 @@ class ROSBridge(Node):
         )
 
         with self.data_lock:
+            if not isinstance(self.target_data.get(agent_id), deque):
+                self.target_data[agent_id] = deque(maxlen=self.max_history)
             self.target_data[agent_id].append(data)
             self.latest_target[agent_id] = data
 
@@ -351,6 +359,8 @@ class ROSBridge(Node):
         )
 
         with self.data_lock:
+            if not isinstance(self.diagnostics_data.get(agent_id), deque):
+                self.diagnostics_data[agent_id] = deque(maxlen=self.max_history)
             self.diagnostics_data[agent_id].append(data)
             self.latest_diagnostics[agent_id] = data
 
@@ -361,6 +371,8 @@ class ROSBridge(Node):
         timestamp = time.time()
 
         with self.data_lock:
+            if not isinstance(self.wind_velocity_data, deque):
+                self.wind_velocity_data = deque(maxlen=self.max_history)
             wind_data = WindData(
                 timestamp=timestamp,
                 velocity=Vector3Schema(x=msg.x, y=msg.y, z=msg.z)
@@ -380,6 +392,8 @@ class ROSBridge(Node):
         timestamp = time.time()
 
         with self.data_lock:
+            if not isinstance(self.wind_force_data, deque):
+                self.wind_force_data = deque(maxlen=self.max_history)
             force_vec = Vector3Schema(x=msg.x, y=msg.y, z=msg.z)
             self.wind_force_data.append((timestamp, force_vec))
 
@@ -411,6 +425,8 @@ class ROSBridge(Node):
         )
 
         with self.data_lock:
+            if not isinstance(self.formation_data, deque):
+                self.formation_data = deque(maxlen=self.max_history)
             self.formation_data.append(data)
             self.latest_formation = data
 
