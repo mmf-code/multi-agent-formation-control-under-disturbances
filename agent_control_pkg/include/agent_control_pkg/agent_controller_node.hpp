@@ -11,6 +11,7 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
+#include "my_custom_interfaces_pkg/msg/controller_params.hpp"
 
 #include "agent_control_pkg/config_reader.hpp"
 #include "agent_control_pkg/controllers/combined_pid_fuzzy_adapter.hpp"
@@ -54,6 +55,7 @@ private:
   void windCallback(const geometry_msgs::msg::Vector3::SharedPtr msg);
   void controlLoop();
   void publishDiagnostics();
+  void publishControllerParams();
   void ensureFuzzyParamsLoaded();
 
   AxisLimits axis_limits_x_;
@@ -90,7 +92,9 @@ private:
   rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr wind_sub_;
   rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr cmd_pub_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr diag_pub_;
+  rclcpp::Publisher<my_custom_interfaces_pkg::msg::ControllerParams>::SharedPtr params_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::TimerBase::SharedPtr params_timer_;
 
   geometry_msgs::msg::PoseStamped::SharedPtr latest_target_;
   nav_msgs::msg::Odometry::SharedPtr latest_odom_;
