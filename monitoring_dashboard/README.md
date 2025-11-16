@@ -144,10 +144,14 @@ The dashboard automatically discovers and subscribes to:
 You can start and test the dashboard **without running the simulation**:
 
 ```bash
-# Terminal: Start backend (serves UI)
+# Terminal 1: Start backend (serves UI)
 cd monitoring_dashboard
 source /opt/ros/humble/setup.bash
 ./scripts/run_backend.sh
+
+# Terminal 2 (Optional): Run test publisher for dummy data
+source /opt/ros/humble/setup.bash
+python3 scripts/test_publisher.py
 
 # Open browser: http://localhost:8000/ui
 ```
@@ -155,13 +159,20 @@ source /opt/ros/humble/setup.bash
 **Expected behavior without simulation:**
 - ✅ Dashboard opens successfully
 - ✅ Connection: "Connected" (green) after WS handshake
-- ✅ System shows "No agents detected"
-- ⚠️ No data displayed (expected - start simulation to see data)
+- ✅ System shows "No agents detected" (without test publisher)
+- ⚠️ No data displayed (expected - start simulation or test publisher to see data)
 
-**When you start the simulation**, the dashboard will automatically:
+**With test publisher running:**
+- ✅ 3 simulated agents appear (agent_0, agent_1, agent_2)
+- ✅ Odometry data streams (circular motion pattern)
+- ✅ Wind data updates
+- ✅ Diagnostics show controller outputs
+- ⚠️ No metrics data (requires custom interface not available in test mode)
+
+**When you start the actual simulation**, the dashboard will automatically:
 - Discover agents (agent_0, agent_1, etc.)
-- Enable active topics
-- Start streaming real-time data
+- Enable active topics including metrics
+- Start streaming real-time data with full performance analytics
 
 This allows you to verify the installation before running heavy simulations!
 
@@ -228,6 +239,21 @@ Edit `frontend/src/api/ws.ts` to change:
 
 ## 🐛 Troubleshooting
 
+### Quick Health Check
+
+Run the health check script to diagnose issues:
+
+```bash
+cd monitoring_dashboard
+./scripts/check_health.sh
+```
+
+This will verify:
+- Backend server status
+- ROS2 initialization
+- WebSocket availability
+- Frontend build status
+
 ### Backend Not Starting
 
 **Problem**: ROS2 topics not discovered
@@ -241,6 +267,9 @@ source install/setup.bash
 # Verify topics are publishing
 ros2 topic list
 ros2 topic echo /agent_0/metrics
+
+# Check backend health
+curl http://localhost:8000/api/health
 ```
 
 ### Frontend Not Connecting

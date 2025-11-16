@@ -130,6 +130,29 @@ async def root():
     }
 
 
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint with detailed ROS status"""
+    if not ros_bridge:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "unhealthy",
+                "ros_initialized": False,
+                "message": "ROS bridge not initialized"
+            }
+        )
+
+    return {
+        "status": "healthy",
+        "ros_initialized": True,
+        "ros_ok": rclpy.ok(),
+        "active_agents": len(ros_bridge.active_agents),
+        "discovered_topics": len(ros_bridge.discovered_topics),
+        "active_connections": len(active_connections)
+    }
+
+
 @app.get("/api/status")
 async def get_status():
     """Get system status"""

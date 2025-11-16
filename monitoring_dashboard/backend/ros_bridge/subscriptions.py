@@ -79,7 +79,7 @@ class ROSBridge(Node):
         self.data_lock = threading.Lock()
 
         # Auto-discovery of agents and topics
-        self.discover_timer = self.create_timer(2.0, self.discover_topics)
+        self.discover_timer = self.create_timer(1.0, self.discover_topics)
 
         logger.info("ROSBridge initialized - monitoring dashboard ready")
 
