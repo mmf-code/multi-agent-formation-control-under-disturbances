@@ -100,17 +100,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Optionally serve built frontend (if available) at /ui
-try:
-    frontend_dist = (Path(__file__).resolve().parent.parent / 'frontend' / 'dist')
-    if frontend_dist.is_dir():
-        app.mount('/ui', StaticFiles(directory=str(frontend_dist), html=True), name='ui')
-        logger.info(f"Serving frontend UI from {frontend_dist} at /ui")
-    else:
-        logger.info("Frontend UI not built; skipping static mount (/ui)")
-except Exception:
-    logger.exception("Failed to mount frontend UI static files")
-
 # Active WebSocket connections
 active_connections: Set[WebSocket] = set()
 
@@ -275,17 +264,20 @@ async def websocket_endpoint(websocket: WebSocket):
     subscribe_all_agents = True
 
     try:
-        # Send initial snapshot
+        # Send initial snapshot to frontend
         if ros_bridge:
             try:
                 initial_data = ros_bridge.get_all_latest_data()
-                await websocket.send_json({
-                    "type": "snapshot",
-                    "data": initial_data
-                })
-                logger.info("Initial snapshot sent to WebSocket client")
-            except Exception:
-                logger.exception("Failed to send initial snapshot to WebSocket client")
+                if initial_data and (initial_data.get('metrics') or initial_data.get('odom')):
+                    await websocket.send_json({
+                        "type": "snapshot",
+                        "data": initial_data
+                    })
+                    logger.info(f"Initial snapshot sent (agents: {len(initial_data.get('metrics', {}))})")
+                else:
+                    logger.info("No initial data available yet")
+            except Exception as e:
+                logger.error(f"Failed to send initial snapshot: {e}", exc_info=True)
 
         # Register callback for ROS data updates
         async def on_ros_update(data_type: str, agent_id: Optional[str] = None):
@@ -324,9 +316,17 @@ async def websocket_endpoint(websocket: WebSocket):
                     logger.error(f"Error sending WebSocket update: {e}")
 
         if ros_bridge:
-            ros_bridge.add_update_callback(
-                lambda dt, aid: asyncio.create_task(on_ros_update(dt, aid))
-            )
+            # Store the event loop for callbacks from ROS thread
+            loop = asyncio.get_event_loop()
+
+            def ros_callback(dt, aid):
+                """Callback from ROS thread - schedule coroutine in event loop"""
+                try:
+                    asyncio.run_coroutine_threadsafe(on_ros_update(dt, aid), loop)
+                except Exception as e:
+                    logger.error(f"Error scheduling ROS update: {e}")
+
+            ros_bridge.add_update_callback(ros_callback)
 
         async def heartbeat():
             """Periodic heartbeat to keep connection alive and aid debugging"""
@@ -418,6 +418,23 @@ async def broadcast_message(message: dict):
 
     # Clean up disconnected clients
     active_connections.difference_update(disconnected)
+
+
+# ============================================================================
+# Static Files (must be last to avoid blocking routes)
+# ============================================================================
+
+# Optionally serve built frontend (if available) at /ui
+# IMPORTANT: This MUST come after all route definitions to avoid blocking them
+try:
+    frontend_dist = (Path(__file__).resolve().parent.parent / 'frontend' / 'dist')
+    if frontend_dist.is_dir():
+        app.mount('/ui', StaticFiles(directory=str(frontend_dist), html=True), name='ui')
+        logger.info(f"Serving frontend UI from {frontend_dist} at /ui")
+    else:
+        logger.info("Frontend UI not built; skipping static mount (/ui)")
+except Exception:
+    logger.exception("Failed to mount frontend UI static files")
 
 
 # ============================================================================

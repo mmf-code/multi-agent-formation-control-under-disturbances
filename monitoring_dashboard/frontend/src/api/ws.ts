@@ -113,15 +113,20 @@ export class WebSocketClient {
       ? (import.meta as any).env.VITE_BACKEND_WS_URL
       : undefined;
 
-    // Prefer same-origin WS during development (Vite proxy forwards /ws)
-    const sameOriginUrl = typeof window !== 'undefined'
-      ? `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`
-      : undefined;
-
-    // Fallback direct to backend default
-    const fallbackUrl = 'ws://localhost:8000/ws';
-
-    this.url = url || envUrl || sameOriginUrl || fallbackUrl;
+    if (url) {
+      this.url = url;
+    } else if (envUrl) {
+      this.url = envUrl;
+    } else if (typeof window !== 'undefined') {
+      // Detect if we're served from /ui/ path (production build served by backend)
+      const isUnderUi = window.location.pathname.startsWith('/ui');
+      const wsPath = isUnderUi ? '/ui/ws' : '/ws';
+      const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+      this.url = `${protocol}://${window.location.host}${wsPath}`;
+    } else {
+      // Fallback (shouldn't happen in browser)
+      this.url = 'ws://localhost:8000/ws';
+    }
   }
 
   connect(): void {
