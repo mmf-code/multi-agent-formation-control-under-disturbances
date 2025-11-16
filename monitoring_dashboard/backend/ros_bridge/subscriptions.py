@@ -462,15 +462,41 @@ class ROSBridge(Node):
             force_vec = Vector3Schema(x=msg.x, y=msg.y, z=msg.z)
             self.wind_force_data.append((timestamp, force_vec))
 
-            # Merge with velocity data
-            if self.latest_wind:
-                self.latest_wind.force = force_vec
-            else:
-                self.latest_wind = WindData(
+            # For real simulations that only publish /wind/force (and not /wind/velocity),
+            # also push a WindData sample into the velocity history so the dashboard
+            # has a meaningful time series to plot. We reuse the force vector as a
+            # proxy "velocity" for visualization.
+            if not isinstance(self.wind_velocity_data, deque):
+                self.wind_velocity_data = deque(maxlen=self.max_history)
+
+            # Only synthesize velocity samples if none exist yet (i.e., no real
+            # /wind/velocity publisher). If velocity data is already present we
+            # keep it as the authoritative source.
+            synthesize_velocity = len(self.wind_velocity_data) == 0
+
+            if synthesize_velocity:
+                wind_data = WindData(
                     timestamp=timestamp,
-                    velocity=Vector3Schema(x=0, y=0, z=0),
+                    velocity=force_vec,
                     force=force_vec
                 )
+                self.wind_velocity_data.append(wind_data)
+
+                if self.latest_wind:
+                    self.latest_wind.force = force_vec
+                    # Do not overwrite a real velocity if it was set earlier
+                else:
+                    self.latest_wind = wind_data
+            else:
+                # We already have real velocity samples; just merge force into latest_wind
+                if self.latest_wind:
+                    self.latest_wind.force = force_vec
+                else:
+                    self.latest_wind = WindData(
+                        timestamp=timestamp,
+                        velocity=Vector3Schema(x=0, y=0, z=0),
+                        force=force_vec
+                    )
 
         self.notify_update('wind')
 
@@ -531,7 +557,24 @@ class ROSBridge(Node):
     def get_wind_history(self, limit: int = 100) -> List[WindData]:
         """Get wind history"""
         with self.data_lock:
-            return list(self.wind_velocity_data)[-limit:]
+            # Primary source: velocity samples (from /wind/velocity or synthesized)
+            if len(self.wind_velocity_data) > 0:
+                return list(self.wind_velocity_data)[-limit:]
+
+            # Fallback: if we only have force samples, synthesize WindData
+            if len(self.wind_force_data) > 0:
+                history: List[WindData] = []
+                for ts, force_vec in list(self.wind_force_data)[-limit:]:
+                    history.append(
+                        WindData(
+                            timestamp=ts,
+                            velocity=force_vec,
+                            force=force_vec,
+                        )
+                    )
+                return history
+
+            return []
 
     def get_latest_formation(self) -> Optional[FormationState]:
         """Get latest formation state"""
@@ -543,12 +586,19 @@ class ROSBridge(Node):
 
         Caller is responsible for holding self.data_lock if needed.
         """
+        # Consider wind "active" if we have either a known wind topic
+        # or at least one received sample.
+        wind_topics_present = any(
+            name in self.discovered_topics
+            for name in ('/wind/velocity', '/wind/force')
+        )
+
         return SystemStatus(
             timestamp=time.time(),
             ros_ok=rclpy.ok(),
             active_agents=sorted(list(self.active_agents)),
             available_topics=sorted(list(self.discovered_topics.keys())),
-            wind_active=self.latest_wind is not None,
+            wind_active=wind_topics_present or self.latest_wind is not None,
             formation_active=self.latest_formation is not None,
         )
 

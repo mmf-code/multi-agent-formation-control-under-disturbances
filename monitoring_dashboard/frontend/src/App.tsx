@@ -137,6 +137,28 @@ function App() {
           const s: SystemStatus = await res.json();
           setStatus(s);
           if (wsClient.connected) setConnected(true);
+
+          // Also try to pull wind history via REST as a fallback/supplement
+          // so that wind charts populate even if WebSocket updates are sparse.
+          try {
+            const statusUrl = res.url || '/api/status';
+            const windUrl = statusUrl.replace(/\/api\/status$/, '/api/wind');
+            const windRes = await fetch(windUrl);
+            if (windRes.ok) {
+              const payload: any = await windRes.json();
+              const samples: any[] = Array.isArray(payload?.data) ? payload.data : [];
+              if (samples.length > 0) {
+                setWindHistory((prev) => {
+                  const merged = [...prev, ...(samples as WindData[])];
+                  return merged.slice(-500);
+                });
+                const last = samples[samples.length - 1] as WindData;
+                setWind(last);
+              }
+            }
+          } catch {
+            // Wind REST polling is best-effort; ignore errors here.
+          }
         }
       } catch (e) {
         // ignore network errors here; WS reconnect logic handles primary connectivity
