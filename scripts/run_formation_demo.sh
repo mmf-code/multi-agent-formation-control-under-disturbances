@@ -75,27 +75,25 @@ echo ""
 
 # Wind parametreleri
 echo -e "${CYAN}Wind Disturbance:${NC}"
-echo -e "  Base world wind plugin: ${RED}4.0N${NC} mean, ${RED}1.5N${NC} variance"
-echo -e "  ROS wind topic: ${RED}/wind/force${NC} (for controllers + dashboard)"
+echo -e "  ${YELLOW}DISABLED${NC} (for debugging drone spawn issues)"
 echo ""
 
-# Rüzgar publisher'ını otomatik başlat (dashboard için /wind/force)
-echo -e "${CYAN}[2.5/3] Starting wind publisher node...${NC}"
-# Use bash explicitly so script does not need +x
-bash scripts/run_wind.sh --x 4.0 --y 1.2 --z 0.0 --duration 999999 >/dev/null 2>&1 &
-WIND_PID=$!
-echo -e "  → Wind publisher PID: ${WIND_PID}"
-echo ""
+# TEMPORARILY DISABLED: Wind publisher causing drone control issues
+# echo -e "${CYAN}[2.5/3] Starting wind publisher node...${NC}"
+# bash scripts/run_wind.sh --x 4.0 --y 1.2 --z 0.0 --duration 999999 >/dev/null 2>&1 &
+# WIND_PID=$!
+# echo -e "  → Wind publisher PID: ${WIND_PID}"
+# echo ""
 
-cleanup() {
-  echo ""
-  echo -e "${YELLOW}Stopping wind publisher (PID ${WIND_PID})...${NC}"
-  if kill -0 "${WIND_PID}" 2>/dev/null; then
-    kill "${WIND_PID}" 2>/dev/null || true
-  fi
-}
+# cleanup() {
+#   echo ""
+#   echo -e "${YELLOW}Stopping wind publisher (PID ${WIND_PID})...${NC}"
+#   if kill -0 "${WIND_PID}" 2>/dev/null; then
+#     kill "${WIND_PID}" 2>/dev/null || true
+#   fi
+# }
 
-trap cleanup EXIT INT TERM
+# trap cleanup EXIT INT TERM
 
 # Launch
 echo -e "${CYAN}[3/3] Launching simulation...${NC}"
