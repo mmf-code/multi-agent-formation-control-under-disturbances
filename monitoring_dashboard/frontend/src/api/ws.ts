@@ -68,6 +68,29 @@ export interface DiagnosticsData {
   y_fuzzy: number;
 }
 
+export interface ControllerParams {
+  agent_id: string;
+  timestamp: number;
+  controller_type: string;
+  pid_kp: number;
+  pid_ki: number;
+  pid_kd: number;
+  fuzzy_enable: boolean;
+  fuzzy_wind_scalar: number;
+  mix_k_pid: number;
+  mix_k_fuzzy: number;
+  feedforward_enable_drag: boolean;
+  feedforward_enable_wind: boolean;
+  feedforward_k_drag: number;
+  feedforward_k_wind: number;
+  output_limit_x_min: number;
+  output_limit_x_max: number;
+  output_limit_y_min: number;
+  output_limit_y_max: number;
+  control_frequency_hz: number;
+  dt: number;
+}
+
 export interface SystemStatus {
   timestamp: number;
   ros_ok: boolean;
@@ -82,6 +105,7 @@ export interface SnapshotData {
   odom: Record<string, OdometryData>;
   target: Record<string, { position: { x: number; y: number; z: number } }>;
   diagnostics: Record<string, DiagnosticsData>;
+  controller_params: Record<string, ControllerParams>;
   formation: FormationState | null;
   wind: WindData | null;
   status: SystemStatus;

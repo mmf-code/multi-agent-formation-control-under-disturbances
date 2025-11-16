@@ -120,6 +120,44 @@ class TopicInfo(BaseModel):
     subscription_count: int
 
 
+class ControllerParams(BaseModel):
+    """Controller parameters for agent"""
+    agent_id: str
+    timestamp: float
+
+    # Controller type
+    controller_type: str
+
+    # PID parameters
+    pid_kp: float
+    pid_ki: float
+    pid_kd: float
+
+    # Fuzzy parameters
+    fuzzy_enable: bool
+    fuzzy_wind_scalar: float
+
+    # Hybrid mixing
+    mix_k_pid: float
+    mix_k_fuzzy: float
+
+    # Feed-forward
+    feedforward_enable_drag: bool
+    feedforward_enable_wind: bool
+    feedforward_k_drag: float
+    feedforward_k_wind: float
+
+    # Output limits
+    output_limit_x_min: float
+    output_limit_x_max: float
+    output_limit_y_min: float
+    output_limit_y_max: float
+
+    # Timing
+    control_frequency_hz: float
+    dt: float
+
+
 class SystemStatus(BaseModel):
     """Overall system status"""
     timestamp: float
