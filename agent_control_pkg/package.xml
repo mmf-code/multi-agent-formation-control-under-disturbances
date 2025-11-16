@@ -16,6 +16,7 @@
   <depend>std_msgs</depend>
   <depend>ament_index_cpp</depend>
   <depend>yaml-cpp</depend>
+  <depend>my_custom_interfaces_pkg</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
 

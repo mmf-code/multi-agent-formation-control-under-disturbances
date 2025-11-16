@@ -293,6 +293,13 @@ ament_target_dependencies(simple_drone_plugin
   gazebo_ros
 )
 
+# Set RPATH so plugin can find ROS2 libraries at runtime
+set_target_properties(simple_drone_plugin PROPERTIES
+  INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:$ORIGIN"
+  BUILD_RPATH "${CMAKE_BINARY_DIR}/lib"
+  INSTALL_RPATH_USE_LINK_PATH TRUE
+)
+
 install(TARGETS simple_drone_plugin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
