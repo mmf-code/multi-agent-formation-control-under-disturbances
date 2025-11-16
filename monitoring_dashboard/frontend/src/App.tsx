@@ -12,12 +12,14 @@ import {
   FormationState,
   SystemStatus,
   SnapshotData,
+  ControllerParams,
 } from './api/ws';
 import { KpiCards } from './components/KpiCards';
 import { TopicStatus } from './components/TopicStatus';
 import { TimeSeries } from './components/TimeSeries';
 import { FormationMap } from './components/FormationMap';
 import { EventLog, LogEntry } from './components/EventLog';
+import { ControllerParamsPanel } from './components/ControllerParamsPanel';
 
 function App() {
   // State
@@ -28,6 +30,7 @@ function App() {
   const [metrics, setMetrics] = useState<Record<string, MetricsData>>({});
   const [odom, setOdom] = useState<Record<string, OdometryData>>({});
   const [targets, setTargets] = useState<Record<string, any>>({});
+  const [controllerParams, setControllerParams] = useState<Record<string, ControllerParams>>({});
   const [_wind, setWind] = useState<WindData | null>(null);
   const [formation, setFormation] = useState<FormationState | null>(null);
 
@@ -74,6 +77,8 @@ function App() {
         handleMetricsUpdate(agentId, data);
       } else if (dataType === 'odom' && agentId) {
         handleOdomUpdate(agentId, data);
+      } else if (dataType === 'controller_params' && agentId) {
+        setControllerParams((prev) => ({ ...prev, [agentId]: data }));
       } else if (dataType === 'wind') {
         handleWindUpdate(data);
       } else if (dataType === 'formation') {
@@ -155,6 +160,7 @@ function App() {
     setMetrics(snapshot.metrics);
     setOdom(snapshot.odom);
     setTargets(snapshot.target);
+    if (snapshot.controller_params) setControllerParams(snapshot.controller_params);
     if (snapshot.wind) setWind(snapshot.wind);
     if (snapshot.formation) setFormation(snapshot.formation);
     if (snapshot.status) setStatus(snapshot.status);
@@ -286,6 +292,14 @@ function App() {
             <h2 className="text-xl font-semibold mb-4">Performance Metrics</h2>
             <KpiCards metrics={metrics} selectedAgent={selectedAgent} />
           </div>
+        )}
+
+        {/* Controller Parameters */}
+        {Object.keys(controllerParams).length > 0 && (
+          <ControllerParamsPanel
+            controllerParams={controllerParams}
+            selectedAgent={selectedAgent}
+          />
         )}
 
         {/* Formation Map */}

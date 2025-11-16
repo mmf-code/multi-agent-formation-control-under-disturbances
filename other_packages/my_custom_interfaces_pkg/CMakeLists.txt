@@ -7,6 +7,7 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/FormationState.msg"
   "msg/MetricsData.msg"
+  "msg/ControllerParams.msg"
   "srv/UpdateFormation.srv"
 )
 

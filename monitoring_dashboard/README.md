@@ -9,6 +9,7 @@ Modern, real-time web-based monitoring dashboard for multi-agent drone formation
 ### 📊 Real-time Monitoring
 - **Live Drone Tracking**: 2D formation map with current & target positions
 - **Performance Metrics**: Error, RMSE, IAE, ITAE, settling time, overshoot
+- **Controller Parameters**: Real-time PID (Kp, Ki, Kd), Fuzzy, and Hybrid controller config display
 - **Wind Monitoring**: Real-time wind velocity and force tracking
 - **Formation State**: Dynamic formation shape, spacing, and center tracking
 
@@ -20,13 +21,18 @@ Modern, real-time web-based monitoring dashboard for multi-agent drone formation
 
 ### 📈 Visualizations
 1. **KPI Cards**: Key performance indicators for each agent
-2. **Formation Map**: 2D visualization of drone positions
-3. **Time Series Charts**:
+2. **Controller Parameters Panel**: Live controller configuration display
+   - PID gains (Kp, Ki, Kd)
+   - Fuzzy logic settings
+   - Hybrid mixing ratios
+   - Feed-forward compensation parameters
+3. **Formation Map**: 2D visualization of drone positions
+4. **Time Series Charts**:
    - Position error (X, Y, Z)
    - IAE/ITAE trends
    - Wind velocity
    - Overshoot & RMSE
-4. **Event Log**: Real-time system messages
+5. **Event Log**: Real-time system messages
 
 ## 🏗️ Architecture
 
@@ -133,6 +139,7 @@ The dashboard automatically discovers and subscribes to:
 - `/agent_X/target_pose` (geometry_msgs/PoseStamped) - Target position
 - `/agent_X/metrics` (my_custom_interfaces_pkg/MetricsData) - Performance metrics
 - `/agent_X/diagnostics` (std_msgs/Float64MultiArray) - Controller contributions
+- `/agent_X/controller_params` (my_custom_interfaces_pkg/ControllerParams) - Real-time controller configuration
 
 ### Global Topics
 - `/wind/velocity` (geometry_msgs/Vector3) - Wind velocity
@@ -141,7 +148,9 @@ The dashboard automatically discovers and subscribes to:
 
 ## 🧪 Testing Without Simulation
 
-You can start and test the dashboard **without running the simulation**:
+You can start and test the dashboard **without running the simulation** using the test publisher!
+
+### Option 1: Backend Only (No Data)
 
 ```bash
 # Terminal 1: Start backend (serves UI)
@@ -149,25 +158,58 @@ cd monitoring_dashboard
 source /opt/ros/humble/setup.bash
 ./scripts/run_backend.sh
 
-# Terminal 2 (Optional): Run test publisher for dummy data
+# Open browser: http://localhost:8000/ui
+```
+
+**Expected behavior:**
+- ✅ Dashboard opens successfully
+- ✅ Connection: "Connected" (green) after WS handshake
+- ✅ System shows "No agents detected"
+- ⚠️ No data displayed (start test publisher or simulation to see data)
+
+### Option 2: With Test Publisher (Recommended for Testing)
+
+The test publisher simulates 3 agents with realistic data patterns!
+
+```bash
+# Terminal 1: Build custom ROS messages first (one-time)
+cd /path/to/workspace
 source /opt/ros/humble/setup.bash
+colcon build --packages-select my_custom_interfaces_pkg
+source install/setup.bash
+
+# Terminal 2: Start backend
+cd monitoring_dashboard
+./scripts/run_backend.sh
+
+# Terminal 3: Run test publisher
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+cd monitoring_dashboard
 python3 scripts/test_publisher.py
 
 # Open browser: http://localhost:8000/ui
 ```
 
-**Expected behavior without simulation:**
-- ✅ Dashboard opens successfully
-- ✅ Connection: "Connected" (green) after WS handshake
-- ✅ System shows "No agents detected" (without test publisher)
-- ⚠️ No data displayed (expected - start simulation or test publisher to see data)
-
 **With test publisher running:**
 - ✅ 3 simulated agents appear (agent_0, agent_1, agent_2)
+- ✅ **Controller Parameters** displayed for each agent:
+  - **Agent 0**: Pure PID (Kp=5.0, Ki=2.5, Kd=5.0)
+  - **Agent 1**: Hybrid PID+Fuzzy (Kp=3.5, Ki=1.8, Kd=4.0, Fuzzy enabled)
+  - **Agent 2**: Full Hybrid with Feed-Forward
 - ✅ Odometry data streams (circular motion pattern)
-- ✅ Wind data updates
-- ✅ Diagnostics show controller outputs
-- ⚠️ No metrics data (requires custom interface not available in test mode)
+- ✅ Target poses update dynamically
+- ✅ Wind velocity and force updates
+- ✅ Diagnostics show controller outputs (PID/Fuzzy contributions)
+
+**Test Publisher Features:**
+- **3 agents** in circular formation pattern
+- **Different controller configs** per agent (PID, Hybrid, Full Hybrid)
+- **Realistic motion** (circular trajectory with varying radius)
+- **Wind simulation** (sinusoidal velocity patterns)
+- **Controller diagnostics** (X/Y axis PID and Fuzzy outputs)
+- **10 Hz** data publication rate (100ms update interval)
+- **2 second** controller parameters refresh
 
 **When you start the actual simulation**, the dashboard will automatically:
 - Discover agents (agent_0, agent_1, etc.)

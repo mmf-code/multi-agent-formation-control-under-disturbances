@@ -16,6 +16,7 @@ from geometry_msgs.msg import PoseStamped, Vector3
 from std_msgs.msg import Float64MultiArray
 from my_custom_interfaces_pkg.msg import MetricsData as ROSMetricsData
 from my_custom_interfaces_pkg.msg import FormationState as ROSFormationState
+from my_custom_interfaces_pkg.msg import ControllerParams as ROSControllerParams
 
 from .schemas import (
     MetricsData,
@@ -24,6 +25,7 @@ from .schemas import (
     FormationState,
     WindData,
     DiagnosticsData,
+    ControllerParams,
     SystemStatus,
     Vector3 as Vector3Schema
 )
@@ -46,6 +48,7 @@ class ROSBridge(Node):
         self.odom_data: Dict[str, deque] = defaultdict(lambda: deque(maxlen=self.max_history))
         self.target_data: Dict[str, deque] = defaultdict(lambda: deque(maxlen=self.max_history))
         self.diagnostics_data: Dict[str, deque] = defaultdict(lambda: deque(maxlen=self.max_history))
+        self.controller_params_data: Dict[str, deque] = defaultdict(lambda: deque(maxlen=100))  # Less history needed for params
         self.formation_data: deque = deque(maxlen=self.max_history)
         self.wind_velocity_data: deque = deque(maxlen=self.max_history)
         self.wind_force_data: deque = deque(maxlen=self.max_history)
@@ -55,6 +58,7 @@ class ROSBridge(Node):
         self.latest_odom: Dict[str, OdometryData] = {}
         self.latest_target: Dict[str, TargetPoseData] = {}
         self.latest_diagnostics: Dict[str, DiagnosticsData] = {}
+        self.latest_controller_params: Dict[str, ControllerParams] = {}
         self.latest_formation: Optional[FormationState] = None
         self.latest_wind: Optional[WindData] = None
 
@@ -120,6 +124,8 @@ class ROSBridge(Node):
                         self.subscribe_target_pose(agent_id)
                     elif topic_name.endswith('/diagnostics'):
                         self.subscribe_diagnostics(agent_id)
+                    elif topic_name.endswith('/controller_params'):
+                        self.subscribe_controller_params(agent_id)
 
             # Global topics
             elif topic_name == '/wind/velocity':
@@ -195,6 +201,21 @@ class ROSBridge(Node):
             Float64MultiArray,
             topic,
             lambda msg: self._on_diagnostics(agent_id, msg),
+            10
+        )
+        self._subs_registry[topic] = sub
+        logger.info(f"Subscribed to {topic}")
+
+    def subscribe_controller_params(self, agent_id: str):
+        """Subscribe to agent controller parameters topic"""
+        topic = f'/{agent_id}/controller_params'
+        if topic in self._subs_registry:
+            return
+
+        sub = self.create_subscription(
+            ROSControllerParams,
+            topic,
+            lambda msg: self._on_controller_params(agent_id, msg),
             10
         )
         self._subs_registry[topic] = sub
@@ -366,6 +387,41 @@ class ROSBridge(Node):
 
         self.notify_update('diagnostics', agent_id)
 
+    def _on_controller_params(self, agent_id: str, msg: ROSControllerParams):
+        """Handle controller parameters message"""
+        timestamp = time.time()
+
+        data = ControllerParams(
+            agent_id=agent_id,
+            timestamp=timestamp,
+            controller_type=msg.controller_type,
+            pid_kp=msg.pid_kp,
+            pid_ki=msg.pid_ki,
+            pid_kd=msg.pid_kd,
+            fuzzy_enable=msg.fuzzy_enable,
+            fuzzy_wind_scalar=msg.fuzzy_wind_scalar,
+            mix_k_pid=msg.mix_k_pid,
+            mix_k_fuzzy=msg.mix_k_fuzzy,
+            feedforward_enable_drag=msg.feedforward_enable_drag,
+            feedforward_enable_wind=msg.feedforward_enable_wind,
+            feedforward_k_drag=msg.feedforward_k_drag,
+            feedforward_k_wind=msg.feedforward_k_wind,
+            output_limit_x_min=msg.output_limit_x_min,
+            output_limit_x_max=msg.output_limit_x_max,
+            output_limit_y_min=msg.output_limit_y_min,
+            output_limit_y_max=msg.output_limit_y_max,
+            control_frequency_hz=msg.control_frequency_hz,
+            dt=msg.dt
+        )
+
+        with self.data_lock:
+            if not isinstance(self.controller_params_data.get(agent_id), deque):
+                self.controller_params_data[agent_id] = deque(maxlen=100)
+            self.controller_params_data[agent_id].append(data)
+            self.latest_controller_params[agent_id] = data
+
+        self.notify_update('controller_params', agent_id)
+
     def _on_wind_velocity(self, msg: Vector3):
         """Handle wind velocity message"""
         timestamp = time.time()
@@ -485,6 +541,11 @@ class ROSBridge(Node):
                 formation_active=self.latest_formation is not None
             )
 
+    def get_latest_controller_params(self, agent_id: str) -> Optional[ControllerParams]:
+        """Get latest controller parameters for an agent"""
+        with self.data_lock:
+            return self.latest_controller_params.get(agent_id)
+
     def get_all_latest_data(self) -> dict:
         """Get all latest data in one shot (for dashboard snapshot)"""
         with self.data_lock:
@@ -493,6 +554,7 @@ class ROSBridge(Node):
                 'odom': {k: v.dict() for k, v in self.latest_odom.items()},
                 'target': {k: v.dict() for k, v in self.latest_target.items()},
                 'diagnostics': {k: v.dict() for k, v in self.latest_diagnostics.items()},
+                'controller_params': {k: v.dict() for k, v in self.latest_controller_params.items()},
                 'formation': self.latest_formation.dict() if self.latest_formation else None,
                 'wind': self.latest_wind.dict() if self.latest_wind else None,
                 'status': self.get_system_status().dict()

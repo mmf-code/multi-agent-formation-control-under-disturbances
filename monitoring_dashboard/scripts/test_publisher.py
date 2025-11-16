@@ -8,6 +8,7 @@ from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseStamped, Vector3
 from std_msgs.msg import Float64MultiArray
+from my_custom_interfaces_pkg.msg import ControllerParams
 import math
 import time
 
@@ -24,6 +25,7 @@ class TestPublisher(Node):
         self.odom_pubs = []
         self.target_pubs = []
         self.diag_pubs = []
+        self.params_pubs = []
 
         for i in range(self.num_agents):
             agent_id = f'agent_{i}'
@@ -40,6 +42,10 @@ class TestPublisher(Node):
             diag_pub = self.create_publisher(Float64MultiArray, f'/{agent_id}/diagnostics', 10)
             self.diag_pubs.append(diag_pub)
 
+            # Controller parameters
+            params_pub = self.create_publisher(ControllerParams, f'/{agent_id}/controller_params', 10)
+            self.params_pubs.append(params_pub)
+
         # Wind publishers
         self.wind_vel_pub = self.create_publisher(Vector3, '/wind/velocity', 10)
         self.wind_force_pub = self.create_publisher(Vector3, '/wind/force', 10)
@@ -47,14 +53,21 @@ class TestPublisher(Node):
         # Timer for publishing
         self.timer = self.create_timer(0.1, self.publish_test_data)  # 10 Hz
 
+        # Timer for controller params (less frequent - every 2 seconds)
+        self.params_timer = self.create_timer(2.0, self.publish_controller_params)
+
         self.get_logger().info('Test publisher started - simulating 3 agents')
         self.get_logger().info('Publishing to:')
         for i in range(self.num_agents):
             self.get_logger().info(f'  - /agent_{i}/odom')
             self.get_logger().info(f'  - /agent_{i}/target_pose')
             self.get_logger().info(f'  - /agent_{i}/diagnostics')
+            self.get_logger().info(f'  - /agent_{i}/controller_params')
         self.get_logger().info('  - /wind/velocity')
         self.get_logger().info('  - /wind/force')
+
+        # Publish initial controller params immediately
+        self.publish_controller_params()
 
     def publish_test_data(self):
         """Publish test data for all agents"""
@@ -122,6 +135,76 @@ class TestPublisher(Node):
         wind_force.y = wind_vel.y * 0.5
         wind_force.z = wind_vel.z * 0.5
         self.wind_force_pub.publish(wind_force)
+
+    def publish_controller_params(self):
+        """Publish controller parameters for all agents"""
+        # Different controller configs for variety
+        configs = [
+            # Agent 0: Pure PID
+            {
+                'type': 'pid',
+                'kp': 5.0, 'ki': 2.5, 'kd': 5.0,
+                'fuzzy_enable': False, 'fuzzy_wind': 0.0,
+                'mix_pid': 1.0, 'mix_fuzzy': 0.0,
+                'ff_drag': False, 'ff_wind': False,
+                'k_drag': 0.8, 'k_wind': 1.0
+            },
+            # Agent 1: Hybrid (PID + Fuzzy)
+            {
+                'type': 'hybrid',
+                'kp': 3.5, 'ki': 1.8, 'kd': 4.0,
+                'fuzzy_enable': True, 'fuzzy_wind': 0.5,
+                'mix_pid': 0.7, 'mix_fuzzy': 0.3,
+                'ff_drag': True, 'ff_wind': False,
+                'k_drag': 0.8, 'k_wind': 1.0
+            },
+            # Agent 2: Full Hybrid with FF
+            {
+                'type': 'hybrid',
+                'kp': 4.0, 'ki': 2.0, 'kd': 4.5,
+                'fuzzy_enable': True, 'fuzzy_wind': 0.8,
+                'mix_pid': 0.6, 'mix_fuzzy': 0.4,
+                'ff_drag': True, 'ff_wind': True,
+                'k_drag': 0.8, 'k_wind': 1.0
+            }
+        ]
+
+        for i in range(self.num_agents):
+            config = configs[i]
+
+            params = ControllerParams()
+            params.controller_type = config['type']
+
+            # PID params
+            params.pid_kp = config['kp']
+            params.pid_ki = config['ki']
+            params.pid_kd = config['kd']
+
+            # Fuzzy params
+            params.fuzzy_enable = config['fuzzy_enable']
+            params.fuzzy_wind_scalar = config['fuzzy_wind']
+
+            # Hybrid mixing
+            params.mix_k_pid = config['mix_pid']
+            params.mix_k_fuzzy = config['mix_fuzzy']
+
+            # Feed-forward
+            params.feedforward_enable_drag = config['ff_drag']
+            params.feedforward_enable_wind = config['ff_wind']
+            params.feedforward_k_drag = config['k_drag']
+            params.feedforward_k_wind = config['k_wind']
+
+            # Output limits
+            params.output_limit_x_min = -10.0
+            params.output_limit_x_max = 10.0
+            params.output_limit_y_min = -8.0
+            params.output_limit_y_max = 12.0
+
+            # Timing
+            params.control_frequency_hz = 200.0
+            params.dt = 0.005
+
+            self.params_pubs[i].publish(params)
 
 
 def main(args=None):
