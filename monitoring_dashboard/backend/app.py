@@ -3,6 +3,7 @@ Monitoring Dashboard Backend
 FastAPI + WebSocket server for real-time ROS2 data streaming
 """
 import asyncio
+import time
 import logging
 import threading
 from contextlib import asynccontextmanager
@@ -12,7 +13,9 @@ import rclpy
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 import uvicorn
+from pathlib import Path
 
 from ros_bridge import ROSBridge
 
@@ -96,6 +99,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Optionally serve built frontend (if available) at /ui
+try:
+    frontend_dist = (Path(__file__).resolve().parent.parent / 'frontend' / 'dist')
+    if frontend_dist.is_dir():
+        app.mount('/ui', StaticFiles(directory=str(frontend_dist), html=True), name='ui')
+        logger.info(f"Serving frontend UI from {frontend_dist} at /ui")
+    else:
+        logger.info("Frontend UI not built; skipping static mount (/ui)")
+except Exception:
+    logger.exception("Failed to mount frontend UI static files")
 
 # Active WebSocket connections
 active_connections: Set[WebSocket] = set()
@@ -240,11 +254,15 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         # Send initial snapshot
         if ros_bridge:
-            initial_data = ros_bridge.get_all_latest_data()
-            await websocket.send_json({
-                "type": "snapshot",
-                "data": initial_data
-            })
+            try:
+                initial_data = ros_bridge.get_all_latest_data()
+                await websocket.send_json({
+                    "type": "snapshot",
+                    "data": initial_data
+                })
+                logger.info("Initial snapshot sent to WebSocket client")
+            except Exception:
+                logger.exception("Failed to send initial snapshot to WebSocket client")
 
         # Register callback for ROS data updates
         async def on_ros_update(data_type: str, agent_id: Optional[str] = None):
@@ -286,6 +304,18 @@ async def websocket_endpoint(websocket: WebSocket):
             ros_bridge.add_update_callback(
                 lambda dt, aid: asyncio.create_task(on_ros_update(dt, aid))
             )
+
+        async def heartbeat():
+            """Periodic heartbeat to keep connection alive and aid debugging"""
+            try:
+                while True:
+                    await asyncio.sleep(20)
+                    await websocket.send_json({"type": "server_heartbeat", "ts": time.time()})
+            except Exception:
+                # Any error here will be handled by the main loop/close
+                pass
+
+        hb_task = asyncio.create_task(heartbeat())
 
         # Listen for client messages (subscription management)
         while True:
@@ -334,8 +364,18 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
     finally:
+        try:
+            hb_task.cancel()
+        except Exception:
+            pass
         active_connections.discard(websocket)
         logger.info(f"WebSocket client removed. Total connections: {len(active_connections)}")
+
+
+# Provide an alias under /ui/ws to support deployments serving UI at /ui
+@app.websocket("/ui/ws")
+async def websocket_endpoint_ui(websocket: WebSocket):
+    await websocket_endpoint(websocket)
 
 
 # ============================================================================

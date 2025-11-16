@@ -94,28 +94,47 @@ function App() {
   useEffect(() => {
     const poll = setInterval(async () => {
       try {
-        const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+        // Try same-origin first (Vite proxy forwards /api)
+        const candidates: string[] = [];
+
+        const env: any = (typeof import.meta !== 'undefined' && (import.meta as any).env)
+          ? (import.meta as any).env
+          : {};
+
+        candidates.push('/api/status');
+
+        // If explicit backend HTTP provided via env, try it next
+        if (env.VITE_BACKEND_HTTP_URL) {
+          candidates.push(`${String(env.VITE_BACKEND_HTTP_URL).replace(/\/$/, '')}/api/status`);
+        }
+
+        // As a final fallback, try host:8000
+        if (typeof window !== 'undefined') {
+          candidates.push(`http://${window.location.hostname}:8000/api/status`);
+          if (window.location.hostname === 'localhost' || window.location.hostname === '::1') {
+            candidates.push('http://127.0.0.1:8000/api/status');
+          }
+        } else {
+          candidates.push('http://localhost:8000/api/status');
+        }
+
         let res: Response | null = null;
-        try {
-          res = await fetch(`http://${host}:8000/api/status`);
-        } catch (_) {
-          // Fallback to 127.0.0.1 if localhost/::1 fails
-          if (host === 'localhost' || host === '::1') {
-            res = await fetch(`http://127.0.0.1:8000/api/status`);
-          } else {
-            throw _;
+        for (const url of candidates) {
+          try {
+            res = await fetch(url);
+            if (res.ok) break;
+          } catch {
+            // try next candidate
           }
         }
-        if (res.ok) {
+
+        if (res && res.ok) {
           const s: SystemStatus = await res.json();
           setStatus(s);
-          // If ROS is up and WS is open, mark connected
-          if (wsClient.connected) {
-            setConnected(true);
-          }
+          if (wsClient.connected) setConnected(true);
         }
       } catch (e) {
-        // ignore
+        // ignore network errors here; WS reconnect logic handles primary connectivity
       }
     }, 1500);
     return () => clearInterval(poll);
@@ -141,6 +160,21 @@ function App() {
     if (snapshot.status) setStatus(snapshot.status);
 
     addLog('info', 'Dashboard connected and synchronized');
+
+    // Seed histories with snapshot so charts render immediately
+    if (snapshot.metrics) {
+      setMetricsHistory(() => {
+        const seeded: Record<string, MetricsData[]> = {};
+        for (const [agentId, m] of Object.entries(snapshot.metrics)) {
+          seeded[agentId] = [m as MetricsData];
+        }
+        return seeded;
+      });
+    }
+
+    if (snapshot.wind) {
+      setWindHistory((prev) => [...prev, snapshot.wind as WindData].slice(-500));
+    }
   };
 
   const handleMetricsUpdate = (agentId: string, data: MetricsData) => {

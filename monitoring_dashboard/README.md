@@ -93,7 +93,16 @@ source install/setup.bash
 ros2 launch agent_control_pkg multi_agent_formation.launch.py
 ```
 
-### 3. Start the Backend
+### 3. Build the Frontend (once)
+
+```bash
+cd monitoring_dashboard/frontend
+npm run build
+```
+
+This produces the production UI under `frontend/dist`.
+
+### 4. Start the Backend (serves UI at /ui)
 
 In a new terminal:
 
@@ -105,21 +114,13 @@ cd monitoring_dashboard
 The backend will:
 - Auto-discover active ROS2 topics
 - Subscribe to metrics, odometry, wind, formation topics
-- Serve WebSocket API on `ws://localhost:8000/ws`
 - Serve REST API on `http://localhost:8000`
-
-### 4. Start the Frontend
-
-In another terminal:
-
-```bash
-cd monitoring_dashboard
-./scripts/run_frontend.sh
-```
+- Serve WebSocket API on `ws://localhost:8000/ws`
+- Serve the Dashboard UI at `http://localhost:8000/ui`
 
 ### 5. Open Dashboard
 
-Open your browser to **http://localhost:3000**
+Open your browser to **http://localhost:8000/ui**
 
 You should see the dashboard with live data streaming!
 
@@ -143,23 +144,18 @@ The dashboard automatically discovers and subscribes to:
 You can start and test the dashboard **without running the simulation**:
 
 ```bash
-# Terminal 1: Start backend
+# Terminal: Start backend (serves UI)
 cd monitoring_dashboard
 source /opt/ros/humble/setup.bash
 ./scripts/run_backend.sh
 
-# Terminal 2: Start frontend
-cd monitoring_dashboard
-./scripts/run_frontend.sh
-
-# Open browser: http://localhost:3000
+# Open browser: http://localhost:8000/ui
 ```
 
 **Expected behavior without simulation:**
 - ✅ Dashboard opens successfully
-- ✅ Connection status: "Connected" (green)
+- ✅ Connection: "Connected" (green) after WS handshake
 - ✅ System shows "No agents detected"
-- ✅ Topic buttons are available but grayed out
 - ⚠️ No data displayed (expected - start simulation to see data)
 
 **When you start the simulation**, the dashboard will automatically:
@@ -249,12 +245,13 @@ ros2 topic echo /agent_0/metrics
 
 ### Frontend Not Connecting
 
-**Problem**: WebSocket connection failed
+**Problem**: WebSocket connection failed / header shows Disconnected
 
 **Solution**:
-1. Check backend is running: `curl http://localhost:8000`
-2. Check browser console for errors
-3. Verify WebSocket URL in `frontend/src/api/ws.ts`
+1. Open `http://localhost:8000/ui` (production UI served by backend)
+2. Check backend logs for `WebSocket /ws [accepted]`
+3. If absent, try private window (disable extensions) and reload
+4. Verify WS manually: `npx wscat -c ws://localhost:8000/ws`
 
 ### No Data Appearing
 
@@ -272,7 +269,7 @@ ros2 topic echo /agent_0/metrics
 **Solution**:
 1. Check WebSocket connection status (top-right indicator)
 2. Refresh browser (Ctrl+R)
-3. Check browser console for errors
+3. Verify backend logs show updates and subscriptions
 
 ## 🔌 API Reference
 
@@ -332,14 +329,11 @@ cd frontend
 # Install dependencies
 npm install
 
-# Start dev server with hot reload
+# Start dev server with proxy to backend
 npm run dev
 
-# Build for production
+# Build for production (served by backend at /ui)
 npm run build
-
-# Preview production build
-npm run preview
 ```
 
 ## 📝 Adding Custom Metrics
@@ -409,3 +403,8 @@ For issues or questions:
 ---
 
 **Built for real-time multi-agent formation control simulation monitoring** 🚁✨
+
+Sadece backend + prod UI:
+source /opt/ros/humble/setup.bash && source install/setup.bash
+cd monitoring_dashboard/frontend && npm run build
+cd ../.. && ./monitoring_dashboard/scripts/run_backend.sh

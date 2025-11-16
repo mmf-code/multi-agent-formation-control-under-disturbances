@@ -99,6 +99,7 @@ export class WebSocketClient {
   private ws: WebSocket | null = null;
   private reconnectInterval = 2000;
   private reconnectTimer: NodeJS.Timeout | null = null;
+  private heartbeatTimer: any = null;
   private callbacks: Set<DataUpdateCallback> = new Set();
   private statusCallbacks: Set<ConnectionStatusCallback> = new Set();
   private url: string;
@@ -111,10 +112,16 @@ export class WebSocketClient {
     const envUrl = (typeof import.meta !== 'undefined' && (import.meta as any).env)
       ? (import.meta as any).env.VITE_BACKEND_WS_URL
       : undefined;
-    const defaultUrl = typeof window !== 'undefined'
-      ? `ws://${window.location.hostname}:8000/ws`
-      : 'ws://localhost:8000/ws';
-    this.url = url || envUrl || defaultUrl;
+
+    // Prefer same-origin WS during development (Vite proxy forwards /ws)
+    const sameOriginUrl = typeof window !== 'undefined'
+      ? `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`
+      : undefined;
+
+    // Fallback direct to backend default
+    const fallbackUrl = 'ws://localhost:8000/ws';
+
+    this.url = url || envUrl || sameOriginUrl || fallbackUrl;
   }
 
   connect(): void {
@@ -134,12 +141,18 @@ export class WebSocketClient {
         clearTimeout(this.reconnectTimer);
         this.reconnectTimer = null;
       }
+      if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = setInterval(() => this.ping(), 15000);
     };
 
     this.ws.onclose = () => {
       console.log('WebSocket disconnected');
       this.connected = false;
       this.notifyStatusChange(false);
+      if (this.heartbeatTimer) {
+        clearInterval(this.heartbeatTimer);
+        this.heartbeatTimer = null;
+      }
       // Fallback: if using localhost and initial connect failed, try 127.0.0.1
       try {
         const u = new URL(this.url);
@@ -182,9 +195,17 @@ export class WebSocketClient {
     const { type, data_type, agent_id, data } = message;
 
     if (type === 'snapshot') {
+      if (!this.connected) {
+        this.connected = true;
+        this.notifyStatusChange(true);
+      }
       // Initial data snapshot
       this.notifyCallbacks('snapshot', null, message.data);
     } else if (type === 'update') {
+      if (!this.connected) {
+        this.connected = true;
+        this.notifyStatusChange(true);
+      }
       // Real-time update
       this.notifyCallbacks(data_type, agent_id || null, data);
     } else if (type === 'pong') {
@@ -270,6 +291,10 @@ export class WebSocketClient {
     }
 
     this.connected = false;
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
   }
 }
 

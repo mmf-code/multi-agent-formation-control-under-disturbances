@@ -57,6 +57,13 @@ cd "$BACKEND_DIR"
 # Start backend server
 echo "Starting backend server on http://localhost:8000"
 echo "WebSocket endpoint: ws://localhost:8000/ws"
+if [ -d "$SCRIPT_DIR/../frontend/dist" ]; then
+    echo "Frontend UI available at: http://localhost:8000/ui"
+else
+    echo "(Tip) Build frontend to serve UI from backend:"
+    echo "     cd monitoring_dashboard/frontend && npm run build"
+    echo "     then open http://localhost:8000/ui"
+fi
 echo "Press Ctrl+C to stop"
 echo ""
 
