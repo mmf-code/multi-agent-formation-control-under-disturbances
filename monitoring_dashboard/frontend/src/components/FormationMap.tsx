@@ -4,13 +4,14 @@
  */
 import React, { useMemo } from 'react';
 import Plot from 'react-plotly.js';
-import { OdometryData, FormationState } from '../api/ws';
+import { OdometryData, FormationState, WindData } from '../api/ws';
 
 interface FormationMapProps {
   odomData: Record<string, OdometryData>;
   targetData: Record<string, { position: { x: number; y: number; z: number } }>;
   formationState: FormationState | null;
   selectedAgents: Set<string>;
+  windData?: WindData | null;
 }
 
 export const FormationMap: React.FC<FormationMapProps> = ({
@@ -18,6 +19,7 @@ export const FormationMap: React.FC<FormationMapProps> = ({
   targetData,
   formationState,
   selectedAgents,
+  windData,
 }) => {
   const plotData = useMemo(() => {
     const agents = selectedAgents.size > 0
@@ -91,7 +93,7 @@ export const FormationMap: React.FC<FormationMapProps> = ({
         }
       : null;
 
-    const traces = [
+    const traces: any[] = [
       ...connectionLines,
       currentTrace,
       targetTrace,
@@ -101,8 +103,51 @@ export const FormationMap: React.FC<FormationMapProps> = ({
       traces.push(centerTrace);
     }
 
+    // Wind direction arrow (if wind data available)
+    if (windData && windData.velocity) {
+      const windMag = Math.sqrt(windData.velocity.x ** 2 + windData.velocity.y ** 2);
+      if (windMag > 0.1) {
+        // Scale arrow length based on wind magnitude (cap at 3m for visualization)
+        const arrowLength = Math.min(windMag * 0.5, 3);
+        const windX = windData.velocity.x;
+        const windY = windData.velocity.y;
+        const normX = (windX / windMag) * arrowLength;
+        const normY = (windY / windMag) * arrowLength;
+
+        // Position arrow in top-right corner of the plot
+        const bounds = {
+          x: [...agents.map((id) => odomData[id]?.position.x || 0),
+              ...agents.map((id) => targetData[id]?.position.x || 0)],
+          y: [...agents.map((id) => odomData[id]?.position.y || 0),
+              ...agents.map((id) => targetData[id]?.position.y || 0)],
+        };
+
+        const maxX = Math.max(...bounds.x, 0);
+        const maxY = Math.max(...bounds.y, 0);
+        const arrowBaseX = maxX + 1;
+        const arrowBaseY = maxY + 1;
+
+        const windArrow = {
+          x: [arrowBaseX, arrowBaseX + normX],
+          y: [arrowBaseY, arrowBaseY + normY],
+          mode: 'lines+markers' as const,
+          type: 'scatter' as const,
+          name: `Wind ${windMag.toFixed(2)} m/s`,
+          line: { color: '#f97316', width: 3 },
+          marker: {
+            size: [0, 12],
+            color: '#f97316',
+            symbol: ['circle', 'arrow'],
+            angleref: 'previous' as const,
+          },
+        };
+
+        traces.push(windArrow);
+      }
+    }
+
     return traces;
-  }, [odomData, targetData, formationState, selectedAgents]);
+  }, [odomData, targetData, formationState, selectedAgents, windData]);
 
   // Calculate bounds
   const bounds = useMemo(() => {

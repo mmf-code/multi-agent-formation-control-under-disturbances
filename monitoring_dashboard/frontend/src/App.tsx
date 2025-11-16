@@ -20,6 +20,7 @@ import { TimeSeries } from './components/TimeSeries';
 import { FormationMap } from './components/FormationMap';
 import { EventLog, LogEntry } from './components/EventLog';
 import { ControllerParamsPanel } from './components/ControllerParamsPanel';
+import FormationControllerPanel from './components/FormationControllerPanel';
 
 function App() {
   // State
@@ -45,6 +46,7 @@ function App() {
   const [selectedAgents, setSelectedAgents] = useState<Set<string>>(new Set());
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [chartType, setChartType] = useState<'error' | 'metrics' | 'wind' | 'overshoot'>('error');
+  const [controllerView, setControllerView] = useState<'per-agent' | 'formation'>('formation');
 
   // Event log
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -316,12 +318,83 @@ function App() {
           </div>
         )}
 
+        {/* Wind Information Card */}
+        {selectedTopics.has('wind') && _wind && (
+          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+            <h2 className="text-xl font-semibold mb-3 flex items-center">
+              <span className="mr-2">💨</span>
+              Wind Conditions
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-gray-900 rounded p-3 border border-blue-700/30">
+                <div className="text-sm text-gray-400 mb-1">Velocity X</div>
+                <div className="text-2xl font-bold text-blue-400">
+                  {_wind.velocity.x.toFixed(2)} <span className="text-sm text-gray-400">m/s</span>
+                </div>
+              </div>
+              <div className="bg-gray-900 rounded p-3 border border-green-700/30">
+                <div className="text-sm text-gray-400 mb-1">Velocity Y</div>
+                <div className="text-2xl font-bold text-green-400">
+                  {_wind.velocity.y.toFixed(2)} <span className="text-sm text-gray-400">m/s</span>
+                </div>
+              </div>
+              <div className="bg-gray-900 rounded p-3 border border-purple-700/30">
+                <div className="text-sm text-gray-400 mb-1">Magnitude</div>
+                <div className="text-2xl font-bold text-purple-400">
+                  {Math.sqrt(_wind.velocity.x ** 2 + _wind.velocity.y ** 2).toFixed(2)} <span className="text-sm text-gray-400">m/s</span>
+                </div>
+              </div>
+              <div className="bg-gray-900 rounded p-3 border border-orange-700/30">
+                <div className="text-sm text-gray-400 mb-1">Direction</div>
+                <div className="text-2xl font-bold text-orange-400">
+                  {((Math.atan2(_wind.velocity.y, _wind.velocity.x) * 180 / Math.PI + 360) % 360).toFixed(1)}°
+                  <span className="text-sm text-gray-400 ml-1">
+                    {_wind.force && ` | F: ${Math.sqrt(_wind.force.x ** 2 + _wind.force.y ** 2).toFixed(2)}N`}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Controller Parameters */}
         {Object.keys(controllerParams).length > 0 && (
-          <ControllerParamsPanel
-            controllerParams={controllerParams}
-            selectedAgent={selectedAgent}
-          />
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Controller Parameters</h2>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setControllerView('formation')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    controllerView === 'formation'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                  }`}
+                >
+                  Formation View
+                </button>
+                <button
+                  onClick={() => setControllerView('per-agent')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    controllerView === 'per-agent'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                  }`}
+                >
+                  Per-Agent View
+                </button>
+              </div>
+            </div>
+
+            {controllerView === 'formation' ? (
+              <FormationControllerPanel controllerParams={controllerParams} />
+            ) : (
+              <ControllerParamsPanel
+                controllerParams={controllerParams}
+                selectedAgent={selectedAgent}
+              />
+            )}
+          </div>
         )}
 
         {/* Formation Map */}
@@ -331,6 +404,7 @@ function App() {
             targetData={targets}
             formationState={formation}
             selectedAgents={selectedAgents}
+            windData={_wind}
           />
         )}
 
