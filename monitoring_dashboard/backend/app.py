@@ -268,12 +268,12 @@ async def websocket_endpoint(websocket: WebSocket):
         if ros_bridge:
             try:
                 initial_data = ros_bridge.get_all_latest_data()
-                if initial_data and (initial_data.get('metrics') or initial_data.get('odom')):
+                if initial_data:
                     await websocket.send_json({
                         "type": "snapshot",
                         "data": initial_data
                     })
-                    logger.info(f"Initial snapshot sent (agents: {len(initial_data.get('metrics', {}))})")
+                    logger.info(f"Initial snapshot sent (metrics: {len(initial_data.get('metrics', {}))}, odom: {len(initial_data.get('odom', {}))})")
                 else:
                     logger.info("No initial data available yet")
             except Exception as e:

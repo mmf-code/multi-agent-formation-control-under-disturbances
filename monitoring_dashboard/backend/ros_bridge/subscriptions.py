@@ -77,7 +77,9 @@ class ROSBridge(Node):
         self._subs_registry: Dict[str, Any] = {}
 
         # Data update callbacks (for WebSocket notifications)
-        self.update_callbacks: List[Callable] = []
+        # Callbacks are invoked from the ROS spin thread, so they must
+        # hand off any asyncio work to the event loop in a thread-safe way.
+        self.update_callbacks: List[Callable[[str, Optional[str]], None]] = []
 
         # Lock for thread-safe data access
         self.data_lock = threading.Lock()
@@ -87,13 +89,20 @@ class ROSBridge(Node):
 
         logger.info("ROSBridge initialized - monitoring dashboard ready")
 
-    def add_update_callback(self, callback: Callable):
+    def add_update_callback(self, callback: Callable[[str, Optional[str]], None]):
         """Register callback for data updates (WebSocket push)"""
         self.update_callbacks.append(callback)
 
     def notify_update(self, data_type: str, agent_id: Optional[str] = None):
-        """Notify all registered callbacks about data update"""
-        for callback in self.update_callbacks:
+        """Notify all registered callbacks about data update.
+
+        This is called from ROS2 subscription callbacks (spin thread),
+        so callbacks must interact with asyncio only via thread-safe
+        mechanisms (e.g. loop.call_soon_threadsafe).
+        """
+        # Iterate over a copy in case callbacks list is modified
+        callbacks = list(self.update_callbacks)
+        for callback in callbacks:
             try:
                 callback(data_type, agent_id)
             except Exception as e:
@@ -529,17 +538,24 @@ class ROSBridge(Node):
         with self.data_lock:
             return self.latest_formation
 
+    def _build_system_status_unlocked(self) -> SystemStatus:
+        """Build SystemStatus without acquiring data_lock.
+
+        Caller is responsible for holding self.data_lock if needed.
+        """
+        return SystemStatus(
+            timestamp=time.time(),
+            ros_ok=rclpy.ok(),
+            active_agents=sorted(list(self.active_agents)),
+            available_topics=sorted(list(self.discovered_topics.keys())),
+            wind_active=self.latest_wind is not None,
+            formation_active=self.latest_formation is not None,
+        )
+
     def get_system_status(self) -> SystemStatus:
         """Get overall system status"""
         with self.data_lock:
-            return SystemStatus(
-                timestamp=time.time(),
-                ros_ok=rclpy.ok(),
-                active_agents=sorted(list(self.active_agents)),
-                available_topics=sorted(list(self.discovered_topics.keys())),
-                wind_active=self.latest_wind is not None,
-                formation_active=self.latest_formation is not None
-            )
+            return self._build_system_status_unlocked()
 
     def get_latest_controller_params(self, agent_id: str) -> Optional[ControllerParams]:
         """Get latest controller parameters for an agent"""
@@ -549,6 +565,7 @@ class ROSBridge(Node):
     def get_all_latest_data(self) -> dict:
         """Get all latest data in one shot (for dashboard snapshot)"""
         with self.data_lock:
+            status = self._build_system_status_unlocked()
             return {
                 'metrics': {k: v.dict() for k, v in self.latest_metrics.items()},
                 'odom': {k: v.dict() for k, v in self.latest_odom.items()},
@@ -557,5 +574,5 @@ class ROSBridge(Node):
                 'controller_params': {k: v.dict() for k, v in self.latest_controller_params.items()},
                 'formation': self.latest_formation.dict() if self.latest_formation else None,
                 'wind': self.latest_wind.dict() if self.latest_wind else None,
-                'status': self.get_system_status().dict()
+                'status': status.dict()
             }

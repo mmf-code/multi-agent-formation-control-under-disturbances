@@ -224,21 +224,15 @@ export class WebSocketClient {
     const { type, data_type, agent_id, data } = message;
 
     if (type === 'snapshot') {
-      if (!this.connected) {
-        this.connected = true;
-        this.notifyStatusChange(true);
-      }
       // Initial data snapshot
       this.notifyCallbacks('snapshot', null, message.data);
     } else if (type === 'update') {
-      if (!this.connected) {
-        this.connected = true;
-        this.notifyStatusChange(true);
-      }
       // Real-time update
       this.notifyCallbacks(data_type, agent_id || null, data);
-    } else if (type === 'pong') {
-      // Heartbeat response
+    } else if (type === 'pong' || type === 'server_heartbeat') {
+      // Heartbeat response - connection is alive
+    } else if (type === 'subscription_updated') {
+      // Subscription confirmation
     }
   }
 
