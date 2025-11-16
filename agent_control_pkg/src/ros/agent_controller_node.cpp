@@ -60,6 +60,9 @@ AgentControllerNode::AgentControllerNode(const rclcpp::NodeOptions & options)
     diag_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("diagnostics", 10);
   }
 
+  // Controller parameters publisher (for dashboard monitoring)
+  params_pub_ = create_publisher<my_custom_interfaces_pkg::msg::ControllerParams>("controller_params", 10);
+
   if (loop_period_ <= 0.0) {
     loop_period_ = 0.005;
   }
@@ -67,6 +70,11 @@ AgentControllerNode::AgentControllerNode(const rclcpp::NodeOptions & options)
   timer_ = create_wall_timer(
     std::chrono::duration<double>(loop_period_),
     std::bind(&AgentControllerNode::controlLoop, this));
+
+  // Publish controller parameters every 2 seconds
+  params_timer_ = create_wall_timer(
+    std::chrono::seconds(2),
+    std::bind(&AgentControllerNode::publishControllerParams, this));
 
   latest_target_ = std::make_shared<geometry_msgs::msg::PoseStamped>();
   latest_odom_ = std::make_shared<nav_msgs::msg::Odometry>();
@@ -477,6 +485,49 @@ void AgentControllerNode::publishDiagnostics()
     axis_y_.last_fuzzy_contribution
   };
   diag_pub_->publish(msg);
+}
+
+void AgentControllerNode::publishControllerParams()
+{
+  if (!params_pub_) {
+    return;
+  }
+
+  auto msg = my_custom_interfaces_pkg::msg::ControllerParams();
+
+  // Controller type
+  msg.controller_type = controller_type_;
+
+  // PID parameters
+  msg.pid_kp = pid_kp_;
+  msg.pid_ki = pid_ki_;
+  msg.pid_kd = pid_kd_;
+
+  // Fuzzy parameters
+  msg.fuzzy_enable = fuzzy_enable_;
+  msg.fuzzy_wind_scalar = fuzzy_wind_scalar_;
+
+  // Hybrid mixing
+  msg.mix_k_pid = mix_k_pid_;
+  msg.mix_k_fuzzy = mix_k_fuzzy_;
+
+  // Feed-forward parameters
+  msg.feedforward_enable_drag = ff_params_.enable_drag_ff;
+  msg.feedforward_enable_wind = ff_params_.enable_wind_ff;
+  msg.feedforward_k_drag = ff_params_.k_drag;
+  msg.feedforward_k_wind = ff_params_.k_wind;
+
+  // Output limits
+  msg.output_limit_x_min = axis_limits_x_.umin;
+  msg.output_limit_x_max = axis_limits_x_.umax;
+  msg.output_limit_y_min = axis_limits_y_.umin;
+  msg.output_limit_y_max = axis_limits_y_.umax;
+
+  // Control frequency
+  msg.control_frequency_hz = (loop_period_ > 0.0) ? (1.0 / loop_period_) : 0.0;
+  msg.dt = configured_dt_;
+
+  params_pub_->publish(msg);
 }
 
 }  // namespace agent_control_pkg

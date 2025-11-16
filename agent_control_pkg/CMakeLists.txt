@@ -140,6 +140,7 @@ ament_target_dependencies(agent_controller_node
   nav_msgs
   std_msgs
   ament_index_cpp
+  my_custom_interfaces_pkg
 )
 target_link_libraries(agent_controller_node
   controller_adapters_lib
