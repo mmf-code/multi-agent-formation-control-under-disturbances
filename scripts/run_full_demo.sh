@@ -127,7 +127,7 @@ echo -e "  ${MAGENTA}● Group 0 (Magenta Drones)${NC} → PID+Fuzzy  → Best w
 echo -e "  ${CYAN}● Group 1 (Cyan Drones)${NC}    → PD         → Fastest settling"
 echo -e "  ${YELLOW}● Group 2 (Yellow Drones)${NC}  → PID        → Balanced"
 echo ""
-echo -e "${CYAN}Wind Disturbance:${NC} ${RED}4.0N mean, 1.5N variance${NC}"
+echo -e "${CYAN}Wind Disturbance:${NC} ${RED}8.0N mean, 3.0N variance${NC}"
 echo ""
 echo -e "${YELLOW}Recording ${DURATION}s of CSV data...${NC}"
 echo ""

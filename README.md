@@ -78,12 +78,13 @@ cd /home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances
 
 #### **1. Visual Demo (Alternative Methods)**
 ```bash
-./scripts/quick_test.sh                  # 15s system validation (optional)
-./scripts/run_formation_demo.sh          # Full GUI demo (watch only)
-./scripts/demo_with_recording.sh 60      # Full GUI + CSV recording
+./scripts/quick_test.sh                       # 15s system validation (optional)
+./scripts/run_formation_demo.sh               # 9-drone comparison demo + CSV logging (default 60s)
+./scripts/run_formation_demo.sh --no-record   # Same demo, no CSV (visual only)
+./scripts/demo_with_recording.sh 60           # Legacy full GUI + CSV recording
 ```
 
-**What you'll see:**
+**What you'll see (run_formation_demo.sh):**
 - 9 drones in 3 groups, each group maintaining triangle formation
 - **Group 0 (Magenta)**: PID+Fuzzy controllers - Best wind rejection
 - **Group 1 (Cyan)**: PD controllers - Fastest settling time
@@ -104,7 +105,7 @@ cd /home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances
 **CSV Columns:** timestamp, elapsed_time, error_x/y/z, RMSE, IAE, ITAE, settling_time, is_settled
 
 #### **3. Expected Results (Thesis Hypothesis)**
-Under wind disturbance (4.0N mean):
+Under strong wind disturbance (≈8.0N mean):
 - **PID+Fuzzy (k_fuzzy=0.7)**: Lowest RMSE & IAE (best disturbance rejection)
 - **PID (Ki=1.946)**: Good steady-state, moderate disturbance rejection
 - **PD (no integral)**: Fast settling but higher steady-state error under wind
@@ -241,6 +242,107 @@ With the long scenario, you'll be able to:
 - PID+Fuzzy should outperform in **heavy wind phases** (Phase 3, 5)
 - PD should have **fastest response** in clean trajectory segments
 - PID should provide **best overall balance** across all phases
+
+---
+
+## 📊 **Thesis Results & Figures Guide (What to Show)**
+
+This section summarizes the final controller comparison setup and suggests which plots / screenshots to include in your report.
+
+### 1. Core Scenario (Formation Comparison Demo)
+
+- Command (recommended for thesis figures):
+  ```bash
+  cd ~/Documents/GitHub/multi-agent-formation-control-under-disturbances
+  source /opt/ros/humble/setup.bash
+  source install/setup.bash
+  ./scripts/run_formation_demo.sh        # 60s, GUI + CSV
+  ```
+- Controllers (fixed gains for fair comparison):
+  - Group 0 (Magenta, agents 0–2): **PID+Fuzzy** (`pid_fuzzy`, `k_fuzzy=0.7`, `fuzzy.wind_scalar=1.5`)
+  - Group 1 (Cyan, agents 3–5): **PD**
+  - Group 2 (Yellow, agents 6–8): **PID**
+- Disturbance:
+  - Gazebo wind plugin: mean ≈ **8.0 N**, variance ≈ **3.0 N**
+  - Python wind tool (default `--wind-mode=tool`): constant force on `/wind/force` and matching `/wind/velocity`
+
+**CSV outputs (for this demo):**
+- `thesis_data/YYYY-MM-DD/HH-MM-SS_full_demo/agent_0_pidfuzzy.csv`
+- `thesis_data/YYYY-MM-DD/HH-MM-SS_full_demo/agent_3_pd.csv`
+- `thesis_data/YYYY-MM-DD/HH-MM-SS_full_demo/agent_6_pid.csv`
+
+### 2. Recommended Figures (by chapter)
+
+**A) Method / Setup Chapter**
+- Screenshot 1 – **Simulation world**:
+  - Gazebo view showing 9 drones in 3 altitude lanes (Magenta, Cyan, Yellow).
+  - Optionally overlay wind direction arrow / world markers.
+- Screenshot 2 – **Dashboard overview**:
+  - `http://localhost:8000/ui` with:
+    - 9 active agents
+    - Wind panel visible (`/wind/velocity`, `/wind/force`)
+    - System status + formation map.
+
+**B) Controller Comparison (Formation Demo)**
+From the three CSVs above (60s full_demo run):
+
+- Plot 1 – **X-position tracking (one agent per group)**:
+  - `x(t)` vs `x_target(t)` for:
+    - `agent_0` (PID+Fuzzy)
+    - `agent_3` (PD)
+    - `agent_6` (PID)
+  - Show how PD drifts under heavy wind, while PID and PID+Fuzzy track better.
+
+- Plot 2 – **Y-position / lateral error**:
+  - `error_y(t)` for `agent_0`, `agent_3`, `agent_6`.
+  - In the final tuned scenario you should see:
+    - PID+Fuzzy: smallest lateral error area (best disturbance rejection),
+    - PID: intermediate,
+    - PD: clearly larger sustained lateral error.
+
+- Plot 3 – **RMSE and IAE bar chart (60s window)**:
+  - For each controller: PID+Fuzzy, PID, PD
+  - Bars for:
+    - `RMSE_total` (or `rmse_x`, `rmse_y`)
+    - `IAE_x`, `IAE_y`
+  - Data comes from the last row of each CSV (`rmse_*`, `iae_*` columns).
+  - Highlight especially that `IAE_y` (lateral) is lowest for PID+Fuzzy and highest for PD.
+
+- Plot 4 – **Settling behaviour (is_settled vs time)**:
+  - From `is_settled` column:
+    - Plot `is_settled(t)` as 0/1 for each controller.
+  - Show that under the relaxed but realistic threshold (10 cm, 1 s window) all controllers eventually settle, but their transient error magnitudes differ.
+
+**C) Long Scenario / Extra Results (optional but strong)**
+- Use `./scripts/run_long_thesis_demo.sh` once.
+- Use:
+  - `analysis/plot_long_scenario.py`
+  - `analysis/compare_phases.py`
+  to generate:
+  - Trajectory plot (X–Y path) for PID+Fuzzy vs PID vs PD.
+  - Phase-by-phase IAE / ITAE for each controller (Phase 3 and 5 highlight heavy wind).
+- Recommended figures:
+  - Long-scenario trajectory overlay (one figure).
+  - Bar chart of IAE/ITAE per phase for each controller.
+
+### 3. How to Refer to Results in the Text
+
+When writing the thesis:
+
+- Emphasize that **gains are identical** for PID and the PID-part of PID+Fuzzy:
+  - `Kp=3.501`, `Ki=1.946`, `Kd=3.608`
+- Explain that the only difference is:
+  - Fuzzy GT2 layer with `k_fuzzy=0.7` and stronger wind scalar (`fuzzy.wind_scalar=1.5`),
+  - Heavy wind environment (≈8N mean) which exposes disturbance rejection capabilities.
+- For each figure, explicitly mention:
+  - Which run folder it uses (e.g. `thesis_data/2025-11-21/13-51-46_full_demo/`),
+  - Which agent/controller it corresponds to (PID+Fuzzy = agent_0, PD = agent_3, PID = agent_6),
+  - Which metric you are comparing (RMSE_x, IAE_y, settling time, etc.).
+
+Using this structure you can quickly pick:
+- 2–3 screenshots (world + dashboard),
+- 3–4 key plots (position tracking, lateral error, RMSE/IAE bars, optional long-scenario),
+and cover the complete story of **“PID+Fuzzy vs PID vs PD under strong wind”** in the final report.
 
 ---
 

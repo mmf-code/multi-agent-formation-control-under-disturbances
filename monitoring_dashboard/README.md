@@ -1,481 +1,236 @@
-# 🚁 Multi-Agent Formation Control - Real-time Monitoring Dashboard
+# Formation Control Monitoring Dashboard
 
-Modern, real-time web-based monitoring dashboard for multi-agent drone formation control simulations. Built with React, FastAPI, and WebSocket for seamless ROS2 integration.
+Real-time web dashboard for multi-agent drone formation control simulations. Built with React + FastAPI + WebSocket for ROS2 integration.
 
-![Dashboard Preview](https://via.placeholder.com/800x400?text=Formation+Control+Monitor)
-
-## ✨ Features
-
-### 📊 Real-time Monitoring
-- **Live Drone Tracking**: 2D formation map with current & target positions
-- **Performance Metrics**: Error, RMSE, IAE, ITAE, settling time, overshoot
-- **Controller Parameters**: Real-time PID (Kp, Ki, Kd), Fuzzy, and Hybrid controller config display
-- **Wind Monitoring**: Real-time wind velocity and force tracking
-- **Formation State**: Dynamic formation shape, spacing, and center tracking
-
-### 🎯 Interactive Interface
-- **Topic Selection**: Choose which ROS2 topics to monitor
-- **Agent Filtering**: Focus on specific agents or view all
-- **Dynamic Charts**: Real-time Plotly.js charts with multiple views
-- **Event Log**: System events and status updates
-
-### 📈 Visualizations
-1. **KPI Cards**: Key performance indicators for each agent
-2. **Controller Parameters Panel**: Live controller configuration display
-   - PID gains (Kp, Ki, Kd)
-   - Fuzzy logic settings
-   - Hybrid mixing ratios
-   - Feed-forward compensation parameters
-3. **Formation Map**: 2D visualization of drone positions
-4. **Time Series Charts**:
-   - Position error (X, Y, Z)
-   - IAE/ITAE trends
-   - Wind velocity
-   - Overshoot & RMSE
-5. **Event Log**: Real-time system messages
-
-## 🏗️ Architecture
-
-```
-monitoring_dashboard/
-├── backend/                    # FastAPI + ROS2 Bridge
-│   ├── app.py                  # Main FastAPI application
-│   └── ros_bridge/             # ROS2 integration
-│       ├── __init__.py
-│       ├── subscriptions.py    # Auto-discovery & topic management
-│       ├── schemas.py          # Pydantic data models
-│       └── metrics.py
-├── frontend/                   # React + TypeScript
-│   ├── src/
-│   │   ├── App.tsx             # Main application
-│   │   ├── api/
-│   │   │   └── ws.ts           # WebSocket client
-│   │   └── components/
-│   │       ├── KpiCards.tsx    # Performance metrics cards
-│   │       ├── TopicStatus.tsx # Topic/agent selection
-│   │       ├── TimeSeries.tsx  # Real-time charts
-│   │       ├── FormationMap.tsx# 2D drone visualization
-│   │       └── EventLog.tsx    # Event logging
-│   ├── package.json
-│   └── index.html
-├── scripts/                    # Utility scripts
-│   ├── setup.sh                # One-time setup
-│   ├── run_backend.sh          # Start backend server
-│   └── run_frontend.sh         # Start frontend dev server
-└── README.md
-```
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- **ROS2** (Humble/Iron/Jazzy)
-- **Python 3.8+**
-- **Node.js 18+** and npm
-- Active ROS2 workspace with simulation running
-
-### 1. Setup (First Time Only)
-
-```bash
-cd monitoring_dashboard
-./scripts/setup.sh
-```
-
-This will:
-- Install Python dependencies (FastAPI, uvicorn, websockets, pydantic)
-- Install Node.js dependencies (React, Plotly.js, etc.)
-- Make scripts executable
-
-### 2. Start the Simulation
-
-In a new terminal, start your formation control simulation:
-
-```bash
-# Source ROS2 and workspace
-source /opt/ros/humble/setup.bash
-source install/setup.bash
-
-# Launch simulation (example)
-ros2 launch agent_control_pkg multi_agent_formation.launch.py
-```
-
-### 3. Build the Frontend (once)
-
-```bash
-cd monitoring_dashboard/frontend
-npm run build
-```
-
-This produces the production UI under `frontend/dist`.
-
-### 4. Start the Backend (serves UI at /ui)
-
-In a new terminal:
-
-```bash
-cd monitoring_dashboard
-./scripts/run_backend.sh
-```
-
-The backend will:
-- Auto-discover active ROS2 topics
-- Subscribe to metrics, odometry, wind, formation topics
-- Serve REST API on `http://localhost:8000`
-- Serve WebSocket API on `ws://localhost:8000/ws`
-- Serve the Dashboard UI at `http://localhost:8000/ui`
-
-### 5. Open Dashboard
-
-Open your browser to **http://localhost:8000/ui**
-
-You should see the dashboard with live data streaming!
-
-## 📡 Monitored ROS2 Topics
-
-### Per-Agent Topics
-The dashboard automatically discovers and subscribes to:
-
-- `/agent_X/odom` (nav_msgs/Odometry) - Position, velocity, orientation
-- `/agent_X/target_pose` (geometry_msgs/PoseStamped) - Target position
-- `/agent_X/metrics` (my_custom_interfaces_pkg/MetricsData) - Performance metrics
-- `/agent_X/diagnostics` (std_msgs/Float64MultiArray) - Controller contributions
-- `/agent_X/controller_params` (my_custom_interfaces_pkg/ControllerParams) - Real-time controller configuration
-
-### Global Topics
-- `/wind/velocity` (geometry_msgs/Vector3) - Wind velocity
-- `/wind/force` (geometry_msgs/Vector3) - Wind force/bias
-- `/formation_coordinator_node/state` (my_custom_interfaces_pkg/FormationState) - Formation state
-
-## 🧪 Testing Without Simulation
-
-You can start and test the dashboard **without running the simulation** using the test publisher!
-
-### Option 1: Backend Only (No Data)
-
-```bash
-# Terminal 1: Start backend (serves UI)
-cd monitoring_dashboard
-source /opt/ros/humble/setup.bash
-./scripts/run_backend.sh
-
-# Open browser: http://localhost:8000/ui
-```
-
-**Expected behavior:**
-- ✅ Dashboard opens successfully
-- ✅ Connection: "Connected" (green) after WS handshake
-- ✅ System shows "No agents detected"
-- ⚠️ No data displayed (start test publisher or simulation to see data)
-
-### Option 2: With Test Publisher (Recommended for Testing)
-
-The test publisher simulates 3 agents with realistic data patterns!
-
-```bash
-# Terminal 1: Build custom ROS messages first (one-time)
-cd /path/to/workspace
-source /opt/ros/humble/setup.bash
-colcon build --packages-select my_custom_interfaces_pkg
-source install/setup.bash
-
-# Terminal 2: Start backend
-cd monitoring_dashboard
-./scripts/run_backend.sh
-
-# Terminal 3: Run test publisher
-source /opt/ros/humble/setup.bash
-source install/setup.bash
-cd monitoring_dashboard
-python3 scripts/test_publisher.py
-
-# Open browser: http://localhost:8000/ui
-```
-
-**With test publisher running:**
-- ✅ 3 simulated agents appear (agent_0, agent_1, agent_2)
-- ✅ **Controller Parameters** displayed for each agent:
-  - **Agent 0**: Pure PID (Kp=5.0, Ki=2.5, Kd=5.0)
-  - **Agent 1**: Hybrid PID+Fuzzy (Kp=3.5, Ki=1.8, Kd=4.0, Fuzzy enabled)
-  - **Agent 2**: Full Hybrid with Feed-Forward
-- ✅ Odometry data streams (circular motion pattern)
-- ✅ Target poses update dynamically
-- ✅ Wind velocity and force updates
-- ✅ Diagnostics show controller outputs (PID/Fuzzy contributions)
-
-**Test Publisher Features:**
-- **3 agents** in circular formation pattern
-- **Different controller configs** per agent (PID, Hybrid, Full Hybrid)
-- **Realistic motion** (circular trajectory with varying radius)
-- **Wind simulation** (sinusoidal velocity patterns)
-- **Controller diagnostics** (X/Y axis PID and Fuzzy outputs)
-- **10 Hz** data publication rate (100ms update interval)
-- **2 second** controller parameters refresh
-
-**When you start the actual simulation**, the dashboard will automatically:
-- Discover agents (agent_0, agent_1, etc.)
-- Enable active topics including metrics
-- Start streaming real-time data with full performance analytics
-
-This allows you to verify the installation before running heavy simulations!
-
-## 🎮 Usage Guide
-
-### Selecting Topics
-
-Use the **Topic Selection** panel to enable/disable data streams:
-- Click topic buttons to toggle subscription
-- Active topics show a green pulse indicator
-- Disabled topics appear grayed out
-
-### Filtering Agents
-
-Click on agent buttons to focus on specific drones:
-- Selected agents are highlighted in green
-- Charts and maps update to show only selected agents
-- Clear all selections to view all agents
-
-### Chart Views
-
-Switch between different chart types:
-- **Position Error**: X, Y, Z tracking errors
-- **IAE/ITAE**: Integral performance metrics
-- **Wind Velocity**: Wind environment conditions
-- **Overshoot & RMSE**: Response characteristics
-
-### Formation Map
-
-The 2D map shows:
-- **Blue circles**: Current drone positions
-- **Green X**: Target positions
-- **Dotted lines**: Error vectors (current → target)
-- **Orange diamond**: Formation center
-
-## 🔧 Configuration
-
-### Backend Configuration
-
-Edit `backend/app.py` to configure:
-- WebSocket port (default: 8000)
-- CORS settings
-- Data buffer sizes
-- Update rates
-
-### Frontend Configuration
-
-Edit `frontend/src/api/ws.ts` to change:
-- WebSocket URL (default: ws://localhost:8000/ws)
-- Reconnection interval
-- Data history limits
-
-## 📊 Performance Metrics Explained
-
-| Metric | Description | Unit |
-|--------|-------------|------|
-| **Error** | Instantaneous position error magnitude | meters |
-| **RMSE** | Root Mean Square Error (cumulative accuracy) | meters |
-| **IAE** | Integral Absolute Error (total error accumulation) | m·s |
-| **ITAE** | Integral Time-weighted Absolute Error (penalizes late errors) | m·s² |
-| **Settling Time** | Time to reach and stay within threshold | seconds |
-| **Overshoot** | Maximum error after initial approach | meters |
-| **Settled** | Whether error is within threshold for duration | boolean |
-
-## 🐛 Troubleshooting
-
-### Quick Health Check
-
-Run the health check script to diagnose issues:
-
-```bash
-cd monitoring_dashboard
-./scripts/check_health.sh
-```
-
-This will verify:
-- Backend server status
-- ROS2 initialization
-- WebSocket availability
-- Frontend build status
-
-### Backend Not Starting
-
-**Problem**: ROS2 topics not discovered
-
-**Solution**:
-```bash
-# Make sure ROS2 is sourced
-source /opt/ros/humble/setup.bash
-source install/setup.bash
-
-# Verify topics are publishing
-ros2 topic list
-ros2 topic echo /agent_0/metrics
-
-# Check backend health
-curl http://localhost:8000/api/health
-```
-
-### Frontend Not Connecting
-
-**Problem**: WebSocket connection failed / header shows Disconnected
-
-**Solution**:
-1. Open `http://localhost:8000/ui` (production UI served by backend)
-2. Check backend logs for `WebSocket /ws [accepted]`
-3. If absent, try private window (disable extensions) and reload
-4. Verify WS manually: `npx wscat -c ws://localhost:8000/ws`
-
-### No Data Appearing
-
-**Problem**: Dashboard shows "No data available"
-
-**Solution**:
-1. Ensure simulation is running and publishing data
-2. Check topic selection (topics must be enabled)
-3. Verify ROS2 topics: `ros2 topic hz /agent_0/metrics`
-
-### Charts Not Updating
-
-**Problem**: Charts frozen or not updating
-
-**Solution**:
-1. Check WebSocket connection status (top-right indicator)
-2. Refresh browser (Ctrl+R)
-3. Verify backend logs show updates and subscriptions
-
-## 🔌 API Reference
-
-### REST Endpoints
-
-```http
-GET /                           # API info
-GET /api/status                 # System status
-GET /api/topics                 # Available ROS2 topics
-GET /api/agents                 # Active agents
-GET /api/snapshot               # Complete data snapshot
-GET /api/metrics/{agent_id}     # Metrics history
-GET /api/odom/{agent_id}        # Odometry history
-GET /api/wind                   # Wind history
-GET /api/formation              # Formation state
-```
-
-### WebSocket Messages
-
-**Subscribe to topics:**
-```json
-{
-  "action": "subscribe",
-  "topics": ["metrics", "odom", "wind"],
-  "agents": ["agent_0", "agent_1"]
-}
-```
-
-**Receive updates:**
-```json
-{
-  "type": "update",
-  "data_type": "metrics",
-  "agent_id": "agent_0",
-  "data": { ... }
-}
-```
-
-## 🛠️ Development
-
-### Backend Development
-
-```bash
-# Install dev dependencies
-pip3 install black flake8 mypy
-
-# Run with auto-reload
-cd backend
-uvicorn app:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Frontend Development
-
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start dev server with proxy to backend
-npm run dev
-
-# Build for production (served by backend at /ui)
-npm run build
-```
-
-## 📝 Adding Custom Metrics
-
-### 1. Backend (ROS2 → WebSocket)
-
-Add new subscription in `backend/ros_bridge/subscriptions.py`:
-
-```python
-def subscribe_custom_topic(self, agent_id: str):
-    topic = f'/{agent_id}/custom_topic'
-    sub = self.create_subscription(
-        CustomMsg,
-        topic,
-        lambda msg: self._on_custom(agent_id, msg),
-        10
-    )
-    self.subscriptions[topic] = sub
-```
-
-### 2. Frontend (Display)
-
-Create component in `frontend/src/components/CustomView.tsx`:
-
-```tsx
-export const CustomView: React.FC<{data: CustomData}> = ({data}) => {
-  return <div>{/* Render custom data */}</div>;
-};
-```
-
-Add to `App.tsx`:
-
-```tsx
-import { CustomView } from './components/CustomView';
-// ... in render:
-<CustomView data={customData} />
-```
-
-## 🤝 Contributing
-
-Contributions welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## 📄 License
-
-This monitoring dashboard is part of the Multi-Agent Formation Control project.
-
-## 🙏 Acknowledgments
-
-- **ROS2** for robotics framework
-- **FastAPI** for high-performance backend
-- **React** + **Plotly.js** for interactive UI
-- **Tailwind CSS** for modern styling
-
-## 📧 Support
-
-For issues or questions:
-1. Check troubleshooting section above
-2. Review ROS2 topic output: `ros2 topic echo /agent_0/metrics`
-3. Check browser console for errors
-4. Verify backend logs
+**Thesis Project**: Formation Control of Agents Under Dynamic Meteorological Conditions
 
 ---
 
-**Built for real-time multi-agent formation control simulation monitoring** 🚁✨
+## IMPORTANT: Do Not Delete
 
-Sadece backend + prod UI:
-source /opt/ros/humble/setup.bash && source install/setup.bash
-cd monitoring_dashboard/frontend && npm run build
-cd ../.. && ./monitoring_dashboard/scripts/run_backend.sh
+When working with LLMs/AI assistants, **preserve these critical files**:
+
+### Backend (Required)
+- `backend/app.py` - FastAPI server, WebSocket handler, simulation control API
+- `backend/ros_bridge/` - ROS2 subscriptions, schemas, metrics processing
+
+### Frontend (Required)
+- `frontend/src/App.tsx` - Main state management, WebSocket connection, history tracking
+- `frontend/src/api/ws.ts` - WebSocket client, data types (MetricsData, OdometryData, etc.)
+- `frontend/src/components/` - UI components (9 files):
+  - `DashboardLayout.tsx` - Resizable panels, simulation start/stop controls
+  - `SimulationMetricsPanel.tsx` - Main left panel with tabs (Overview, Map, Charts, etc.)
+  - `FormationMap.tsx` - 2D drone position visualization with targets
+  - `RosGraphPanel.tsx` - rqt_graph-style ROS2 topology visualization
+  - `TimeSeries.tsx` - Real-time charts (error, RMSE, wind, etc.)
+  - `ControllerParamsPanel.tsx` - PID/Fuzzy/Hybrid controller parameters display
+  - `SystemStatePanel.tsx` - System state overview
+  - `DiagnosticsPanel.tsx` - Bottom diagnostics wrapper
+  - `EventLog.tsx` - Log display component
+
+### Configuration (Required)
+- `frontend/vite.config.ts` - Build config, dev proxy settings
+- `frontend/package.json` - Dependencies
+- `frontend/tailwind.config.js` - Styling
+
+### Scripts (Useful)
+- `scripts/run_backend.sh` - Start backend with ROS2 sourcing
+- `scripts/check_health.sh` - Health diagnostics
+- `scripts/test_publisher.py` - Test data publisher
+
+---
+
+## Architecture
+
+```
+monitoring_dashboard/
+├── backend/
+│   ├── app.py                 # FastAPI + WebSocket + Simulation Control
+│   └── ros_bridge/
+│       ├── subscriptions.py   # ROS2 topic auto-discovery
+│       └── schemas.py         # Data models
+├── frontend/
+│   ├── src/
+│   │   ├── App.tsx           # Main app, state, WebSocket
+│   │   ├── api/ws.ts         # WebSocket client
+│   │   └── components/       # UI components
+│   ├── dist/                 # Production build (generated)
+│   └── vite.config.ts
+└── scripts/
+```
+
+## Quick Start
+
+### 1. Build Frontend (once)
+```bash
+cd monitoring_dashboard/frontend
+npm install
+npm run build
+```
+
+### 2. Start Backend (serves UI at /ui)
+```bash
+cd monitoring_dashboard
+source /opt/ros/humble/setup.bash
+source ../../install/setup.bash  # or your workspace
+./scripts/run_backend.sh
+```
+
+### 3. Open Dashboard
+**http://localhost:8000/ui**
+
+## Features
+
+### Dashboard Layout
+- **Resizable panels** - Drag borders to resize left/right columns
+- **Simulation control** - Start/stop scripts from header dropdown
+- **Connection status** - Live WebSocket indicator
+
+### Left Panel (Tabs)
+- **Overview** - System summary, controller comparison, error stats
+- **Map** - 2D formation visualization (current + target positions)
+- **Charts** - Time series (error, RMSE, wind velocity)
+- **System** - Detailed system state
+- **Params** - Controller parameters (PID gains, Fuzzy config)
+
+### Right Panel
+- **ROS Graph** - rqt_graph-style node/topic visualization
+- **Zoom/Pan** - Interactive navigation
+- **Filter** - Hide system topics
+
+### Bottom Panel
+- **Diagnostics** - Collapsible log panel
+
+## Key Data Types
+
+```typescript
+// From frontend/src/api/ws.ts
+MetricsData: {
+  timestamp, error_x, error_y, error_z, error_magnitude,
+  rmse_x, rmse_y, rmse_z, rmse_total,
+  iae_x, iae_y, iae_z, itae_x, itae_y, itae_z,
+  settling_time, overshoot, is_settled,
+  target_x, target_y, target_z  // Actual targets
+}
+
+ControllerParams: {
+  controller_type, // 'pid' | 'hybrid'
+  kp_x, ki_x, kd_x, kp_y, ki_y, kd_y, kp_z, ki_z, kd_z,
+  fuzzy_enabled, fuzzy_weight, pid_weight
+}
+
+OdometryData: { position: {x,y,z}, velocity: {x,y,z}, orientation: {x,y,z,w} }
+WindData: { velocity: {x,y,z}, force: {x,y,z} }
+FormationState: { shape, spacing, center_x, center_y, center_z, agent_count }
+```
+
+## API Endpoints
+
+### REST
+- `GET /api/status` - System status
+- `GET /api/topics` - Available ROS2 topics
+- `GET /api/agents` - Active agents
+- `GET /api/snapshot` - Complete data snapshot
+- `GET /api/simulation/status` - Simulation running state
+- `GET /api/simulation/scripts` - Available launch scripts
+- `POST /api/simulation/start?script=X` - Start simulation
+- `POST /api/simulation/stop` - Stop simulation
+
+### WebSocket (`/ws`)
+Receives real-time updates: metrics, odom, wind, formation, ros_graph, controller_params
+
+## Monitored ROS2 Topics
+
+Per-agent:
+- `/agent_X/odom` - Position/velocity
+- `/agent_X/metrics` - Performance metrics
+- `/agent_X/controller_params` - Controller config
+- `/agent_X/target_pose` - Target position
+
+Global:
+- `/wind/velocity` - Wind velocity
+- `/formation_coordinator_node/state` - Formation state
+
+## Development
+
+### Frontend Dev (with hot reload)
+```bash
+cd frontend
+npm run dev  # Runs on :3000, proxies API to :8000
+```
+
+### Backend Dev
+```bash
+cd backend
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+uvicorn app:app --reload --host 0.0.0.0 --port 8000
+```
+
+## Troubleshooting
+
+### No Data
+1. Verify simulation running: `ros2 topic list`
+2. Check backend logs for subscriptions
+3. Verify WebSocket connected (header indicator)
+
+### Charts Empty
+- Charts require history data - wait a few seconds after connection
+- Verify `metricsHistory` is populated in App.tsx
+
+### Map Shows Wrong Targets
+- Map uses `metricsData.target_x/y` (controller targets)
+- Falls back to `targetData` if metrics unavailable
+
+---
+
+## Thesis Results & Figures Guide
+
+### Recommended Dashboard Screenshots for Thesis
+
+1. **Formation Map (Map Tab)**
+   - Show agents converging to formation (current positions → targets)
+   - Capture with wind arrow visible showing disturbance direction
+   - Compare: initial scattered state vs. final formation achieved
+
+2. **Controller Comparison (Overview Tab)**
+   - PID vs Hybrid (PID+Fuzzy) error comparison table
+   - Shows which controller type each agent uses
+   - Average RMSE, settling time differences
+
+3. **Time Series Charts (Charts Tab)**
+   - **Error Plot**: Position error convergence over time (X, Y, Z axes)
+   - **RMSE Plot**: Cumulative accuracy comparison between agents
+   - **Wind Plot**: Wind disturbance profile during experiment
+   - **Overshoot Plot**: Maximum overshoot comparison
+
+4. **ROS2 Graph (Right Panel)**
+   - System architecture visualization
+   - Shows node-topic-node connections
+   - Demonstrates multi-agent communication topology
+
+5. **Controller Parameters (Params Tab)**
+   - PID gains (Kp, Ki, Kd) for each axis
+   - Fuzzy weight vs PID weight ratio
+   - Feed-forward compensation settings
+
+### Key Metrics to Report
+
+| Metric | Description | Compare |
+|--------|-------------|---------|
+| RMSE | Root Mean Square Error | PID vs Hybrid |
+| IAE | Integral Absolute Error | Lower = better tracking |
+| ITAE | Integral Time-weighted AE | Penalizes slow convergence |
+| Settling Time | Time to reach target | Faster = better response |
+| Overshoot | Max error after approach | Lower = smoother control |
+
+### Suggested Experiments
+
+1. **No Wind**: Baseline formation convergence
+2. **Constant Wind**: Steady disturbance rejection
+3. **Variable Wind**: Sinusoidal/gust response
+4. **Formation Change**: Triangle → Line → Square transitions
+
+---
+
+**Built for thesis: Formation Control of Agents Under Dynamic Meteorological Conditions**
