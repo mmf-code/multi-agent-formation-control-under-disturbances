@@ -23,7 +23,7 @@ from geometry_msgs.msg import Vector3
 
 
 class WindTool(Node):
-    def __init__(self, x: float, y: float, z: float, rate_hz: float, duration: float, mode: str):
+    def __init__(self, x: float, y: float, z: float, rate_hz: float, duration: float, mode: str, scale: float = 1.0):
         super().__init__('wind_tool')
         self.mode = mode
         self.force_pub = None
@@ -34,13 +34,21 @@ class WindTool(Node):
         if mode in ('velocity', 'both'):
             self.velocity_pub = self.create_publisher(Vector3, '/wind/velocity', 10)
 
-        self.msg = Vector3(x=x, y=y, z=z)
+        # Apply optional scaling to wind vector so higher-level scripts can easily
+        # amplify or attenuate scenarios without changing base values.
+        scaled_x = x * scale
+        scaled_y = y * scale
+        scaled_z = z * scale
+
+        self.msg = Vector3(x=scaled_x, y=scaled_y, z=scaled_z)
         self.rate = 1.0 / max(rate_hz, 0.1)
         self.end_time = self.get_clock().now() + rclpy.duration.Duration(seconds=float(duration))
         self.timer = self.create_timer(self.rate, self.tick)
 
         self.get_logger().info(
-            f"Publishing wind (mode={mode}): x={x:.2f}, y={y:.2f}, z={z:.2f} @ {rate_hz:.1f} Hz for {duration:.1f}s"
+            f"Publishing wind (mode={mode}, scale={scale:.2f}): "
+            f"x={scaled_x:.2f}, y={scaled_y:.2f}, z={scaled_z:.2f} "
+            f"@ {rate_hz:.1f} Hz for {duration:.1f}s"
         )
 
     def tick(self):
@@ -68,10 +76,16 @@ def main():
         default='force',
         help='What to publish: "force", "velocity", or "both" on /wind/force and /wind/velocity.'
     )
+    parser.add_argument(
+        '--scale',
+        type=float,
+        default=1.0,
+        help='Scaling factor applied to (x,y,z) components.'
+    )
     args = parser.parse_args()
 
     rclpy.init()
-    node = WindTool(args.x, args.y, args.z, args.rate, args.duration, args.mode)
+    node = WindTool(args.x, args.y, args.z, args.rate, args.duration, args.mode, args.scale)
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:

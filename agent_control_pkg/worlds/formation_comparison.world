@@ -40,8 +40,9 @@
       </ros>
       <frame_id>world</frame_id>
       <wind_direction>
-        <x>1.0</x>
-        <y>0.3</y>
+        <!-- Crosswind dominant (north-bound), minimal forward push -->
+        <x>0.1</x>
+        <y>1.0</y>
         <z>0.0</z>
       </wind_direction>
       <!-- Increased mean/variance further to make controller differences visually obvious. -->

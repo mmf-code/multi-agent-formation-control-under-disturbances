@@ -81,6 +81,7 @@ cd /home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances
 ./scripts/quick_test.sh                       # 15s system validation (optional)
 ./scripts/run_formation_demo.sh               # 9-drone comparison demo + CSV logging (default 60s)
 ./scripts/run_formation_demo.sh --no-record   # Same demo, no CSV (visual only)
+./scripts/run_formation_demo.sh --scenario=phased --wind-scale=1.5  # 4-phase wind: increasing strength + settle gaps
 ./scripts/demo_with_recording.sh 60           # Legacy full GUI + CSV recording
 ```
 

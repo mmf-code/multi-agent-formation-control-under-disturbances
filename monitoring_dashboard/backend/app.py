@@ -339,6 +339,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 except Exception as e:
                     logger.error(f"Error sending WebSocket update: {e}")
 
+        ros_callback = None
         if ros_bridge:
             # Store the event loop for callbacks from ROS thread
             loop = asyncio.get_event_loop()
@@ -415,6 +416,8 @@ async def websocket_endpoint(websocket: WebSocket):
             hb_task.cancel()
         except Exception:
             pass
+        if ros_bridge and ros_callback:
+            ros_bridge.remove_update_callback(ros_callback)
         active_connections.discard(websocket)
         logger.info(f"WebSocket client removed. Total connections: {len(active_connections)}")
 

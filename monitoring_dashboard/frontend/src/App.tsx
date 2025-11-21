@@ -89,6 +89,13 @@ function App() {
     };
   }, []);
 
+  // Subscribe to live updates once connected
+  useEffect(() => {
+    if (connected) {
+      wsClient.subscribe(['metrics', 'odom', 'wind', 'formation', 'diagnostics', 'controller_params']);
+    }
+  }, [connected]);
+
   const handleSnapshot = (snapshot: SnapshotData) => {
     if (snapshot.metrics) setMetrics(snapshot.metrics);
     if (snapshot.odom) setOdom(snapshot.odom);
@@ -127,7 +134,7 @@ function App() {
           rosGraph={rosGraph}
         />
       }
-      rightPanel={<RosGraphPanel graphData={rosGraph} />}
+      rightPanel={<RosGraphPanel graphData={rosGraph} controllerParams={controllerParams} />}
       bottomPanel={<DiagnosticsPanel logs={logs} />}
     />
   );

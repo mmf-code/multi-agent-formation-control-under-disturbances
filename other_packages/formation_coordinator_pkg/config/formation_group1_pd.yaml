@@ -14,10 +14,11 @@
     # Spacing between agents (meters) - INCREASED for collision avoidance
     formation.spacing: 3.0
 
-    # Formation center position (target for group centroid)
-    formation.center.x: 5.0
+    # Formation center position (initial target for group centroid)
+    # Start at spawn centroid along X for step-wise trajectory.
+    formation.center.x: -8.5
     formation.center.y: 0.0
-    formation.center.z: 4.0  # FIXED: Match drone spawn altitude (Group 1 at Z=4.0m)
+    formation.center.z: 4.0  # Match drone spawn altitude (Group 1 at Z=4.0m)
 
     # Formation orientation (degrees)
     formation.yaw_deg: 0.0
@@ -36,8 +37,21 @@
     pso.cognitive_coeff: 1.5
     pso.social_coeff: 1.5
 
-    # Center motion along X (ramp from start_x to end_x)
-    motion.enable: true
-    motion.vx: 0.8
-    motion.start_x: -8.5  # FIXED: Match actual centroid of Group 1 spawn positions (-10, -7, -8.5)
-    motion.end_x: 5.0
+    # Legacy linear motion along X (DISABLED - using waypoints instead)
+    motion.enable: false
+    motion.vx: 0.0
+    motion.start_x: 0.0
+    motion.end_x: 0.0
+
+    # WAYPOINT-BASED 4-PHASE TRAJECTORY (≈110s demo with settle gaps)
+    waypoints.enable: true
+
+    # See Group 0 comments for timing pattern (move ~22s, hold ~5s per phase).
+    waypoints.times: [22.0, 27.0, 49.0, 54.0, 76.0, 81.0, 103.0, 110.0]
+
+    # X coordinates (P1..P4) for middle lane (much longer travel)
+    waypoints.x: [-6.0, -6.0, 4.0, 4.0, 12.0, 12.0, 20.0, 20.0]
+
+    # Y/Z stay on the same altitude lane
+    waypoints.y: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    waypoints.z: [4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0]

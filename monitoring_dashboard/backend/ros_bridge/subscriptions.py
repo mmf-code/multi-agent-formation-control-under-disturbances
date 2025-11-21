@@ -96,6 +96,20 @@ class ROSBridge(Node):
         """Register callback for data updates (WebSocket push)"""
         self.update_callbacks.append(callback)
 
+    def remove_update_callback(self, callback: Callable[[str, Optional[str]], None]):
+        """Remove a previously registered callback (safe if not present)"""
+        try:
+            self.update_callbacks.remove(callback)
+        except ValueError:
+            pass
+
+    def remove_update_callback(self, callback: Callable[[str, Optional[str]], None]):
+        """Remove a previously registered callback (safe if not present)."""
+        try:
+            self.update_callbacks.remove(callback)
+        except ValueError:
+            pass
+
     def notify_update(self, data_type: str, agent_id: Optional[str] = None):
         """Notify all registered callbacks about data update.
 

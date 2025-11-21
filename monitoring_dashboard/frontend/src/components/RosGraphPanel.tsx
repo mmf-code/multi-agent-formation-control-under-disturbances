@@ -3,8 +3,18 @@
  * Shows nodes (rectangles), topics (rounded), and directed connections
  */
 import React, { useState, useMemo, useRef, useCallback } from 'react';
-import { RosGraphData } from '../api/ws';
+import { RosGraphData, ControllerParams } from '../api/ws';
 import { ZoomIn, ZoomOut, Filter, Eye, EyeOff, Maximize2 } from 'lucide-react';
+
+// Friendly names for nodes
+const NODE_FRIENDLY_NAMES: Record<string, string> = {
+    'simple_drone_plugin': 'Drone Controller',
+    'gazebo': 'Gazebo Simulator',
+    'monitoring_dashboard_bridge': 'Dashboard Bridge',
+    'simple_metrics_logger': 'Metrics Logger',
+    'formation_coordinator_node': 'Formation Coordinator',
+    'wind_plugin': 'Wind Generator',
+};
 
 interface Position {
     x: number;
@@ -16,6 +26,8 @@ interface LayoutNode {
     label: string;
     type: 'node' | 'topic';
     role?: string;
+    controllerType?: string; // 'pid' | 'hybrid' | 'pd'
+    agentId?: string;
     x: number;
     y: number;
     width: number;
@@ -32,6 +44,7 @@ interface LayoutEdge {
 
 interface RosGraphPanelProps {
     graphData: RosGraphData | null;
+    controllerParams?: Record<string, ControllerParams>;
 }
 
 // System topics to hide by default
@@ -46,7 +59,28 @@ const HIDDEN_PATTERNS = [
     '/set_parameters',
 ];
 
-export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData }) => {
+export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, controllerParams }) => {
+    // Helper to get friendly name and controller type for a node
+    const getNodeInfo = (nodeName: string) => {
+        const parts = nodeName.split('/').filter(Boolean);
+        const baseName = parts[parts.length - 1];
+        const agentMatch = nodeName.match(/agent_(\d+)/);
+        const agentId = agentMatch ? `agent_${agentMatch[1]}` : undefined;
+
+        let friendlyName = NODE_FRIENDLY_NAMES[baseName] || baseName;
+        let controllerType: string | undefined;
+
+        if (agentId && controllerParams?.[agentId]) {
+            controllerType = controllerParams[agentId].controller_type;
+            // Add controller type to name
+            const ctrlLabel = controllerType === 'hybrid' ? 'PID+Fuzzy' : controllerType?.toUpperCase() || '';
+            friendlyName = `${agentId} (${ctrlLabel})`;
+        } else if (agentId) {
+            friendlyName = `${agentId} - ${friendlyName}`;
+        }
+
+        return { friendlyName, controllerType, agentId };
+    };
     const containerRef = useRef<HTMLDivElement>(null);
     const [scale, setScale] = useState(0.7);
     const [pan, setPan] = useState({ x: 100, y: 80 });
@@ -148,11 +182,14 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData }) => {
 
         // Left column - Publishers
         publishers.forEach((node, i) => {
+            const info = getNodeInfo(node.name);
             layoutNodes.push({
                 id: node.id,
-                label: node.name.split('/').pop() || node.name,
+                label: info.friendlyName,
                 type: 'node',
                 role: node.role,
+                controllerType: info.controllerType,
+                agentId: info.agentId,
                 x: 0,
                 y: i * ROW_SPACING,
                 width: NODE_WIDTH,
@@ -176,11 +213,14 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData }) => {
         // Right column - Subscribers (that aren't also publishers)
         const pureSubscribers = subscribers.filter(n => nodeRoles.get(n.id) === 'subscriber');
         pureSubscribers.forEach((node, i) => {
+            const info = getNodeInfo(node.name);
             layoutNodes.push({
                 id: node.id,
-                label: node.name.split('/').pop() || node.name,
+                label: info.friendlyName,
                 type: 'node',
                 role: node.role,
+                controllerType: info.controllerType,
+                agentId: info.agentId,
                 x: COL_SPACING * 2,
                 y: i * ROW_SPACING,
                 width: NODE_WIDTH,
@@ -266,14 +306,23 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData }) => {
         setPan({ x: 100, y: 80 });
     }, []);
 
-    // Node color by role
-    const getNodeColor = (role?: string) => {
+    // Node color by controller type (prioritize) or role
+    const getNodeColor = (controllerType?: string, role?: string) => {
+        // Controller type colors (for agent nodes)
+        if (controllerType) {
+            switch (controllerType) {
+                case 'hybrid': return { bg: '#059669', border: '#10B981', label: 'PID+Fuzzy' }; // Green - Hybrid
+                case 'pid': return { bg: '#2563EB', border: '#3B82F6', label: 'PID' };          // Blue - PID
+                case 'pd': return { bg: '#7C3AED', border: '#8B5CF6', label: 'PD' };            // Purple - PD
+            }
+        }
+        // Role-based colors
         switch (role) {
-            case 'controller': return { bg: '#2563EB', border: '#3B82F6' };
-            case 'sensor': return { bg: '#059669', border: '#10B981' };
-            case 'metrics': return { bg: '#7C3AED', border: '#8B5CF6' };
-            case 'agent_node': return { bg: '#D97706', border: '#F59E0B' };
-            default: return { bg: '#4B5563', border: '#6B7280' };
+            case 'controller': return { bg: '#2563EB', border: '#3B82F6', label: 'Controller' };
+            case 'sensor': return { bg: '#059669', border: '#10B981', label: 'Sensor' };
+            case 'metrics': return { bg: '#7C3AED', border: '#8B5CF6', label: 'Metrics' };
+            case 'agent_node': return { bg: '#D97706', border: '#F59E0B', label: 'Agent' };
+            default: return { bg: '#4B5563', border: '#6B7280', label: 'System' };
         }
     };
 
@@ -349,19 +398,27 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData }) => {
 
             {/* Legend */}
             <div className="absolute bottom-3 left-3 bg-gray-900/95 p-3 rounded-lg border border-gray-700 z-20">
-                <div className="text-xs font-bold text-gray-400 mb-2">Legend</div>
+                <div className="text-xs font-bold text-gray-400 mb-2">Controller Types</div>
                 <div className="space-y-1.5">
                     <div className="flex items-center space-x-2">
-                        <div className="w-8 h-4 rounded bg-blue-600 border border-blue-400" />
-                        <span className="text-xs text-gray-300">Node (Controller)</span>
+                        <div className="w-8 h-4 rounded" style={{ background: '#059669', border: '1px solid #10B981' }} />
+                        <span className="text-xs text-gray-300">PID + Fuzzy (Hybrid)</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <div className="w-8 h-4 rounded-full bg-emerald-700 border border-emerald-500" />
+                        <div className="w-8 h-4 rounded" style={{ background: '#2563EB', border: '1px solid #3B82F6' }} />
+                        <span className="text-xs text-gray-300">PID Only</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <div className="w-8 h-4 rounded" style={{ background: '#7C3AED', border: '1px solid #8B5CF6' }} />
+                        <span className="text-xs text-gray-300">PD Only</span>
+                    </div>
+                    <div className="flex items-center space-x-2 pt-1 border-t border-gray-700 mt-1">
+                        <div className="w-8 h-4 rounded-full bg-emerald-900 border border-emerald-700" />
                         <span className="text-xs text-gray-300">Topic</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <svg width="32" height="8"><line x1="0" y1="4" x2="24" y2="4" stroke="#6B7280" strokeWidth="2" /><polygon points="24,0 32,4 24,8" fill="#6B7280" /></svg>
-                        <span className="text-xs text-gray-300">Publish/Subscribe</span>
+                        <div className="w-8 h-4 rounded" style={{ background: '#4B5563', border: '1px solid #6B7280' }} />
+                        <span className="text-xs text-gray-300">System Node</span>
                     </div>
                 </div>
             </div>
@@ -421,7 +478,7 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData }) => {
                     {/* Nodes and Topics */}
                     {layout.nodes.map(node => {
                         const isSelected = selectedItem === node.id;
-                        const colors = getNodeColor(node.role);
+                        const colors = getNodeColor(node.controllerType, node.role);
 
                         if (node.type === 'topic') {
                             // Topic - rounded rectangle (pill shape)
