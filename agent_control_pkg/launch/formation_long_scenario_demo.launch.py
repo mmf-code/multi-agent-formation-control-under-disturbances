@@ -217,8 +217,11 @@ def generate_launch_description():
                 parameters=[{
                     'use_sim_time': use_sim_time,
                     'publish_rate_hz': 10.0,
-                    'settling_threshold': 0.05,  # 5cm
-                    'settling_time_window': 2.0,
+                    # Long scenario uses the same relaxed defaults as the formation demo
+                    'settled_pos_threshold': 0.10,   # 10 cm
+                    'settled_time_window': 1.0,      # 1 second
+                    'metrics_window_sec': 60.0,
+                    'enable_group_metrics': True,
                 }]
             ),
         ])

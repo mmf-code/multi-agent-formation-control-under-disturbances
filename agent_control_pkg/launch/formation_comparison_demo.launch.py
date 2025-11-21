@@ -74,6 +74,23 @@ def generate_launch_description():
     gazebo_gui = LaunchConfiguration('gazebo_gui', default='true')
     rviz_enabled = LaunchConfiguration('rviz', default='true')
 
+    # Controller tuning arguments (PID vs PID+Fuzzy)
+    # NOTE: Defaults preserve previous behaviour.
+    pid_group_kp = LaunchConfiguration('pid_group_kp')
+    pid_group_ki = LaunchConfiguration('pid_group_ki')
+    pid_group_kd = LaunchConfiguration('pid_group_kd')
+    fuzzy_group_kp = LaunchConfiguration('fuzzy_group_kp')
+    fuzzy_group_ki = LaunchConfiguration('fuzzy_group_ki')
+    fuzzy_group_kd = LaunchConfiguration('fuzzy_group_kd')
+    fuzzy_group_k_fuzzy = LaunchConfiguration('fuzzy_group_k_fuzzy')
+
+    # Wind + metrics arguments
+    wind_source_topic = LaunchConfiguration('wind_source_topic')
+    wind_source_type = LaunchConfiguration('wind_source_type')
+    settled_pos_threshold = LaunchConfiguration('settled_pos_threshold')
+    settled_time_window = LaunchConfiguration('settled_time_window')
+    metrics_window_sec = LaunchConfiguration('metrics_window_sec')
+
     # Declare launch arguments
     declare_use_sim_time = DeclareLaunchArgument(
         'use_sim_time',
@@ -91,6 +108,71 @@ def generate_launch_description():
         'rviz',
         default_value='true',
         description='Launch RViz for visualization'
+    )
+
+    # Controller tuning launch arguments
+    declare_pid_group_kp = DeclareLaunchArgument(
+        'pid_group_kp',
+        default_value='3.501',
+        description='Kp for pure PID group (Group 2: agents 6–8).'
+    )
+    declare_pid_group_ki = DeclareLaunchArgument(
+        'pid_group_ki',
+        default_value='1.946',
+        description='Ki for pure PID group (Group 2: agents 6–8).'
+    )
+    declare_pid_group_kd = DeclareLaunchArgument(
+        'pid_group_kd',
+        default_value='3.608',
+        description='Kd for pure PID group (Group 2: agents 6–8).'
+    )
+
+    declare_fuzzy_group_kp = DeclareLaunchArgument(
+        'fuzzy_group_kp',
+        default_value='3.501',
+        description='Kp for PID+Fuzzy group (Group 0: agents 0–2).'
+    )
+    declare_fuzzy_group_ki = DeclareLaunchArgument(
+        'fuzzy_group_ki',
+        default_value='1.946',
+        description='Ki for PID+Fuzzy group (Group 0: agents 0–2).'
+    )
+    declare_fuzzy_group_kd = DeclareLaunchArgument(
+        'fuzzy_group_kd',
+        default_value='3.608',
+        description='Kd for PID+Fuzzy group (Group 0: agents 0–2).'
+    )
+    declare_fuzzy_group_k_fuzzy = DeclareLaunchArgument(
+        'fuzzy_group_k_fuzzy',
+        default_value='0.7',
+        description='Mixing gain k_fuzzy for PID+Fuzzy group (Group 0).'
+    )
+
+    # Wind + metrics launch arguments
+    declare_wind_source_topic = DeclareLaunchArgument(
+        'wind_source_topic',
+        default_value='/wind/velocity',
+        description='Topic supplying wind data to agent controllers.'
+    )
+    declare_wind_source_type = DeclareLaunchArgument(
+        'wind_source_type',
+        default_value='velocity',
+        description='Wind data interpretation: "velocity" or "force".'
+    )
+    declare_settled_pos_threshold = DeclareLaunchArgument(
+        'settled_pos_threshold',
+        default_value='0.10',
+        description='Position error threshold (m) for settled detection.'
+    )
+    declare_settled_time_window = DeclareLaunchArgument(
+        'settled_time_window',
+        default_value='1.0',
+        description='Time window (s) for settled detection.'
+    )
+    declare_metrics_window_sec = DeclareLaunchArgument(
+        'metrics_window_sec',
+        default_value='30.0',
+        description='Window length (s) for group-level RMSE/IAE metrics.'
     )
 
     # ===== Gazebo Simulation =====
@@ -126,15 +208,20 @@ def generate_launch_description():
     fuzzy_controller_params = {
         'controller_type': 'pid_fuzzy',
         'dt': 0.005,
-        'pid.kp': 3.501,    # UPDATED from velocity tuning
-        'pid.ki': 1.946,    # UPDATED for wind rejection
-        'pid.kd': 3.608,    # UPDATED for damping
+        # PID baseline for hybrid controller
+        'pid.kp': fuzzy_group_kp,
+        'pid.ki': fuzzy_group_ki,
+        'pid.kd': fuzzy_group_kd,
         'fuzzy.enable': True,
         'fuzzy.include_wind': True,
-        'fuzzy.wind_scalar': 1.0,  # UPDATED: full wind sensitivity
+        # Amplified wind awareness so fuzzy reacts more strongly under heavy wind.
+        'fuzzy.wind_scalar': 1.5,
         'fuzzy.params_file': 'fuzzy_params.yaml',
         'mix.k_pid': 1.0,
-        'mix.k_fuzzy': 0.7,  # Strong fuzzy influence for disturbance rejection
+        'mix.k_fuzzy': fuzzy_group_k_fuzzy,  # Fuzzy mix factor
+        # Wind handling (can be overridden per launch)
+        'wind_source_topic': wind_source_topic,
+        'wind_source_type': wind_source_type,
         'use_sim_time': use_sim_time,
         'output_limits.x.min': -10.0,
         'output_limits.x.max': 10.0,
@@ -151,6 +238,8 @@ def generate_launch_description():
         'pid.kd': 3.61,
         'pid.enable_derivative_filter': True,
         'fuzzy.enable': False,
+        'wind_source_topic': wind_source_topic,
+        'wind_source_type': wind_source_type,
         'use_sim_time': use_sim_time,
         'output_limits.x.min': -10.0,
         'output_limits.x.max': 10.0,
@@ -163,12 +252,17 @@ def generate_launch_description():
     pid_controller_params = {
         'controller_type': 'pid',
         'dt': 0.005,
-        'pid.kp': 3.501,    # UPDATED from velocity tuning
-        'pid.ki': 1.946,    # UPDATED for wind rejection
-        'pid.kd': 3.608,    # UPDATED for damping
+        # Pure PID group parameters (no fuzzy)
+        'pid.kp': pid_group_kp,
+        'pid.ki': pid_group_ki,
+        'pid.kd': pid_group_kd,
         'pid.enable_derivative_filter': True,
         'pid.derivative_filter_alpha': 0.1,
         'fuzzy.enable': False,
+        'mix.k_pid': 1.0,
+        'mix.k_fuzzy': 0.0,
+        'wind_source_topic': wind_source_topic,
+        'wind_source_type': wind_source_type,
         'use_sim_time': use_sim_time,
         'output_limits.x.min': -10.0,
         'output_limits.x.max': 10.0,
@@ -227,8 +321,12 @@ def generate_launch_description():
                 parameters=[{
                     'use_sim_time': use_sim_time,
                     'publish_rate_hz': 10.0,
-                    'settling_threshold': 0.05,  # 5cm
-                    'settling_time_window': 2.0,
+                    # Looser, configurable settled detection for dashboard
+                    'settled_pos_threshold': settled_pos_threshold,
+                    'settled_time_window': settled_time_window,
+                    # Group-level comparison window (RMSE / IAE)
+                    'metrics_window_sec': metrics_window_sec,
+                    'enable_group_metrics': True,
                 }]
             ),
         ])
@@ -321,6 +419,18 @@ def generate_launch_description():
         declare_use_sim_time,
         declare_gazebo_gui,
         declare_rviz,
+        declare_pid_group_kp,
+        declare_pid_group_ki,
+        declare_pid_group_kd,
+        declare_fuzzy_group_kp,
+        declare_fuzzy_group_ki,
+        declare_fuzzy_group_kd,
+        declare_fuzzy_group_k_fuzzy,
+        declare_wind_source_topic,
+        declare_wind_source_type,
+        declare_settled_pos_threshold,
+        declare_settled_time_window,
+        declare_metrics_window_sec,
 
         # Gazebo
         gzserver,

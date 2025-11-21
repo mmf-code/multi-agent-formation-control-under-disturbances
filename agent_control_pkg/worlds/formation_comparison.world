@@ -32,10 +32,10 @@
 
     <!-- Wind Model: Strong wind disturbance for controller comparison -->
     <!-- Stronger wind ensures PID+Fuzzy advantage is visible -->
-    <!-- TEMPORARILY DISABLED FOR DEBUGGING -->
-    <!--
     <plugin name="wind_plugin" filename="libgazebo_ros_wind.so">
       <ros>
+        <!-- Namespace chosen so that the plugin publishes under /wind/... topics.
+             The controller node defaults to wind_source_topic=/wind/velocity. -->
         <namespace>/wind</namespace>
       </ros>
       <frame_id>world</frame_id>
@@ -44,11 +44,11 @@
         <y>0.3</y>
         <z>0.0</z>
       </wind_direction>
-      <wind_force_mean>4.0</wind_force_mean>
-      <wind_force_variance>1.5</wind_force_variance>
+      <!-- Increased mean/variance further to make controller differences visually obvious. -->
+      <wind_force_mean>8.0</wind_force_mean>
+      <wind_force_variance>3.0</wind_force_variance>
       <update_rate>10.0</update_rate>
     </plugin>
-    -->
 
     <!-- Ground plane -->
     <model name="ground">

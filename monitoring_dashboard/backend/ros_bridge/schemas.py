@@ -164,5 +164,30 @@ class SystemStatus(BaseModel):
     ros_ok: bool
     active_agents: list[str]
     available_topics: list[str]
-    wind_active: bool
     formation_active: bool
+
+
+class RosNode(BaseModel):
+    """ROS2 Node info for graph"""
+    id: str
+    name: str
+    namespace: str
+    type: str = "node"
+    role: str = "unknown"
+    group: Optional[str] = None
+
+
+class RosEdge(BaseModel):
+    """ROS2 connection edge"""
+    id: str
+    source: str
+    target: str
+    topicName: str
+    msgType: str
+
+
+class RosGraphData(BaseModel):
+    """Complete ROS2 graph topology"""
+    nodes: list[RosNode]
+    edges: list[RosEdge]
+    timestamp: float

@@ -11,6 +11,7 @@ interface TimeSeriesProps {
   windHistory: WindData[];
   selectedAgent: string | null;
   chartType: 'error' | 'metrics' | 'wind' | 'overshoot';
+  timeWindow?: number; // seconds, 0 = full run
 }
 
 export const TimeSeries: React.FC<TimeSeriesProps> = ({
@@ -18,7 +19,9 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
   windHistory,
   selectedAgent,
   chartType,
+  timeWindow: _timeWindow = 60,
 }) => {
+  // TODO: Use _timeWindow to filter data by time range
   const plotData = useMemo(() => {
     if (chartType === 'wind') {
       return {

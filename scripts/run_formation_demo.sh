@@ -11,8 +11,10 @@
 #   - Grup 2 (agent_6,7,8): PID        - Yellow renk   - Dengeli performans
 #
 # Kullanım:
-#   ./scripts/run_formation_demo.sh              # Full GUI (Gazebo + RViz)
-#   ./scripts/run_formation_demo.sh --headless   # Sadece Gazebo GUI, RViz yok
+#   ./scripts/run_formation_demo.sh                      # Full GUI (Gazebo + RViz)
+#   ./scripts/run_formation_demo.sh --headless           # Sadece Gazebo GUI, RViz yok
+#   ./scripts/run_formation_demo.sh --record             # Orijinal sim + CSV kayıt (60s)
+#   ./scripts/run_formation_demo.sh --record-duration=90 # Orijinal sim + CSV kayıt (90s)
 ################################################################################
 
 set -e
@@ -35,8 +37,33 @@ echo ""
 
 # Parse arguments
 RVIZ_ENABLED="true"
-if [[ "$1" == "--headless" ]]; then
-    RVIZ_ENABLED="false"
+WIND_MODE="tool"  # default: Python wind tool (matches previous behaviour)
+# Default: orijinal demo her çalıştığında CSV kaydeder (tez uyumlu).
+RECORD_ENABLED="true"
+RECORD_DURATION=60
+
+for arg in "$@"; do
+  case "$arg" in
+    --headless)
+      RVIZ_ENABLED="false"
+      ;;
+    --wind-mode=*)
+      WIND_MODE="${arg#*=}"
+      ;;
+    --record)
+      RECORD_ENABLED="true"
+      ;;
+    --record-duration=*)
+      RECORD_ENABLED="true"
+      RECORD_DURATION="${arg#*=}"
+      ;;
+    --no-record)
+      RECORD_ENABLED="false"
+      ;;
+  esac
+done
+
+if [[ "$RVIZ_ENABLED" == "false" ]]; then
     echo -e "${YELLOW}Mode: Headless (Gazebo GUI only, no RViz)${NC}"
 else
     echo -e "${GREEN}Mode: Full GUI (Gazebo + RViz)${NC}"
@@ -75,27 +102,42 @@ echo ""
 
 # Wind parametreleri
 echo -e "${CYAN}Wind Disturbance:${NC}"
-echo -e "  Base world wind plugin: ${RED}4.0N${NC} mean, ${RED}1.5N${NC} variance"
-echo -e "  ROS wind topic: ${RED}/wind/force${NC} (for controllers + dashboard)"
+echo -e "  Gazebo world wind plugin: ${RED}8.0N${NC} mean, ${RED}3.0N${NC} variance"
+echo -e "  Wind mode: ${YELLOW}${WIND_MODE}${NC} (plugin: /wind/velocity, tool: /wind/force + /wind/velocity)"
 echo ""
 
-# Rüzgar publisher'ını otomatik başlat (dashboard için /wind/force)
-echo -e "${CYAN}[2.5/3] Starting wind publisher node...${NC}"
-# Use bash explicitly so script does not need +x
-bash scripts/run_wind.sh --x 4.0 --y 1.2 --z 0.0 --duration 999999 >/dev/null 2>&1 &
-WIND_PID=$!
-echo -e "  → Wind publisher PID: ${WIND_PID}"
-echo ""
-
+WIND_PID=""
+SIM_PID=""
 cleanup() {
-  echo ""
-  echo -e "${YELLOW}Stopping wind publisher (PID ${WIND_PID})...${NC}"
-  if kill -0 "${WIND_PID}" 2>/dev/null; then
-    kill "${WIND_PID}" 2>/dev/null || true
+  if [[ -n "${WIND_PID}" ]]; then
+    echo ""
+    echo -e "${YELLOW}Stopping wind publisher (PID ${WIND_PID})...${NC}"
+    if kill -0 "${WIND_PID}" 2>/dev/null; then
+      kill "${WIND_PID}" 2>/dev/null || true
+    fi
+  fi
+  if [[ -n "${SIM_PID}" ]]; then
+    echo -e "${YELLOW}Stopping simulation (PID ${SIM_PID})...${NC}"
+    kill "${SIM_PID}" 2>/dev/null || true
+    pkill -9 gzserver 2>/dev/null || true
+    pkill -9 gzclient 2>/dev/null || true
+    pkill -9 rviz2 2>/dev/null || true
   fi
 }
 
 trap cleanup EXIT INT TERM
+
+if [[ "${WIND_MODE}" == "tool" ]]; then
+  echo -e "${CYAN}[2.5/3] Starting Python wind tool (force + velocity)...${NC}"
+  # Use bash explicitly so script does not need +x
+  bash scripts/run_wind.sh --x 8.0 --y 2.4 --z 0.0 --duration 999999 --mode both >/dev/null 2>&1 &
+  WIND_PID=$!
+  echo -e "  → Wind publisher PID: ${WIND_PID}"
+  echo ""
+else
+  echo -e "${CYAN}[2.5/3] Using Gazebo world wind plugin only (no Python wind tool).${NC}"
+  echo ""
+fi
 
 # Launch
 echo -e "${CYAN}[3/3] Launching simulation...${NC}"
@@ -104,10 +146,51 @@ echo -e "${GREEN}Press Ctrl+C to stop the demo${NC}"
 echo ""
 sleep 2
 
-# Launch komutu
-ros2 launch agent_control_pkg formation_comparison_demo.launch.py \
-    gazebo_gui:=true \
-    rviz:=$RVIZ_ENABLED
+if [[ "${RECORD_ENABLED}" == "true" ]]; then
+  # Orijinal sim + CSV kayıt (tez formatında)
+  DATE=$(date +%Y-%m-%d)
+  TIME=$(date +%H-%M-%S)
+  OUTPUT_DIR="thesis_data/${DATE}/${TIME}_full_demo"
+  mkdir -p "$OUTPUT_DIR"
 
-echo ""
-echo -e "${GREEN}Demo completed!${NC}"
+  echo -e "${CYAN}Recording enabled:${NC} ${YELLOW}${RECORD_DURATION}s${NC}"
+  echo -e "${CYAN}Output directory:${NC} ${YELLOW}${OUTPUT_DIR}${NC}"
+  echo ""
+
+  # Simülasyonu arka planda başlat, log'u kaydet
+  TOTAL_TIME=$((RECORD_DURATION + 15))
+  timeout ${TOTAL_TIME} ros2 launch agent_control_pkg formation_comparison_demo.launch.py \
+      gazebo_gui:=true \
+      rviz:=$RVIZ_ENABLED > "${OUTPUT_DIR}/simulation.log" 2>&1 &
+  SIM_PID=$!
+
+  echo -e "${YELLOW}Waiting 10s for simulation initialization...${NC}"
+  sleep 10
+  echo -e "${GREEN}Simulation running (PID: ${SIM_PID})${NC}"
+  echo ""
+  echo -e "${CYAN}Starting metrics logger (agents 0,3,6)...${NC}"
+
+  python3 scripts/simple_metrics_logger.py \
+      --output-dir "${OUTPUT_DIR}" \
+      --duration "${RECORD_DURATION}" \
+      --agents 0 3 6
+
+  echo ""
+  echo -e "${CYAN}Stopping simulation...${NC}"
+  kill "${SIM_PID}" 2>/dev/null || true
+  pkill -9 gzserver 2>/dev/null || true
+  pkill -9 gzclient 2>/dev/null || true
+  pkill -9 rviz2 2>/dev/null || true
+  SIM_PID=""
+
+  echo ""
+  echo -e "${GREEN}Demo completed! Data saved to:${NC} ${YELLOW}${OUTPUT_DIR}${NC}"
+else
+  # Eski davranış: sadece demo, kayıt yok
+  ros2 launch agent_control_pkg formation_comparison_demo.launch.py \
+      gazebo_gui:=true \
+      rviz:=$RVIZ_ENABLED
+
+  echo ""
+  echo -e "${GREEN}Demo completed!${NC}"
+fi

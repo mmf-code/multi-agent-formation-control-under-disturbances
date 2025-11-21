@@ -226,8 +226,12 @@ def generate_launch_description():
                 parameters=[{
                     'use_sim_time': use_sim_time,
                     'publish_rate_hz': 10.0,
-                    'settling_threshold': 0.05,  # 5cm
-                    'settling_time_window': 2.0,
+                    # For focused step-response analysis we keep a tighter
+                    # settled definition than the formation demo defaults.
+                    'settled_pos_threshold': 0.05,   # 5 cm
+                    'settled_time_window': 2.0,      # 2 seconds
+                    'metrics_window_sec': 0.0,
+                    'enable_group_metrics': False,
                 }]
             ),
         ])

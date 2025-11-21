@@ -100,6 +100,34 @@ export interface SystemStatus {
   formation_active: boolean;
 }
 
+export interface RosNode {
+  id: string;
+  name: string;
+  namespace: string;
+  type: 'node' | 'topic' | 'service' | 'action';
+  role?: 'controller' | 'sensor' | 'metrics' | 'infra';
+  group?: string;
+  rates?: {
+    publish: number;
+    subscribe: number;
+  };
+}
+
+export interface RosEdge {
+  id: string;
+  source: string;
+  target: string;
+  topicName?: string;
+  msgType?: string;
+  rate?: number;
+}
+
+export interface RosGraphData {
+  nodes: RosNode[];
+  edges: RosEdge[];
+  timestamp: number;
+}
+
 export interface SnapshotData {
   metrics: Record<string, MetricsData>;
   odom: Record<string, OdometryData>;
@@ -108,6 +136,7 @@ export interface SnapshotData {
   controller_params: Record<string, ControllerParams>;
   formation: FormationState | null;
   wind: WindData | null;
+  ros_graph?: RosGraphData;
   status: SystemStatus;
 }
 

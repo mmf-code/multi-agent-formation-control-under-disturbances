@@ -4,7 +4,7 @@
  */
 import React, { useMemo } from 'react';
 import Plot from 'react-plotly.js';
-import { OdometryData, FormationState, WindData } from '../api/ws';
+import { OdometryData, FormationState, WindData, MetricsData } from '../api/ws';
 
 interface FormationMapProps {
   odomData: Record<string, OdometryData>;
@@ -12,6 +12,7 @@ interface FormationMapProps {
   formationState: FormationState | null;
   selectedAgents: Set<string>;
   windData?: WindData | null;
+  metricsData?: Record<string, MetricsData>; // Contains target_x, target_y from metrics
 }
 
 export const FormationMap: React.FC<FormationMapProps> = ({
@@ -20,11 +21,20 @@ export const FormationMap: React.FC<FormationMapProps> = ({
   formationState,
   selectedAgents,
   windData,
+  metricsData,
 }) => {
   const plotData = useMemo(() => {
     const agents = selectedAgents.size > 0
       ? Array.from(selectedAgents)
       : Object.keys(odomData);
+
+    // Helper to get target position - prefer metricsData (actual targets) over targetData (initial)
+    const getTargetPos = (id: string) => {
+      if (metricsData?.[id]?.target_x !== undefined && metricsData?.[id]?.target_y !== undefined) {
+        return { x: metricsData[id].target_x, y: metricsData[id].target_y };
+      }
+      return targetData[id]?.position ? { x: targetData[id].position.x, y: targetData[id].position.y } : null;
+    };
 
     // Current positions
     const currentTrace = {
@@ -43,10 +53,10 @@ export const FormationMap: React.FC<FormationMapProps> = ({
       },
     };
 
-    // Target positions
+    // Target positions - use metricsData for actual targets
     const targetTrace = {
-      x: agents.map((id) => targetData[id]?.position.x || 0),
-      y: agents.map((id) => targetData[id]?.position.y || 0),
+      x: agents.map((id) => getTargetPos(id)?.x || 0),
+      y: agents.map((id) => getTargetPos(id)?.y || 0),
       mode: 'markers' as const,
       type: 'scatter' as const,
       name: 'Target Position',
@@ -61,7 +71,7 @@ export const FormationMap: React.FC<FormationMapProps> = ({
     // Connection lines (current to target)
     const connectionLines = agents.flatMap((id) => {
       const current = odomData[id]?.position;
-      const target = targetData[id]?.position;
+      const target = getTargetPos(id);
       if (!current || !target) return [];
 
       return [
@@ -147,7 +157,7 @@ export const FormationMap: React.FC<FormationMapProps> = ({
     }
 
     return traces;
-  }, [odomData, targetData, formationState, selectedAgents, windData]);
+  }, [odomData, targetData, formationState, selectedAgents, windData, metricsData]);
 
   // Calculate bounds
   const bounds = useMemo(() => {

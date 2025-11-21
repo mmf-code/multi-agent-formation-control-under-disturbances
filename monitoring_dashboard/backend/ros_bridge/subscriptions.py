@@ -27,7 +27,10 @@ from .schemas import (
     DiagnosticsData,
     ControllerParams,
     SystemStatus,
-    Vector3 as Vector3Schema
+    Vector3 as Vector3Schema,
+    RosNode,
+    RosEdge,
+    RosGraphData
 )
 
 logger = logging.getLogger(__name__)
@@ -626,3 +629,95 @@ class ROSBridge(Node):
                 'wind': self.latest_wind.dict() if self.latest_wind else None,
                 'status': status.dict()
             }
+
+    def get_ros_graph(self) -> RosGraphData:
+        """
+        Build a graph of the current ROS2 system topology.
+        Nodes are vertices, Topic connections are edges.
+        """
+        nodes: List[RosNode] = []
+        edges: List[RosEdge] = []
+        
+        # 1. Discover all nodes
+        node_list = self.get_node_names_and_namespaces()
+        
+        # Maps to track topology
+        topic_publishers = defaultdict(list)  # topic -> [node_id]
+        topic_subscribers = defaultdict(list) # topic -> [node_id]
+        
+        for node_name, namespace in node_list:
+            full_name = f"{namespace}/{node_name}".replace("//", "/")
+            node_id = full_name.replace("/", "_").strip("_")
+            
+            # Determine role based on naming conventions
+            role = "infra"
+            group = None
+            
+            if "agent" in full_name:
+                if "controller" in full_name:
+                    role = "controller"
+                elif "sensor" in full_name or "camera" in full_name or "lidar" in full_name:
+                    role = "sensor"
+                elif "nav" in full_name or "planner" in full_name:
+                    role = "planner"
+                else:
+                    role = "agent_node"
+                
+                # Extract group/agent ID
+                parts = full_name.split('/')
+                for p in parts:
+                    if p.startswith('agent_'):
+                        group = p
+                        break
+            elif "metrics" in full_name:
+                role = "metrics"
+            elif "visualizer" in full_name or "dashboard" in full_name:
+                role = "viz"
+            
+            nodes.append(RosNode(
+                id=node_id,
+                name=full_name,
+                namespace=namespace,
+                type="node",
+                role=role,
+                group=group
+            ))
+            
+            # 2. Get pubs/subs for this node
+            try:
+                pubs = self.get_publisher_names_and_types_by_node(node_name, namespace)
+                subs = self.get_subscriber_names_and_types_by_node(node_name, namespace)
+                
+                for topic, types in pubs:
+                    topic_publishers[topic].append((node_id, types[0] if types else "Unknown"))
+                    
+                for topic, types in subs:
+                    topic_subscribers[topic].append((node_id, types[0] if types else "Unknown"))
+                    
+            except Exception:
+                # Node might have disappeared
+                continue
+
+        # 3. Build edges from Pub/Sub matches
+        edge_count = 0
+        for topic, publishers in topic_publishers.items():
+            if topic in topic_subscribers:
+                subscribers = topic_subscribers[topic]
+                
+                for pub_node_id, msg_type in publishers:
+                    for sub_node_id, _ in subscribers:
+                        # Avoid self-loops if desired, but ROS allows them
+                        edges.append(RosEdge(
+                            id=f"edge_{edge_count}",
+                            source=pub_node_id,
+                            target=sub_node_id,
+                            topicName=topic,
+                            msgType=msg_type
+                        ))
+                        edge_count += 1
+                        
+        return RosGraphData(
+            nodes=nodes,
+            edges=edges,
+            timestamp=time.time()
+        )

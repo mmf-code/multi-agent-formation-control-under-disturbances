@@ -51,7 +51,7 @@ AgentControllerNode::AgentControllerNode(const rclcpp::NodeOptions & options)
     std::bind(&AgentControllerNode::odomCallback, this, _1));
 
   wind_sub_ = create_subscription<geometry_msgs::msg::Vector3>(
-    "/wind/velocity", 10,
+    wind_source_topic_, 10,
     std::bind(&AgentControllerNode::windCallback, this, _1));
 
   cmd_pub_ = create_publisher<geometry_msgs::msg::Vector3>("cmd_accel", 10);
@@ -76,6 +76,17 @@ AgentControllerNode::AgentControllerNode(const rclcpp::NodeOptions & options)
     std::chrono::seconds(2),
     std::bind(&AgentControllerNode::publishControllerParams, this));
 
+  // Optional debug logging of fuzzy wind scalar for this agent
+  if (debug_wind_input_) {
+    wind_debug_timer_ = create_wall_timer(
+      std::chrono::seconds(1),
+      std::bind(&AgentControllerNode::windDebugTimerCallback, this));
+    RCLCPP_INFO(
+      get_logger(),
+      "Wind debug input enabled: topic='%s', type='%s'",
+      wind_source_topic_.c_str(), wind_source_type_.c_str());
+  }
+
   latest_target_ = std::make_shared<geometry_msgs::msg::PoseStamped>();
   latest_odom_ = std::make_shared<nav_msgs::msg::Odometry>();
 
@@ -90,6 +101,11 @@ void AgentControllerNode::declareParameters()
   declare_parameter<std::string>("controller_type", controller_type_);
   declare_parameter<double>("dt", configured_dt_);
   declare_parameter<double>("control_frequency_hz", 200.0);
+
+  // Wind source configuration for fuzzy and feed-forward handling
+  declare_parameter<std::string>("wind_source_topic", wind_source_topic_);
+  declare_parameter<std::string>("wind_source_type", wind_source_type_);
+  declare_parameter<bool>("debug_wind_input", debug_wind_input_);
 
   declare_parameter<double>("output_limits.x.min", axis_limits_x_.umin);
   declare_parameter<double>("output_limits.x.max", axis_limits_x_.umax);
@@ -126,6 +142,11 @@ void AgentControllerNode::declareParameters()
 void AgentControllerNode::loadParameters()
 {
   controller_type_ = to_lower(get_parameter("controller_type").as_string());
+
+  // Wind source configuration
+  wind_source_topic_ = get_parameter("wind_source_topic").as_string();
+  wind_source_type_ = to_lower(get_parameter("wind_source_type").as_string());
+  debug_wind_input_ = get_parameter("debug_wind_input").as_bool();
 
   configured_dt_ = get_parameter("dt").as_double();
   const double control_frequency = get_parameter("control_frequency_hz").as_double();
@@ -344,23 +365,76 @@ void AgentControllerNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr 
 
 void AgentControllerNode::windCallback(const geometry_msgs::msg::Vector3::SharedPtr msg)
 {
-  // Update wind environment for feed-forward prediction
-  // Note: This assumes /wind/velocity publishes wind velocity in m/s
-  // and /wind/force publishes constant acceleration bias (handled separately)
-  wind_env_.vx = msg->x;
-  wind_env_.vy = msg->y;
-  // Wind bias (ax_bias, ay_bias) could be set from a separate topic if needed
+  // Unified wind input handling for fuzzy + feed-forward.
+  // Depending on wind_source_type_, interpret the incoming Vector3 either as
+  // wind velocity [m/s] or wind force [N] and derive a scalar for the fuzzy
+  // system per axis.
 
-  // Also propagate per-axis wind projection to fuzzy controllers when enabled.
-  // Our GT2 FLS uses a single scalar "wind" input; feed X wind to X-axis fuzzy and Y wind to Y-axis fuzzy.
+  const double x = msg->x;
+  const double y = msg->y;
+
+  double wind_scalar_x = 0.0;
+  double wind_scalar_y = 0.0;
+
+  if (wind_source_type_ == "force") {
+    // Force input [N] → acceleration bias using mass estimate.
+    const double mass = (ff_params_.mass_estimate > 1e-6) ? ff_params_.mass_estimate : 1.0;
+    const double ax_bias = x / mass;
+    const double ay_bias = y / mass;
+
+    wind_env_.ax_bias = ax_bias;
+    wind_env_.ay_bias = ay_bias;
+
+    wind_scalar_x = ax_bias;
+    wind_scalar_y = ay_bias;
+  } else {
+    // Default: treat as wind velocity [m/s] (horizontal plane).
+    wind_env_.vx = x;
+    wind_env_.vy = y;
+
+    wind_scalar_x = x;
+    wind_scalar_y = y;
+  }
+
+  // Scale and clamp into fuzzy universe (see fuzzy_params.yaml "wind" sets).
+  const auto clamp_wind = [](double value) {
+    const double limit = 10.0;
+    if (!std::isfinite(value)) {
+      return 0.0;
+    }
+    return std::clamp(value, -limit, limit);
+  };
+
+  const double scaled_x = fuzzy_wind_scalar_ * wind_scalar_x;
+  const double scaled_y = fuzzy_wind_scalar_ * wind_scalar_y;
+  const double fuzzy_x = clamp_wind(scaled_x);
+  const double fuzzy_y = clamp_wind(scaled_y);
+
+  last_fuzzy_wind_x_ = fuzzy_x;
+  last_fuzzy_wind_y_ = fuzzy_y;
+
+  // Feed to fuzzy controllers when enabled.
   if (fuzzy_enable_ && fuzzy_include_wind_) {
     if (axis_x_.fuzzy) {
-      axis_x_.fuzzy->setWindScalar(msg->x);
+      axis_x_.fuzzy->setWindScalar(fuzzy_x);
     }
     if (axis_y_.fuzzy) {
-      axis_y_.fuzzy->setWindScalar(msg->y);
+      axis_y_.fuzzy->setWindScalar(fuzzy_y);
     }
   }
+}
+
+void AgentControllerNode::windDebugTimerCallback()
+{
+  if (!debug_wind_input_) {
+    return;
+  }
+
+  RCLCPP_INFO(
+    get_logger(),
+    "Fuzzy wind scalar: x=%.3f, y=%.3f (source='%s', topic='%s')",
+    last_fuzzy_wind_x_, last_fuzzy_wind_y_,
+    wind_source_type_.c_str(), wind_source_topic_.c_str());
 }
 
 void AgentControllerNode::controlLoop()

@@ -24,6 +24,7 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <my_custom_interfaces_pkg/msg/metrics_data.hpp>
+#include <std_msgs/msg/float64_multi_array.hpp>
 
 #include <cmath>
 #include <memory>
@@ -47,15 +48,21 @@ public:
   {
     // Declare parameters
     this->declare_parameter<double>("publish_rate_hz", 10.0);
-    this->declare_parameter<double>("settling_threshold", 0.05);  // 5cm
-    this->declare_parameter<double>("settling_time_window", 2.0);  // 2 seconds
+    // Settled detection (tunable from launch)
+    this->declare_parameter<double>("settled_pos_threshold", 0.10);   // 10 cm
+    this->declare_parameter<double>("settled_time_window", 1.0);      // 1 second
+    // History / metrics configuration
     this->declare_parameter<int>("history_size", 1000);
+    this->declare_parameter<double>("metrics_window_sec", 0.0);       // 0 → disabled
+    this->declare_parameter<bool>("enable_group_metrics", false);
 
     // Load parameters
     const double publish_rate = this->get_parameter("publish_rate_hz").as_double();
-    settling_threshold_ = this->get_parameter("settling_threshold").as_double();
-    settling_time_window_ = this->get_parameter("settling_time_window").as_double();
+    settled_pos_threshold_ = this->get_parameter("settled_pos_threshold").as_double();
+    settled_time_window_ = this->get_parameter("settled_time_window").as_double();
     const int history_size = this->get_parameter("history_size").as_int();
+    metrics_window_sec_ = this->get_parameter("metrics_window_sec").as_double();
+    enable_group_metrics_ = this->get_parameter("enable_group_metrics").as_bool();
 
     error_history_.set_capacity(history_size);
 
@@ -90,9 +97,40 @@ public:
 
     RCLCPP_INFO(
       this->get_logger(),
-      "Metrics Publisher initialized: rate=%.1f Hz, settling_threshold=%.3f m",
-      publish_rate, settling_threshold_
+      "Metrics Publisher initialized: rate=%.1f Hz, settled_pos_threshold=%.3f m, settled_time_window=%.2f s",
+      publish_rate, settled_pos_threshold_, settled_time_window_
     );
+
+    // Optional group-level metrics publisher (per formation group)
+    if (enable_group_metrics_ && metrics_window_sec_ > 0.0) {
+      // Expect namespaces like "/agent_0", "/agent_6", etc.
+      const std::string ns = this->get_namespace();
+      int agent_index = -1;
+      auto pos = ns.rfind("agent_");
+      if (pos != std::string::npos) {
+        std::string index_str = ns.substr(pos + 6);
+        try {
+          agent_index = std::stoi(index_str);
+        } catch (const std::exception &) {
+          agent_index = -1;
+        }
+      }
+
+      if (agent_index >= 0) {
+        const int group_index = agent_index / 3;  // 3 agents per group in this demo
+        // Only create one publisher per group (representative = first agent)
+        is_group_representative_ = (agent_index % 3 == 0);
+
+        if (is_group_representative_) {
+          const std::string topic = "/metrics/group_" + std::to_string(group_index);
+          group_metrics_pub_ = this->create_publisher<std_msgs::msg::Float64MultiArray>(topic, 10);
+          RCLCPP_INFO(
+            this->get_logger(),
+            "Group metrics enabled for namespace '%s' (agent_%d, group_%d) on topic '%s' (window=%.1fs)",
+            ns.c_str(), agent_index, group_index, topic.c_str(), metrics_window_sec_);
+        }
+      }
+    }
   }
 
 private:
@@ -218,7 +256,7 @@ private:
     }
 
     // Estimate settling time (last time error exceeded threshold)
-    if (error_mag > settling_threshold_)
+    if (error_mag > settled_pos_threshold_)
     {
       settling_time_ = elapsed;
     }
@@ -262,17 +300,17 @@ private:
     // Elapsed time
     const double elapsed = (this->now() - start_time_).seconds();
 
-    // Check if settled (within threshold for settling_time_window_)
+    // Check if settled (within threshold for settled_time_window_)
     bool is_settled = false;
-    if (elapsed > settling_time_window_)
+    if (elapsed > settled_time_window_)
     {
       is_settled = true;
-      const size_t window_samples = static_cast<size_t>(settling_time_window_ * 100);  // Assume 100Hz
+      const size_t window_samples = static_cast<size_t>(settled_time_window_ * 100);  // Assume 100Hz
       const size_t start_idx = n > window_samples ? n - window_samples : 0;
 
       for (size_t i = start_idx; i < n; ++i)
       {
-        if (error_history_[i].error_magnitude > settling_threshold_)
+        if (error_history_[i].error_magnitude > settled_pos_threshold_)
         {
           is_settled = false;
           break;
@@ -317,6 +355,67 @@ private:
 
     metrics_pub_->publish(msg);
 
+    // Optionally publish group-level metrics (windowed RMSE + IAE) for comparison
+    if (group_metrics_pub_ && is_group_representative_ && metrics_window_sec_ > 0.0) {
+      const auto now_time = this->now();
+      const auto window_start = now_time - rclcpp::Duration::from_seconds(metrics_window_sec_);
+      const double window_duration = (now_time - window_start).seconds();
+
+      if (!error_history_.empty() && window_duration > 0.0) {
+        double iae_window = 0.0;
+        double sum_sq_window = 0.0;
+
+        // Integrate |error| and error^2 over the window using sample-to-sample dt.
+        for (size_t i = 1; i < n; ++i) {
+          const auto &prev = error_history_[i - 1];
+          const auto &curr = error_history_[i];
+
+          if (curr.timestamp <= window_start) {
+            continue;
+          }
+
+          rclcpp::Time seg_start = prev.timestamp;
+          if (seg_start < window_start) {
+            seg_start = window_start;
+          }
+          const double dt = (curr.timestamp - seg_start).seconds();
+          if (dt <= 0.0) {
+            continue;
+          }
+
+          const double e = curr.error_magnitude;
+          const double abs_e = std::abs(e);
+          iae_window += abs_e * dt;
+          sum_sq_window += e * e * dt;
+        }
+
+        // Also integrate from last sample up to "now" using its latest error
+        const auto &last_sample = error_history_.back();
+        if (last_sample.timestamp > window_start) {
+          double dt_last = (now_time - last_sample.timestamp).seconds();
+          if (dt_last > 0.0) {
+            const double e_last = last_sample.error_magnitude;
+            const double abs_e_last = std::abs(e_last);
+            iae_window += abs_e_last * dt_last;
+            sum_sq_window += e_last * e_last * dt_last;
+          }
+        }
+
+        double rmse_window = 0.0;
+        if (sum_sq_window > 0.0 && window_duration > 0.0) {
+          rmse_window = std::sqrt(sum_sq_window / window_duration);
+        }
+
+        std_msgs::msg::Float64MultiArray group_msg;
+        group_msg.data = {
+          rmse_window,
+          iae_window,
+          window_duration
+        };
+        group_metrics_pub_->publish(group_msg);
+      }
+    }
+
     // Log periodic summary
     static int log_counter = 0;
     if (++log_counter % 50 == 0)  // Every 5 seconds at 10Hz
@@ -347,6 +446,7 @@ private:
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr target_sub_;
   rclcpp::Publisher<my_custom_interfaces_pkg::msg::MetricsData>::SharedPtr metrics_pub_;
+  rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr group_metrics_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::TimerBase::SharedPtr status_timer_;
 
@@ -369,8 +469,11 @@ private:
   rclcpp::Time start_time_;
 
   // Parameters
-  double settling_threshold_;
-  double settling_time_window_;
+  double settled_pos_threshold_{0.10};
+  double settled_time_window_{1.0};
+  double metrics_window_sec_{0.0};
+  bool enable_group_metrics_{false};
+  bool is_group_representative_{false};
 };
 
 }  // namespace agent_control_pkg

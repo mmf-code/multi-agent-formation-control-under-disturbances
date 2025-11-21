@@ -53,6 +53,7 @@ private:
   void targetCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
   void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
   void windCallback(const geometry_msgs::msg::Vector3::SharedPtr msg);
+  void windDebugTimerCallback();
   void controlLoop();
   void publishDiagnostics();
   void publishControllerParams();
@@ -69,6 +70,12 @@ private:
   bool fuzzy_enable_{false};
   bool fuzzy_include_wind_{false};
   double fuzzy_wind_scalar_{0.0};
+   // Wind input configuration for fuzzy + feed-forward
+  std::string wind_source_topic_{"/wind/velocity"};
+  std::string wind_source_type_{"velocity"};  // "velocity" or "force"
+  bool debug_wind_input_{false};
+  double last_fuzzy_wind_x_{0.0};
+  double last_fuzzy_wind_y_{0.0};
   std::string fuzzy_params_file_{"fuzzy_params.yaml"};
   bool publish_diagnostics_{true};
 
@@ -95,6 +102,7 @@ private:
   rclcpp::Publisher<my_custom_interfaces_pkg::msg::ControllerParams>::SharedPtr params_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::TimerBase::SharedPtr params_timer_;
+  rclcpp::TimerBase::SharedPtr wind_debug_timer_;
 
   geometry_msgs::msg::PoseStamped::SharedPtr latest_target_;
   nav_msgs::msg::Odometry::SharedPtr latest_odom_;

@@ -238,6 +238,19 @@ async def get_formation():
     return formation.dict()
 
 
+    return formation.dict()
+
+
+@app.get("/api/graph")
+async def get_graph():
+    """Get ROS2 graph topology"""
+    if not ros_bridge:
+        raise HTTPException(status_code=503, detail="ROS bridge not initialized")
+
+    graph = ros_bridge.get_ros_graph()
+    return graph.dict()
+
+
 # ============================================================================
 # WebSocket Endpoint for Real-time Updates
 # ============================================================================
@@ -269,9 +282,15 @@ async def websocket_endpoint(websocket: WebSocket):
             try:
                 initial_data = ros_bridge.get_all_latest_data()
                 if initial_data:
+                    # Add graph data to snapshot
+                    graph_data = ros_bridge.get_ros_graph()
+                    
                     await websocket.send_json({
                         "type": "snapshot",
-                        "data": initial_data
+                        "data": {
+                            **initial_data,
+                            "ros_graph": graph_data.dict()
+                        }
                     })
                     logger.info(f"Initial snapshot sent (metrics: {len(initial_data.get('metrics', {}))}, odom: {len(initial_data.get('odom', {}))})")
                 else:
@@ -306,12 +325,17 @@ async def websocket_endpoint(websocket: WebSocket):
 
             if data_payload:
                 try:
-                    await websocket.send_json({
-                        "type": "update",
-                        "data_type": data_type,
-                        "agent_id": agent_id,
-                        "data": data_payload.dict() if hasattr(data_payload, 'dict') else data_payload
-                    })
+                    if websocket.client_state.name == "CONNECTED":
+                        await websocket.send_json({
+                            "type": "update",
+                            "data_type": data_type,
+                            "agent_id": agent_id,
+                            "data": data_payload.dict() if hasattr(data_payload, 'dict') else data_payload
+                        })
+                except RuntimeError as e:
+                    # WebSocket might be closed during send
+                    logger.debug(f"WebSocket runtime error during update (connection likely closed): {e}")
+                    return
                 except Exception as e:
                     logger.error(f"Error sending WebSocket update: {e}")
 
@@ -435,6 +459,194 @@ try:
         logger.info("Frontend UI not built; skipping static mount (/ui)")
 except Exception:
     logger.exception("Failed to mount frontend UI static files")
+
+
+# ============================================================================
+# Simulation Control API
+# ============================================================================
+
+import subprocess
+import signal
+import os
+
+# Global process tracking
+simulation_process: Optional[subprocess.Popen] = None
+simulation_status = {"running": False, "pid": None, "script": None}
+
+@app.post("/api/simulation/start")
+async def start_simulation(script: str = "run_formation_demo.sh"):
+    """Start a simulation script"""
+    global simulation_process, simulation_status
+
+    logger.info(f"Start simulation request received: script='{script}'")
+
+    if simulation_process and simulation_process.poll() is None:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Simulation already running", "pid": simulation_process.pid}
+        )
+
+    # Get project root directory
+    project_root = Path(__file__).resolve().parent.parent.parent
+    scripts_dir = project_root / "scripts"
+    script_path = scripts_dir / script
+
+    if not script_path.exists():
+        return JSONResponse(
+            status_code=404,
+            content={"error": f"Script not found: {script}"}
+        )
+
+    # Build the command to run in a new shell with ROS2 sourced
+    ros_setup = "/opt/ros/humble/setup.bash"
+    workspace_setup = project_root / "install" / "setup.bash"
+
+    cmd = f"""
+    cd {project_root} && \
+    source {ros_setup} && \
+    source {workspace_setup} && \
+    {script_path}
+    """
+
+    try:
+        # Start the process in background
+        simulation_process = subprocess.Popen(
+            ["bash", "-c", cmd],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            preexec_fn=os.setsid,  # Create new process group for clean termination
+            cwd=str(project_root)
+        )
+
+        simulation_status = {
+            "running": True,
+            "pid": simulation_process.pid,
+            "script": script
+        }
+
+        logger.info(f"Started simulation: {script} (PID: {simulation_process.pid})")
+
+        return {
+            "status": "started",
+            "pid": simulation_process.pid,
+            "script": script
+        }
+    except Exception as e:
+        logger.error(f"Failed to start simulation: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)}
+        )
+
+
+@app.post("/api/simulation/stop")
+async def stop_simulation():
+    """Stop the running simulation"""
+    global simulation_process, simulation_status
+
+    if not simulation_process or simulation_process.poll() is not None:
+        simulation_status = {"running": False, "pid": None, "script": None}
+        return {"status": "not_running"}
+
+    try:
+        # Kill the entire process group
+        os.killpg(os.getpgid(simulation_process.pid), signal.SIGTERM)
+        simulation_process.wait(timeout=5)
+
+        logger.info(f"Stopped simulation (PID: {simulation_status['pid']})")
+
+        simulation_status = {"running": False, "pid": None, "script": None}
+        return {"status": "stopped"}
+    except subprocess.TimeoutExpired:
+        # Force kill if it doesn't stop gracefully
+        os.killpg(os.getpgid(simulation_process.pid), signal.SIGKILL)
+        simulation_status = {"running": False, "pid": None, "script": None}
+        return {"status": "force_killed"}
+    except Exception as e:
+        logger.error(f"Error stopping simulation: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)}
+        )
+
+
+@app.get("/api/simulation/status")
+async def get_simulation_status():
+    """Get current simulation status"""
+    global simulation_process, simulation_status
+
+    # Check if process is still running
+    if simulation_process:
+        if simulation_process.poll() is None:
+            simulation_status["running"] = True
+        else:
+            simulation_status = {"running": False, "pid": None, "script": None}
+
+    return simulation_status
+
+
+@app.get("/api/simulation/scripts")
+async def list_simulation_scripts():
+    """List available simulation scripts"""
+    project_root = Path(__file__).resolve().parent.parent.parent
+    scripts_dir = project_root / "scripts"
+
+    if not scripts_dir.exists():
+        return {"scripts": []}
+
+    scripts = []
+    for f in scripts_dir.glob("*.sh"):
+        scripts.append({
+            "name": f.name,
+            "path": str(f.relative_to(project_root))
+        })
+
+    return {"scripts": sorted(scripts, key=lambda x: x["name"])}
+
+
+# ============================================================================
+# Controller Parameters API
+# ============================================================================
+
+@app.get("/api/params")
+async def get_params():
+    """Get controller parameters (Mock for now)"""
+    return {
+        "groups": [
+            {
+                "id": 0,
+                "type": "PID+Fuzzy",
+                "params": {
+                    "kp": 1.5,
+                    "ki": 0.01,
+                    "kd": 0.5,
+                    "k_fuzzy": 0.8,
+                    "fuzzy_rules": "standard"
+                },
+                "thresholds": {
+                    "settled_pos": 0.1,
+                    "settled_time": 2.0
+                }
+            },
+            {
+                "id": 1,
+                "type": "PID",
+                "params": {
+                    "kp": 1.2,
+                    "ki": 0.0,
+                    "kd": 0.3
+                },
+                "thresholds": {
+                    "settled_pos": 0.15,
+                    "settled_time": 1.5
+                }
+            }
+        ],
+        "global": {
+            "metrics_window_sec": 60,
+            "safety_enabled": True
+        }
+    }
 
 
 # ============================================================================

@@ -28,4 +28,3 @@ if [ -f "${WS_ROOT}/install/setup.bash" ]; then
 fi
 
 exec python3 scripts/wind_tool.py "$@"
-
