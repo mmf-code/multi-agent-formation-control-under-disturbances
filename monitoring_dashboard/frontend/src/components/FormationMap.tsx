@@ -3,8 +3,13 @@
  * 2D visualization of drone positions and formation
  */
 import React, { useMemo } from 'react';
-import Plot from 'react-plotly.js';
+// @ts-ignore - plotly.js-cartesian-dist-min has no types
+import Plotly from 'plotly.js-cartesian-dist-min';
+// @ts-ignore - react-plotly.js/factory has no types
+import createPlotlyComponent from 'react-plotly.js/factory';
 import { OdometryData, FormationState, WindData, MetricsData } from '../api/ws';
+
+const Plot = createPlotlyComponent(Plotly);
 
 interface FormationMapProps {
   odomData: Record<string, OdometryData>;
