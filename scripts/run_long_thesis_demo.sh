@@ -191,7 +191,7 @@ echo -e "${YELLOW}  Waiting for ROS2 topics...${NC}"
 WAIT_TIME=0
 MAX_WAIT=30
 while [ $WAIT_TIME -lt $MAX_WAIT ]; do
-    TOPIC_COUNT=$(ros2 topic list 2>/dev/null | grep -E "/agent_[036]/metrics" | wc -l)
+    TOPIC_COUNT=$(ros2 topic list --no-daemon 2>/dev/null | grep -E "/agent_[036]/metrics" | wc -l)
     if [ "$TOPIC_COUNT" -eq 3 ]; then
         break
     fi
@@ -206,7 +206,7 @@ echo ""
 
 # Verify topics
 echo -e "${CYAN}[6/8] Verifying ROS2 topics...${NC}"
-TOPIC_COUNT=$(ros2 topic list 2>/dev/null | grep -E "/agent_[036]/metrics" | wc -l)
+TOPIC_COUNT=$(ros2 topic list --no-daemon 2>/dev/null | grep -E "/agent_[036]/metrics" | wc -l)
 if [ "$TOPIC_COUNT" -eq 3 ]; then
     echo -e "${GREEN}✓ All 3 metrics topics active${NC}"
 else

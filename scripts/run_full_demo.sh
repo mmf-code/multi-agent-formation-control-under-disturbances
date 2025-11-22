@@ -105,7 +105,7 @@ echo ""
 
 # 6. Check topics
 echo -e "${CYAN}[6/7] Verifying ROS2 topics...${NC}"
-TOPIC_COUNT=$(ros2 topic list | grep -E "/agent_[036]/metrics" | wc -l)
+TOPIC_COUNT=$(ros2 topic list --no-daemon 2>/dev/null | grep -E "/agent_[036]/metrics" | wc -l)
 if [ "$TOPIC_COUNT" -eq 3 ]; then
     echo -e "${GREEN}✓ All 3 metrics topics active${NC}"
 else
