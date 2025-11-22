@@ -22,12 +22,23 @@
       </ode>
     </physics>
 
+    <scene>
+      <sky>
+        <clouds>
+          <speed>12</speed>
+        </clouds>
+      </sky>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>true</shadows>
+    </scene>
+
     <light name="sun" type="directional">
       <pose>0 0 10 0 0 0</pose>
       <diffuse>0.8 0.8 0.8 1</diffuse>
       <specular>0.2 0.2 0.2 1</specular>
       <direction>-0.5 0.1 -0.9</direction>
-      <cast_shadows>false</cast_shadows>
+      <cast_shadows>true</cast_shadows>
     </light>
 
     <!-- Wind Model: Strong wind disturbance for controller comparison -->
@@ -71,7 +82,10 @@
             </plane>
           </geometry>
           <material>
-            <ambient>0.3 0.5 0.3 1</ambient>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Asphalt</name>
+            </script>
           </material>
         </visual>
       </link>
@@ -97,45 +111,61 @@
           </inertia>
         </inertial>
 
+        <!-- Body: Sleek dark grey box -->
         <visual name="body">
           <geometry>
-            <sphere><radius>0.12</radius></sphere>
+            <box><size>0.3 0.1 0.05</size></box>
           </geometry>
           <material>
-            <ambient>0.1 0.8 0.8 1</ambient>
-            <diffuse>0.2 0.9 0.9 1</diffuse>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/DarkGrey</name>
+            </script>
           </material>
         </visual>
 
-        <visual name="arm_x">
-          <pose>0 0 0 0 1.5708 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
+        <!-- Arms: X-configuration -->
+        <visual name="arm1">
+          <pose>0.1 0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm2">
+          <pose>-0.1 0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm3">
+          <pose>0.1 -0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm4">
+          <pose>-0.1 -0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+
+        <!-- Group Indicator: Cyan Neon (Emissive) -->
+        <visual name="indicator">
+          <pose>0 0 0.03 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.01</size></box></geometry>
           <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
+            <ambient>0 1 1 1</ambient>
+            <diffuse>0 1 1 1</diffuse>
+            <emissive>0 1 1 1</emissive>
           </material>
         </visual>
 
-        <visual name="arm_y">
-          <pose>0 0 0 1.5708 0 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
-          </material>
-        </visual>
-
-        <!-- Propeller visuals (non-physical) -->
-        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <!-- Propellers -->
+        <visual name="prop_fl"><pose>0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_fr"><pose>0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rl"><pose>-0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rr"><pose>-0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
 
         <collision name="collision">
           <geometry>
-            <sphere><radius>0.2</radius></sphere>
+            <box><size>0.4 0.4 0.1</size></box>
           </geometry>
         </collision>
       </link>
@@ -161,45 +191,61 @@
           </inertia>
         </inertial>
 
+        <!-- Body: Sleek dark grey box -->
         <visual name="body">
           <geometry>
-            <sphere><radius>0.12</radius></sphere>
+            <box><size>0.3 0.1 0.05</size></box>
           </geometry>
           <material>
-            <ambient>0.1 0.8 0.8 1</ambient>
-            <diffuse>0.2 0.9 0.9 1</diffuse>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/DarkGrey</name>
+            </script>
           </material>
         </visual>
 
-        <visual name="arm_x">
-          <pose>0 0 0 0 1.5708 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
+        <!-- Arms: X-configuration -->
+        <visual name="arm1">
+          <pose>0.1 0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm2">
+          <pose>-0.1 0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm3">
+          <pose>0.1 -0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm4">
+          <pose>-0.1 -0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+
+        <!-- Group Indicator: Cyan Neon (Emissive) -->
+        <visual name="indicator">
+          <pose>0 0 0.03 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.01</size></box></geometry>
           <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
+            <ambient>0 1 1 1</ambient>
+            <diffuse>0 1 1 1</diffuse>
+            <emissive>0 1 1 1</emissive>
           </material>
         </visual>
 
-        <visual name="arm_y">
-          <pose>0 0 0 1.5708 0 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
-          </material>
-        </visual>
-
-        <!-- Propeller visuals (non-physical) -->
-        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <!-- Propellers -->
+        <visual name="prop_fl"><pose>0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_fr"><pose>0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rl"><pose>-0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rr"><pose>-0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
 
         <collision name="collision">
           <geometry>
-            <sphere><radius>0.2</radius></sphere>
+            <box><size>0.4 0.4 0.1</size></box>
           </geometry>
         </collision>
       </link>
@@ -225,45 +271,61 @@
           </inertia>
         </inertial>
 
+        <!-- Body: Sleek dark grey box -->
         <visual name="body">
           <geometry>
-            <sphere><radius>0.12</radius></sphere>
+            <box><size>0.3 0.1 0.05</size></box>
           </geometry>
           <material>
-            <ambient>0.1 0.8 0.8 1</ambient>
-            <diffuse>0.2 0.9 0.9 1</diffuse>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/DarkGrey</name>
+            </script>
           </material>
         </visual>
 
-        <visual name="arm_x">
-          <pose>0 0 0 0 1.5708 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
+        <!-- Arms: X-configuration -->
+        <visual name="arm1">
+          <pose>0.1 0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm2">
+          <pose>-0.1 0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm3">
+          <pose>0.1 -0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm4">
+          <pose>-0.1 -0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+
+        <!-- Group Indicator: Cyan Neon (Emissive) -->
+        <visual name="indicator">
+          <pose>0 0 0.03 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.01</size></box></geometry>
           <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
+            <ambient>0 1 1 1</ambient>
+            <diffuse>0 1 1 1</diffuse>
+            <emissive>0 1 1 1</emissive>
           </material>
         </visual>
 
-        <visual name="arm_y">
-          <pose>0 0 0 1.5708 0 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
-          </material>
-        </visual>
-
-        <!-- Propeller visuals (non-physical) -->
-        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <!-- Propellers -->
+        <visual name="prop_fl"><pose>0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_fr"><pose>0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rl"><pose>-0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rr"><pose>-0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
 
         <collision name="collision">
           <geometry>
-            <sphere><radius>0.2</radius></sphere>
+            <box><size>0.4 0.4 0.1</size></box>
           </geometry>
         </collision>
       </link>
@@ -294,45 +356,61 @@
           </inertia>
         </inertial>
 
+        <!-- Body: Sleek dark grey box -->
         <visual name="body">
           <geometry>
-            <sphere><radius>0.12</radius></sphere>
+            <box><size>0.3 0.1 0.05</size></box>
           </geometry>
           <material>
-            <ambient>0.8 0.1 0.1 1</ambient>
-            <diffuse>0.9 0.2 0.2 1</diffuse>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/DarkGrey</name>
+            </script>
           </material>
         </visual>
 
-        <visual name="arm_x">
-          <pose>0 0 0 0 1.5708 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
+        <!-- Arms: X-configuration -->
+        <visual name="arm1">
+          <pose>0.1 0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm2">
+          <pose>-0.1 0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm3">
+          <pose>0.1 -0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm4">
+          <pose>-0.1 -0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+
+        <!-- Group Indicator: Red Neon (Emissive) -->
+        <visual name="indicator">
+          <pose>0 0 0.03 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.01</size></box></geometry>
           <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <emissive>1 0 0 1</emissive>
           </material>
         </visual>
 
-        <visual name="arm_y">
-          <pose>0 0 0 1.5708 0 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
-          </material>
-        </visual>
-
-        <!-- Propeller visuals (non-physical) -->
-        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <!-- Propellers -->
+        <visual name="prop_fl"><pose>0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_fr"><pose>0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rl"><pose>-0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rr"><pose>-0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
 
         <collision name="collision">
           <geometry>
-            <sphere><radius>0.2</radius></sphere>
+            <box><size>0.4 0.4 0.1</size></box>
           </geometry>
         </collision>
       </link>
@@ -358,45 +436,61 @@
           </inertia>
         </inertial>
 
+        <!-- Body: Sleek dark grey box -->
         <visual name="body">
           <geometry>
-            <sphere><radius>0.12</radius></sphere>
+            <box><size>0.3 0.1 0.05</size></box>
           </geometry>
           <material>
-            <ambient>0.8 0.1 0.1 1</ambient>
-            <diffuse>0.9 0.2 0.2 1</diffuse>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/DarkGrey</name>
+            </script>
           </material>
         </visual>
 
-        <visual name="arm_x">
-          <pose>0 0 0 0 1.5708 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
+        <!-- Arms: X-configuration -->
+        <visual name="arm1">
+          <pose>0.1 0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm2">
+          <pose>-0.1 0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm3">
+          <pose>0.1 -0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm4">
+          <pose>-0.1 -0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+
+        <!-- Group Indicator: Red Neon (Emissive) -->
+        <visual name="indicator">
+          <pose>0 0 0.03 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.01</size></box></geometry>
           <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <emissive>1 0 0 1</emissive>
           </material>
         </visual>
 
-        <visual name="arm_y">
-          <pose>0 0 0 1.5708 0 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
-          </material>
-        </visual>
-
-        <!-- Propeller visuals (non-physical) -->
-        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <!-- Propellers -->
+        <visual name="prop_fl"><pose>0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_fr"><pose>0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rl"><pose>-0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rr"><pose>-0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
 
         <collision name="collision">
           <geometry>
-            <sphere><radius>0.2</radius></sphere>
+            <box><size>0.4 0.4 0.1</size></box>
           </geometry>
         </collision>
       </link>
@@ -422,45 +516,61 @@
           </inertia>
         </inertial>
 
+        <!-- Body: Sleek dark grey box -->
         <visual name="body">
           <geometry>
-            <sphere><radius>0.12</radius></sphere>
+            <box><size>0.3 0.1 0.05</size></box>
           </geometry>
           <material>
-            <ambient>0.8 0.1 0.1 1</ambient>
-            <diffuse>0.9 0.2 0.2 1</diffuse>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/DarkGrey</name>
+            </script>
           </material>
         </visual>
 
-        <visual name="arm_x">
-          <pose>0 0 0 0 1.5708 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
+        <!-- Arms: X-configuration -->
+        <visual name="arm1">
+          <pose>0.1 0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm2">
+          <pose>-0.1 0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm3">
+          <pose>0.1 -0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm4">
+          <pose>-0.1 -0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+
+        <!-- Group Indicator: Red Neon (Emissive) -->
+        <visual name="indicator">
+          <pose>0 0 0.03 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.01</size></box></geometry>
           <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <emissive>1 0 0 1</emissive>
           </material>
         </visual>
 
-        <visual name="arm_y">
-          <pose>0 0 0 1.5708 0 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
-          </material>
-        </visual>
-
-        <!-- Propeller visuals (non-physical) -->
-        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <!-- Propellers -->
+        <visual name="prop_fl"><pose>0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_fr"><pose>0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rl"><pose>-0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rr"><pose>-0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
 
         <collision name="collision">
           <geometry>
-            <sphere><radius>0.2</radius></sphere>
+            <box><size>0.4 0.4 0.1</size></box>
           </geometry>
         </collision>
       </link>
@@ -491,45 +601,61 @@
           </inertia>
         </inertial>
 
+        <!-- Body: Sleek dark grey box -->
         <visual name="body">
           <geometry>
-            <sphere><radius>0.12</radius></sphere>
+            <box><size>0.3 0.1 0.05</size></box>
           </geometry>
           <material>
-            <ambient>0.9 0.5 0.1 1</ambient>
-            <diffuse>1.0 0.6 0.2 1</diffuse>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/DarkGrey</name>
+            </script>
           </material>
         </visual>
 
-        <visual name="arm_x">
-          <pose>0 0 0 0 1.5708 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
+        <!-- Arms: X-configuration -->
+        <visual name="arm1">
+          <pose>0.1 0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm2">
+          <pose>-0.1 0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm3">
+          <pose>0.1 -0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm4">
+          <pose>-0.1 -0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+
+        <!-- Group Indicator: Orange Neon (Emissive) -->
+        <visual name="indicator">
+          <pose>0 0 0.03 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.01</size></box></geometry>
           <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
+            <ambient>1 0.5 0 1</ambient>
+            <diffuse>1 0.5 0 1</diffuse>
+            <emissive>1 0.5 0 1</emissive>
           </material>
         </visual>
 
-        <visual name="arm_y">
-          <pose>0 0 0 1.5708 0 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
-          </material>
-        </visual>
-
-        <!-- Propeller visuals (non-physical) -->
-        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <!-- Propellers -->
+        <visual name="prop_fl"><pose>0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_fr"><pose>0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rl"><pose>-0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rr"><pose>-0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
 
         <collision name="collision">
           <geometry>
-            <sphere><radius>0.2</radius></sphere>
+            <box><size>0.4 0.4 0.1</size></box>
           </geometry>
         </collision>
       </link>
@@ -555,45 +681,61 @@
           </inertia>
         </inertial>
 
+        <!-- Body: Sleek dark grey box -->
         <visual name="body">
           <geometry>
-            <sphere><radius>0.12</radius></sphere>
+            <box><size>0.3 0.1 0.05</size></box>
           </geometry>
           <material>
-            <ambient>0.9 0.5 0.1 1</ambient>
-            <diffuse>1.0 0.6 0.2 1</diffuse>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/DarkGrey</name>
+            </script>
           </material>
         </visual>
 
-        <visual name="arm_x">
-          <pose>0 0 0 0 1.5708 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
+        <!-- Arms: X-configuration -->
+        <visual name="arm1">
+          <pose>0.1 0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm2">
+          <pose>-0.1 0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm3">
+          <pose>0.1 -0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm4">
+          <pose>-0.1 -0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+
+        <!-- Group Indicator: Orange Neon (Emissive) -->
+        <visual name="indicator">
+          <pose>0 0 0.03 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.01</size></box></geometry>
           <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
+            <ambient>1 0.5 0 1</ambient>
+            <diffuse>1 0.5 0 1</diffuse>
+            <emissive>1 0.5 0 1</emissive>
           </material>
         </visual>
 
-        <visual name="arm_y">
-          <pose>0 0 0 1.5708 0 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
-          </material>
-        </visual>
-
-        <!-- Propeller visuals (non-physical) -->
-        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <!-- Propellers -->
+        <visual name="prop_fl"><pose>0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_fr"><pose>0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rl"><pose>-0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rr"><pose>-0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
 
         <collision name="collision">
           <geometry>
-            <sphere><radius>0.2</radius></sphere>
+            <box><size>0.4 0.4 0.1</size></box>
           </geometry>
         </collision>
       </link>
@@ -619,45 +761,61 @@
           </inertia>
         </inertial>
 
+        <!-- Body: Sleek dark grey box -->
         <visual name="body">
           <geometry>
-            <sphere><radius>0.12</radius></sphere>
+            <box><size>0.3 0.1 0.05</size></box>
           </geometry>
           <material>
-            <ambient>0.9 0.5 0.1 1</ambient>
-            <diffuse>1.0 0.6 0.2 1</diffuse>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/DarkGrey</name>
+            </script>
           </material>
         </visual>
 
-        <visual name="arm_x">
-          <pose>0 0 0 0 1.5708 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
+        <!-- Arms: X-configuration -->
+        <visual name="arm1">
+          <pose>0.1 0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm2">
+          <pose>-0.1 0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm3">
+          <pose>0.1 -0.1 0 0 0 -0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+        <visual name="arm4">
+          <pose>-0.1 -0.1 0 0 0 0.785</pose>
+          <geometry><box><size>0.25 0.02 0.02</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+
+        <!-- Group Indicator: Orange Neon (Emissive) -->
+        <visual name="indicator">
+          <pose>0 0 0.03 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.01</size></box></geometry>
           <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
+            <ambient>1 0.5 0 1</ambient>
+            <diffuse>1 0.5 0 1</diffuse>
+            <emissive>1 0.5 0 1</emissive>
           </material>
         </visual>
 
-        <visual name="arm_y">
-          <pose>0 0 0 1.5708 0 0</pose>
-          <geometry>
-            <cylinder><radius>0.02</radius><length>0.6</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.05 0.05 0.05 1</ambient>
-          </material>
-        </visual>
-
-        <!-- Propeller visuals (non-physical) -->
-        <visual name="prop_fl"><pose>0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_fr"><pose>0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rl"><pose>-0.3 0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
-        <visual name="prop_rr"><pose>-0.3 -0.3 0.02 0 0 0</pose><geometry><cylinder><radius>0.06</radius><length>0.01</length></cylinder></geometry><material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material></visual>
+        <!-- Propellers -->
+        <visual name="prop_fl"><pose>0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_fr"><pose>0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rl"><pose>-0.15 0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
+        <visual name="prop_rr"><pose>-0.15 -0.15 0.02 0 0 0</pose><geometry><cylinder><radius>0.08</radius><length>0.01</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Black</name></script></material></visual>
 
         <collision name="collision">
           <geometry>
-            <sphere><radius>0.2</radius></sphere>
+            <box><size>0.4 0.4 0.1</size></box>
           </geometry>
         </collision>
       </link>
@@ -677,25 +835,35 @@
     </include>
 
     <!-- Group 0 Checkpoints -->
-    <include><uri>model://checkpoint_marker</uri><name>g0_p1</name><pose>-15 -5 1.0 0 0 0</pose></include>
-    <include><uri>model://checkpoint_marker</uri><name>g0_p2</name><pose>-10 -2 1.5 0 0 0</pose></include>
-    <include><uri>model://checkpoint_marker</uri><name>g0_p3</name><pose> -5 -5 1.0 0 0 0</pose></include>
-    <include><uri>model://checkpoint_marker</uri><name>g0_p4</name><pose>  0 -2 1.8 0 0 0</pose></include>
-    <include><uri>model://checkpoint_marker</uri><name>g0_p5</name><pose>  5 -3.5 1.5 0 0 0</pose></include>
+    <!-- Group 0 Checkpoints (Z=1.0) -->
+    <!-- Phase 1: (5, 5) -->
+    <include><uri>model://checkpoint_marker</uri><name>g0_p1</name><pose>5 5 1.0 0 0 0</pose></include>
+    <!-- Phase 2: (-5, 0) -->
+    <include><uri>model://checkpoint_marker</uri><name>g0_p2</name><pose>-5 0 1.0 0 0 0</pose></include>
+    <!-- Phase 3: (0, -5) -->
+    <include><uri>model://checkpoint_marker</uri><name>g0_p3</name><pose>0 -5 1.0 0 0 0</pose></include>
+    <!-- Phase 4 (Finish): (5, 0) -->
+    <include><uri>model://finish_marker</uri><name>g0_finish</name><pose>5 0 1.0 0 0 0</pose></include>
 
-    <!-- Group 1 Checkpoints -->
-    <include><uri>model://checkpoint_marker</uri><name>g1_p1</name><pose>-15 0 4.0 0 0 0</pose></include>
-    <include><uri>model://checkpoint_marker</uri><name>g1_p2</name><pose>-10 3 4.5 0 0 0</pose></include>
-    <include><uri>model://checkpoint_marker</uri><name>g1_p3</name><pose> -5 0 4.0 0 0 0</pose></include>
-    <include><uri>model://checkpoint_marker</uri><name>g1_p4</name><pose>  0 3 4.8 0 0 0</pose></include>
-    <include><uri>model://checkpoint_marker</uri><name>g1_p5</name><pose>  5 1.5 4.5 0 0 0</pose></include>
+    <!-- Group 1 Checkpoints (Z=4.0) -->
+    <!-- Phase 1: (5, 5) -->
+    <include><uri>model://checkpoint_marker</uri><name>g1_p1</name><pose>5 5 4.0 0 0 0</pose></include>
+    <!-- Phase 2: (-5, 0) -->
+    <include><uri>model://checkpoint_marker</uri><name>g1_p2</name><pose>-5 0 4.0 0 0 0</pose></include>
+    <!-- Phase 3: (0, -5) -->
+    <include><uri>model://checkpoint_marker</uri><name>g1_p3</name><pose>0 -5 4.0 0 0 0</pose></include>
+    <!-- Phase 4 (Finish): (5, 0) -->
+    <include><uri>model://finish_marker</uri><name>g1_finish</name><pose>5 0 4.0 0 0 0</pose></include>
 
-    <!-- Group 2 Checkpoints -->
-    <include><uri>model://checkpoint_marker</uri><name>g2_p1</name><pose>-15 5 7.0 0 0 0</pose></include>
-    <include><uri>model://checkpoint_marker</uri><name>g2_p2</name><pose>-10 2 7.5 0 0 0</pose></include>
-    <include><uri>model://checkpoint_marker</uri><name>g2_p3</name><pose> -5 5 7.0 0 0 0</pose></include>
-    <include><uri>model://checkpoint_marker</uri><name>g2_p4</name><pose>  0 2 7.8 0 0 0</pose></include>
-    <include><uri>model://checkpoint_marker</uri><name>g2_p5</name><pose>  5 3.5 7.5 0 0 0</pose></include>
+    <!-- Group 2 Checkpoints (Z=7.0) -->
+    <!-- Phase 1: (5, 5) -->
+    <include><uri>model://checkpoint_marker</uri><name>g2_p1</name><pose>5 5 7.0 0 0 0</pose></include>
+    <!-- Phase 2: (-5, 0) -->
+    <include><uri>model://checkpoint_marker</uri><name>g2_p2</name><pose>-5 0 7.0 0 0 0</pose></include>
+    <!-- Phase 3: (0, -5) -->
+    <include><uri>model://checkpoint_marker</uri><name>g2_p3</name><pose>0 -5 7.0 0 0 0</pose></include>
+    <!-- Phase 4 (Finish): (5, 0) -->
+    <include><uri>model://finish_marker</uri><name>g2_finish</name><pose>5 0 7.0 0 0 0</pose></include>
 
   </world>
 </sdf>

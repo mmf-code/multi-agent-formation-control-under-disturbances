@@ -552,24 +552,45 @@ async def stop_simulation():
         return {"status": "not_running"}
 
     try:
-        # Kill the entire process group
-        os.killpg(os.getpgid(simulation_process.pid), signal.SIGTERM)
-        simulation_process.wait(timeout=5)
+        pid = simulation_process.pid
+        logger.info(f"Stopping simulation (PID: {pid})")
 
-        logger.info(f"Stopped simulation (PID: {simulation_status['pid']})")
+        # Try graceful termination first
+        try:
+            os.killpg(os.getpgid(pid), signal.SIGTERM)
+            simulation_process.wait(timeout=3)
+            logger.info("Simulation stopped gracefully")
+        except subprocess.TimeoutExpired:
+            # Force kill if it doesn't stop gracefully
+            logger.warning("Graceful stop failed, force killing...")
+            os.killpg(os.getpgid(pid), signal.SIGKILL)
+        except ProcessLookupError:
+            logger.warning(f"Process group for PID {pid} not found")
 
+        # Also kill Gazebo processes directly (they sometimes survive)
+        subprocess.run(["pkill", "-9", "gzserver"], stderr=subprocess.DEVNULL)
+        subprocess.run(["pkill", "-9", "gzclient"], stderr=subprocess.DEVNULL)
+        subprocess.run(["pkill", "-9", "rviz2"], stderr=subprocess.DEVNULL)
+
+        logger.info(f"Stopped simulation and cleaned up Gazebo processes")
         simulation_status = {"running": False, "pid": None, "script": None}
+        simulation_process = None
         return {"status": "stopped"}
-    except subprocess.TimeoutExpired:
-        # Force kill if it doesn't stop gracefully
-        os.killpg(os.getpgid(simulation_process.pid), signal.SIGKILL)
-        simulation_status = {"running": False, "pid": None, "script": None}
-        return {"status": "force_killed"}
+
     except Exception as e:
         logger.error(f"Error stopping simulation: {e}")
+        # Fallback: try to kill everything
+        try:
+            subprocess.run(["pkill", "-9", "gzserver"], stderr=subprocess.DEVNULL)
+            subprocess.run(["pkill", "-9", "gzclient"], stderr=subprocess.DEVNULL)
+            subprocess.run(["pkill", "-9", "rviz2"], stderr=subprocess.DEVNULL)
+        except:
+            pass
+        simulation_status = {"running": False, "pid": None, "script": None}
+        simulation_process = None
         return JSONResponse(
             status_code=500,
-            content={"error": str(e)}
+            content={"error": str(e), "status": "cleanup_attempted"}
         )
 
 
