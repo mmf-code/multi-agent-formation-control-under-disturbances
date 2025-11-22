@@ -46,10 +46,18 @@ source install/setup.bash
 ./scripts/run_full_demo.sh
 ```
 
-### Gelişmiş 5-Fazlı Demo (300 saniye + Checkpoint)
+### Gelişmiş 5-Fazlı Demo (300 saniye + Checkpoint) ⭐ TEZ İÇİN ÖNERİLEN
 ```bash
 ./scripts/run_long_thesis_demo.sh
 ```
+
+**🎓 Tez İçin En İyi Demo!**
+Bu demo tezinizi kanıtlamak için tasarlandı:
+- ✅ 5 farklı senaryoda performans karşılaştırması
+- ✅ Zamana bağlı adaptasyon analizi
+- ✅ Rüzgar etkisi altında dayanıklılık testi
+- ✅ Otomatik checkpoint kaydı (her 60s)
+- ✅ Tam veri seti: raw_data + checkpoints + final_results
 
 **Opsiyonlar:**
 - `--test-mode` : 1 dakika hızlı test
@@ -59,7 +67,13 @@ source install/setup.bash
 
 **Örnekler:**
 ```bash
+# Tam thesis demo (5 dakika)
+./scripts/run_long_thesis_demo.sh
+
+# Hızlı test (1 dakika)
 ./scripts/run_long_thesis_demo.sh --test-mode
+
+# Uzun veri toplama (10 dakika)
 ./scripts/run_long_thesis_demo.sh --headless --duration 600
 ```
 
