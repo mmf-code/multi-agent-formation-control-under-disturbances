@@ -43,7 +43,7 @@ AgentControllerNode::AgentControllerNode(const rclcpp::NodeOptions & options)
 
   using std::placeholders::_1;
   target_sub_ = create_subscription<geometry_msgs::msg::PoseStamped>(
-    "target_pose", rclcpp::SensorDataQoS(),
+    "target_pose", 10,
     std::bind(&AgentControllerNode::targetCallback, this, _1));
 
   odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
