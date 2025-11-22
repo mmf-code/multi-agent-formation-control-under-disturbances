@@ -98,7 +98,7 @@
 
     <!-- Drone 0: PID+Fuzzy (Cyan) -->
     <model name="agent_0">
-      <pose>-15 -5.5 1.0 0 0 0</pose>  <!-- Left vertex (Group 0, Z=1.0m lowest) -->
+      <pose>-15 -15.0 3.0 0 0 0</pose>  <!-- Group 0 LEFT (y=-15) -->
       <static>false</static>
 
       <link name="base_link">
@@ -172,13 +172,13 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_0</namespace>
-        <target_altitude>1.0</target_altitude>
+        <target_altitude>3.0</target_altitude>
       </plugin>
     </model>
 
     <!-- Drone 1: PID+Fuzzy (Group 0 color unified: Cyan) -->
     <model name="agent_1">
-      <pose>-12 -5.5 1.0 0 0 0</pose>  <!-- Right vertex (Group 0, Z=1.0m lowest) -->
+      <pose>-12 -15.0 3.0 0 0 0</pose>  <!-- Group 0 LEFT (y=-15) -->
       <static>false</static>
 
       <link name="base_link">
@@ -252,13 +252,13 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_1</namespace>
-        <target_altitude>1.0</target_altitude>
+        <target_altitude>3.0</target_altitude>
       </plugin>
     </model>
 
     <!-- Drone 2: PID+Fuzzy (Group 0 color unified: Cyan) -->
     <model name="agent_2">
-      <pose>-13.5 -2.5 1.0 0 0 0</pose>  <!-- Top vertex (Group 0, Z=1.0m lowest) -->
+      <pose>-13.5 -13.0 3.0 0 0 0</pose>  <!-- Group 0 LEFT (y=-15) -->
       <static>false</static>
 
       <link name="base_link">
@@ -332,7 +332,7 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_2</namespace>
-        <target_altitude>1.0</target_altitude>
+        <target_altitude>3.0</target_altitude>
       </plugin>
     </model>
 
@@ -343,7 +343,7 @@
 
     <!-- Drone 3: PD (Group 1 color unified: Red) -->
     <model name="agent_3">
-      <pose>-10 -1.5 4.0 0 0 0</pose>  <!-- Left vertex (Group 1, Z=4.0m middle +3m) -->
+      <pose>-10 0.0 3.0 0 0 0</pose>  <!-- Left vertex (Group 1, Z=3.0m EQUAL HEIGHT) -->
       <static>false</static>
 
       <link name="base_link">
@@ -417,13 +417,13 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_3</namespace>
-        <target_altitude>4.0</target_altitude>
+        <target_altitude>3.0</target_altitude>
       </plugin>
     </model>
 
     <!-- Drone 4: PD (Group 1 color unified: Red) -->
     <model name="agent_4">
-      <pose>-7 -1.5 4.0 0 0 0</pose>  <!-- Right vertex (Group 1, Z=4.0m middle +3m) -->
+      <pose>-7 0.0 3.0 0 0 0</pose>  <!-- Right vertex (Group 1, Z=3.0m EQUAL HEIGHT) -->
       <static>false</static>
 
       <link name="base_link">
@@ -497,13 +497,13 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_4</namespace>
-        <target_altitude>4.0</target_altitude>
+        <target_altitude>3.0</target_altitude>
       </plugin>
     </model>
 
     <!-- Drone 5: PD (Group 1 color unified: Red) -->
     <model name="agent_5">
-      <pose>-8.5 1.5 4.0 0 0 0</pose>  <!-- Top vertex (Group 1, Z=4.0m middle +3m) -->
+      <pose>-8.5 1.5 3.0 0 0 0</pose>  <!-- Top vertex (Group 1, Z=3.0m EQUAL HEIGHT) -->
       <static>false</static>
 
       <link name="base_link">
@@ -577,7 +577,7 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_5</namespace>
-        <target_altitude>4.0</target_altitude>
+        <target_altitude>3.0</target_altitude>
       </plugin>
     </model>
 
@@ -588,7 +588,7 @@
 
     <!-- Drone 6: PID (Orange) -->
     <model name="agent_6">
-      <pose>-5 2.5 7.0 0 0 0</pose>  <!-- Left vertex (Group 2, Z=7.0m highest +6m) -->
+      <pose>-5 15.0 3.0 0 0 0</pose>  <!-- Group 2 RIGHT (y=+15) -->
       <static>false</static>
 
       <link name="base_link">
@@ -662,13 +662,13 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_6</namespace>
-        <target_altitude>7.0</target_altitude>
+        <target_altitude>3.0</target_altitude>
       </plugin>
     </model>
 
     <!-- Drone 7: PID (Group 2 color unified: Orange) -->
     <model name="agent_7">
-      <pose>-2 2.5 7.0 0 0 0</pose>  <!-- Right vertex (Group 2, Z=7.0m highest +6m) -->
+      <pose>-2 15.0 3.0 0 0 0</pose>  <!-- Group 2 RIGHT (y=+15) -->
       <static>false</static>
 
       <link name="base_link">
@@ -742,13 +742,13 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_7</namespace>
-        <target_altitude>7.0</target_altitude>
+        <target_altitude>3.0</target_altitude>
       </plugin>
     </model>
 
     <!-- Drone 8: PID (Group 2 color unified: Orange) -->
     <model name="agent_8">
-      <pose>-3.5 5.5 7.0 0 0 0</pose>  <!-- Top vertex (Group 2, Z=7.0m highest +6m) -->
+      <pose>-3.5 17.0 3.0 0 0 0</pose>  <!-- Group 2 RIGHT (y=+15) -->
       <static>false</static>
 
       <link name="base_link">
@@ -822,7 +822,7 @@
 
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_8</namespace>
-        <target_altitude>7.0</target_altitude>
+        <target_altitude>3.0</target_altitude>
       </plugin>
   </model>
 

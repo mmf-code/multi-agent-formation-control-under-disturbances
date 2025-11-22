@@ -16,6 +16,6 @@ echo "Resetting ROS 2 Daemon..."
 ros2 daemon stop
 ros2 daemon start
 
-# 4. Launch Simulation (Headless to prevent crash)
-echo "Launching simulation in headless mode..."
-ros2 launch agent_control_pkg formation_comparison_demo.launch.py gazebo_gui:=false rviz:=false
+# 4. Launch Simulation (Full GUI for visualization)
+echo "Launching simulation with GUI..."
+ros2 launch agent_control_pkg formation_comparison_demo.launch.py gazebo_gui:=true rviz:=true
