@@ -298,15 +298,36 @@ async def websocket_endpoint(websocket: WebSocket):
             except Exception as e:
                 logger.error(f"Failed to send initial snapshot: {e}", exc_info=True)
 
+        # Track pending updates to avoid overwhelming the connection
+        pending_updates = {}
+        update_lock = asyncio.Lock()
+        last_send_time = {}
+
+        # Throttle rate: minimum time between updates for same data_type+agent_id (in seconds)
+        THROTTLE_INTERVAL = 0.05  # 50ms = max 20 updates/sec per agent
+
         # Register callback for ROS data updates
         async def on_ros_update(data_type: str, agent_id: Optional[str] = None):
-            """Callback when ROS data updates"""
+            """Callback when ROS data updates - throttled to prevent overwhelming connection"""
             # Check subscription filters
             if subscribed_topics and data_type not in subscribed_topics:
                 return
             if agent_id and not subscribe_all_agents:
                 if agent_id not in subscribed_agents:
                     return
+
+            # Throttle updates per agent/data_type to prevent flooding
+            update_key = f"{data_type}:{agent_id or 'global'}"
+            current_time = time.time()
+
+            async with update_lock:
+                last_time = last_send_time.get(update_key, 0)
+                if current_time - last_time < THROTTLE_INTERVAL:
+                    # Too soon, store as pending
+                    pending_updates[update_key] = (data_type, agent_id)
+                    return
+
+                last_send_time[update_key] = current_time
 
             # Get updated data
             data_payload = None
@@ -354,14 +375,29 @@ async def websocket_endpoint(websocket: WebSocket):
             ros_bridge.add_update_callback(ros_callback)
 
         async def heartbeat():
-            """Periodic heartbeat to keep connection alive and aid debugging"""
+            """Periodic heartbeat to keep connection alive and flush pending updates"""
             try:
                 while True:
                     await asyncio.sleep(20)
-                    await websocket.send_json({"type": "server_heartbeat", "ts": time.time()})
-            except Exception:
-                # Any error here will be handled by the main loop/close
-                pass
+
+                    # Send heartbeat
+                    if websocket.client_state.name == "CONNECTED":
+                        try:
+                            await websocket.send_json({"type": "server_heartbeat", "ts": time.time()})
+                        except Exception as e:
+                            logger.debug(f"Heartbeat send failed: {e}")
+                            break
+
+                    # Flush any pending updates that were throttled
+                    async with update_lock:
+                        pending = list(pending_updates.items())
+                        pending_updates.clear()
+
+                    for update_key, (data_type, agent_id) in pending:
+                        await on_ros_update(data_type, agent_id)
+
+            except Exception as e:
+                logger.debug(f"Heartbeat task error: {e}")
 
         hb_task = asyncio.create_task(heartbeat())
 
@@ -370,7 +406,7 @@ async def websocket_endpoint(websocket: WebSocket):
             try:
                 message = await asyncio.wait_for(
                     websocket.receive_json(),
-                    timeout=1.0
+                    timeout=5.0  # Increased timeout to reduce unnecessary timeouts
                 )
 
                 action = message.get("action")
@@ -403,8 +439,16 @@ async def websocket_endpoint(websocket: WebSocket):
 
             except asyncio.TimeoutError:
                 # No message received, continue (allows background updates)
+                # Check if connection is still alive
+                if websocket.client_state.name != "CONNECTED":
+                    logger.info("WebSocket no longer connected, exiting message loop")
+                    break
                 continue
             except WebSocketDisconnect:
+                logger.info("WebSocket disconnect received")
+                break
+            except Exception as e:
+                logger.error(f"Error in WebSocket message loop: {e}")
                 break
 
     except WebSocketDisconnect:

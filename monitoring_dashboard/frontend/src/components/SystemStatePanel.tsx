@@ -78,7 +78,7 @@ export const SystemStatePanel: React.FC<SystemStatePanelProps> = ({ metrics, win
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-700/30">
-                            {agents.map((agentId, idx) => {
+                            {agents.map((agentId) => {
                                 // Mock group assignment based on ID
                                 const idNum = parseInt(agentId.split('_')[1] || '0');
                                 const group = Math.floor(idNum / 3);
