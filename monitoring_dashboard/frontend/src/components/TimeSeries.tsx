@@ -149,6 +149,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
     // Group agents by controller type
     const groupedAgents: Record<string, string[]> = {};
     Object.keys(metricsHistory).forEach((agentId) => {
+      // Default to 'unknown' if params not yet available
       const controllerType = controllerParams[agentId]?.controller_type || 'unknown';
       if (!groupedAgents[controllerType]) {
         groupedAgents[controllerType] = [];
@@ -331,9 +332,12 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
 
     // Filter by selected controllers if in aggregated mode
     if (viewMode === 'aggregated' && !selectedAgent) {
+      // If controller params are missing, everything is 'unknown'.
+      // We should include 'unknown' if it contains data, or fallback to showing everything if selection is empty?
+      // Better: Always include selected controllers, AND 'unknown' if it exists (so user sees data even if params missing)
       dataSource = Object.fromEntries(
         Object.entries(dataSource).filter(([controllerType, _]) =>
-          selectedControllers.has(controllerType)
+          selectedControllers.has(controllerType) || controllerType === 'unknown'
         )
       );
     }
@@ -346,13 +350,27 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
       const data = agents.flatMap((agent, idx) => {
         const rawHistory = dataSource[agent] || [];
         const history = filterByTimeWindow(rawHistory, timeWindow);
-        // Use controller-specific colors for aggregated view, or cycle through colors for individual view
-        const baseColor = viewMode === 'aggregated'
-          ? CONTROLLER_COLORS[agent] || COLORS.primary
-          : AGENT_COLORS[idx % AGENT_COLORS.length];
+
+        // Color Logic:
+        // Aggregated: Use CONTROLLER_COLORS
+        // Individual: Use AGENT_COLORS based on agent ID if possible, else cycle
+        let baseColor = COLORS.primary;
+
+        if (viewMode === 'aggregated') {
+          baseColor = CONTROLLER_COLORS[agent] || CONTROLLER_COLORS['unknown'];
+        } else {
+          // Try to extract agent number for consistent coloring
+          const match = agent.match(/agent_(\d+)/);
+          if (match) {
+            const agentNum = parseInt(match[1]);
+            baseColor = AGENT_COLORS[agentNum % AGENT_COLORS.length];
+          } else {
+            baseColor = AGENT_COLORS[idx % AGENT_COLORS.length];
+          }
+        }
 
         const agentLabel = viewMode === 'aggregated'
-          ? (agent === 'pid_fuzzy' ? 'Hybrid (PID+Fuzzy) Controller' : `${agent.toUpperCase()} Controller`)
+          ? (agent === 'pid_fuzzy' ? 'Hybrid (PID+Fuzzy)' : agent === 'unknown' ? 'Unknown Controller' : `${agent.toUpperCase()}`)
           : agent;
 
         return [
@@ -412,11 +430,22 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
       const data = agents.flatMap((agent, idx) => {
         const rawHistory = dataSource[agent] || [];
         const history = filterByTimeWindow(rawHistory, timeWindow);
-        const baseColor = viewMode === 'aggregated'
-          ? CONTROLLER_COLORS[agent] || COLORS.primary
-          : AGENT_COLORS[idx % AGENT_COLORS.length];
+
+        let baseColor = COLORS.primary;
+        if (viewMode === 'aggregated') {
+          baseColor = CONTROLLER_COLORS[agent] || CONTROLLER_COLORS['unknown'];
+        } else {
+          const match = agent.match(/agent_(\d+)/);
+          if (match) {
+            const agentNum = parseInt(match[1]);
+            baseColor = AGENT_COLORS[agentNum % AGENT_COLORS.length];
+          } else {
+            baseColor = AGENT_COLORS[idx % AGENT_COLORS.length];
+          }
+        }
+
         const agentLabel = viewMode === 'aggregated'
-          ? (agent === 'pid_fuzzy' ? 'Hybrid (PID+Fuzzy) Controller' : `${agent.toUpperCase()} Controller`)
+          ? (agent === 'pid_fuzzy' ? 'Hybrid (PID+Fuzzy)' : agent === 'unknown' ? 'Unknown Controller' : `${agent.toUpperCase()}`)
           : agent;
 
         return [
@@ -475,11 +504,22 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
       const data = agents.flatMap((agent, idx) => {
         const rawHistory = dataSource[agent] || [];
         const history = filterByTimeWindow(rawHistory, timeWindow);
-        const baseColor = viewMode === 'aggregated'
-          ? CONTROLLER_COLORS[agent] || COLORS.primary
-          : AGENT_COLORS[idx % AGENT_COLORS.length];
+
+        let baseColor = COLORS.primary;
+        if (viewMode === 'aggregated') {
+          baseColor = CONTROLLER_COLORS[agent] || CONTROLLER_COLORS['unknown'];
+        } else {
+          const match = agent.match(/agent_(\d+)/);
+          if (match) {
+            const agentNum = parseInt(match[1]);
+            baseColor = AGENT_COLORS[agentNum % AGENT_COLORS.length];
+          } else {
+            baseColor = AGENT_COLORS[idx % AGENT_COLORS.length];
+          }
+        }
+
         const agentLabel = viewMode === 'aggregated'
-          ? (agent === 'pid_fuzzy' ? 'Hybrid (PID+Fuzzy) Controller' : `${agent.toUpperCase()} Controller`)
+          ? (agent === 'pid_fuzzy' ? 'Hybrid (PID+Fuzzy)' : agent === 'unknown' ? 'Unknown Controller' : `${agent.toUpperCase()}`)
           : agent;
 
         return [

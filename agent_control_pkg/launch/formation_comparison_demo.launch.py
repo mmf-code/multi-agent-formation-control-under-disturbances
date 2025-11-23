@@ -144,7 +144,7 @@ def generate_launch_description():
     )
     declare_fuzzy_group_k_fuzzy = DeclareLaunchArgument(
         'fuzzy_group_k_fuzzy',
-        default_value='0.5',
+        default_value='0.7',
         description='Mixing gain k_fuzzy for PID+Fuzzy group (Group 0). Reduced from 0.7 to reduce oscillations.'
     )
 
@@ -214,16 +214,16 @@ def generate_launch_description():
         'pid.kd': fuzzy_group_kd,
         'fuzzy.enable': True,
         'fuzzy.include_wind': True,
-        # Wind scalar for fuzzy controller. Reduced from 1.5 to 1.0 to avoid over-amplification.
-        'fuzzy.wind_scalar': 1.0,
+        # Wind scalar for fuzzy controller. Reverted to 1.5 (was 1.0)
+        'fuzzy.wind_scalar': 1.5,
         'fuzzy.params_file': 'fuzzy_params.yaml',
         'mix.k_pid': 1.0,
         'mix.k_fuzzy': fuzzy_group_k_fuzzy,  # Fuzzy mix factor
         # Wind handling (can be overridden per launch)
         'wind_source_topic': wind_source_topic,
         'wind_source_type': wind_source_type,
-        'feedforward.enable_wind': True,
-        'feedforward.k_wind': 0.8,
+        'feedforward.enable_wind': False, # Reverted to False
+        'feedforward.k_wind': 0.0,        # Reverted to 0.0
         'use_sim_time': use_sim_time,
         'output_limits.x.min': -10.0,
         'output_limits.x.max': 10.0,
@@ -242,8 +242,8 @@ def generate_launch_description():
         'fuzzy.enable': False,
         'wind_source_topic': wind_source_topic,
         'wind_source_type': wind_source_type,
-        'feedforward.enable_wind': True,
-        'feedforward.k_wind': 0.8,
+        'feedforward.enable_wind': False, # Reverted to False
+        'feedforward.k_wind': 0.0,        # Reverted to 0.0
         'use_sim_time': use_sim_time,
         'output_limits.x.min': -10.0,
         'output_limits.x.max': 10.0,
@@ -267,8 +267,8 @@ def generate_launch_description():
         'mix.k_fuzzy': 0.0,
         'wind_source_topic': wind_source_topic,
         'wind_source_type': wind_source_type,
-        'feedforward.enable_wind': True,
-        'feedforward.k_wind': 0.8,
+        'feedforward.enable_wind': False, # Reverted to False
+        'feedforward.k_wind': 0.0,        # Reverted to 0.0
         'use_sim_time': use_sim_time,
         'output_limits.x.min': -10.0,
         'output_limits.x.max': 10.0,

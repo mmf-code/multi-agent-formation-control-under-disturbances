@@ -123,14 +123,25 @@ echo ""
 
 # 7. Check topics
 echo -e "${CYAN}[7/8] Verifying ROS2 topics...${NC}"
-TOPIC_COUNT=$(ros2 topic list --no-daemon 2>/dev/null | grep -E "/agent_[036]/metrics" | wc -l)
-if [ "$TOPIC_COUNT" -eq 3 ]; then
-    echo -e "${GREEN}✓ All 3 metrics topics active${NC}"
-else
-    echo -e "${RED}✗ ERROR: Expected 3 topics, found ${TOPIC_COUNT}${NC}"
-    kill $SIM_PID 2>/dev/null || true
-    exit 1
-fi
+MAX_RETRIES=30
+for ((i=1; i<=MAX_RETRIES; i++)); do
+    TOPIC_COUNT=$(ros2 topic list --no-daemon 2>/dev/null | grep -E "/agent_[036]/metrics" | wc -l)
+    if [ "$TOPIC_COUNT" -eq 3 ]; then
+        echo -e "${GREEN}✓ All 3 metrics topics active${NC}"
+        break
+    fi
+    
+    if [ $i -eq $MAX_RETRIES ]; then
+        echo -e "${RED}✗ ERROR: Expected 3 topics, found ${TOPIC_COUNT}${NC}"
+        echo -e "${YELLOW}  Active topics matching pattern:${NC}"
+        ros2 topic list --no-daemon 2>/dev/null | grep -E "/agent_[036]/metrics" || echo "  (none)"
+        kill $SIM_PID 2>/dev/null || true
+        exit 1
+    fi
+    
+    echo -ne "${YELLOW}  Waiting for topics... ($i/$MAX_RETRIES) [Found: $TOPIC_COUNT/3]${NC}\r"
+    sleep 1
+done
 echo ""
 
 # 8. Start CSV recording
