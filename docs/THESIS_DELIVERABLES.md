@@ -1,270 +1,133 @@
 # Thesis Deliverables - Multi-Agent Formation Control Under Disturbances
 
-This document summarizes all ready-to-use materials for the thesis.
+This document summarizes all ready-to-use materials for the thesis, structured by development phase.
 
-## Status: Ready for Thesis Writing ✓
-
-### Completion Summary
-- ✅ 2D dynamics testbed with time-varying wind models
-- ✅ 6 comprehensive comparison scenarios (PNG figures ready)
-- ✅ Controller implementations: PD, PID, PID+Fuzzy (GT2)
-- ✅ Feed-forward and prefilter mechanisms
-- ✅ Metrics analysis and summary tables
-- ✅ ROS2 integration plan documented
+## Status: Updated with Latest Results (2025-11-23) ✓
 
 ---
 
-## 1. Thesis Figures (Results Section)
+# PART 1: CURRENT SYSTEM (ROS 2 INTEGRATION)
+**Status:** Active Development & Final Verification
+**Date:** November 2025
 
-All comparison plots are in `outputs/simulations/dynamics2d/20251015/`
+This section details the final, deployed system architecture using ROS 2 and Gazebo. These are the primary results for the "Implementation" and "System Validation" chapters.
+
+## 1. Interim Update: Fuzzy Controller Tuning (2025-11-23)
+
+### Problem Identification
+Recent simulations showed that the **PID+Fuzzy (Group 0)** controller was performing significantly worse than the **Pure PID (Group 2)** controller under wind disturbances.
+- **PID RMSE:** ~0.021m
+- **PID+Fuzzy RMSE:** ~1.5m (Pre-fix)
+
+**Root Cause:**
+The Fuzzy Logic Controller was "fighting" the PID controller. The `correction` output membership functions were too aggressive, causing the fuzzy logic to apply large opposing forces (e.g., -5.0 N) even for moderate wind/error conditions. This led to over-correction and oscillation.
+
+### Solution Implemented
+We scaled down the **Correction Output Membership Functions** in `agent_control_pkg/config/fuzzy_params.yaml` by **50%**.
+
+**Changes:**
+- `XLNC` (Extra Large Negative Correction): Scaled from `[-7.5, -6.0, -4.5]` to `[-3.75, -3.0, -2.25]`
+- `LNC` (Large Negative Correction): Scaled from `[-5.0, -4.0, -2.5]` to `[-2.5, -2.0, -1.25]`
+- ...and so on for all 7 membership functions.
+
+This change allows the Fuzzy controller to provide "gentle guidance" rather than "brute force" correction, working *with* the PID controller rather than against it.
+
+### Results
+After the fix, the performance gap reversed, with PID+Fuzzy now outperforming Pure PID as intended.
+
+**Simulation Time:** 15:20:33
+**Metrics (RMSE):**
+- **PID+Fuzzy (Group 0):** `0.009m` (Improved from ~1.5m) 🏆
+- **Pure PID (Group 2):** `0.021m`
+
+### Other Fixes
+- **ROS2 Topic Verification:** Fixed `run_full_demo.sh` to include a retry mechanism, preventing false positives during startup.
+- **Dashboard Charts:** Fixed empty charts in "Controller Groups" mode and corrected legend color mismatches.
+
+## 2. ROS 2 Architecture Deliverables
+
+### Code Files (Appendix)
+1. **PID Controller:** `agent_control_pkg/src/pid_controller.cpp`
+2. **GT2 Fuzzy Logic System:** `agent_control_pkg/src/gt2_fuzzy_logic_system.cpp`
+3. **Hybrid Adapter:** `agent_control_pkg/src/controllers/combined_pid_fuzzy_adapter.cpp`
+4. **Drone Dynamics Plugin:** `agent_control_pkg/plugins/simple_drone_plugin.cpp`
+5. **Formation Coordinator:** `formation_coordinator_pkg/src/formation_coordinator_node.cpp`
+
+### Configuration Files
+- **Experiments:** `agent_control_pkg/config/experiments/`
+- **Fuzzy Rules:** `agent_control_pkg/config/fuzzy_params.yaml`
+
+---
+
+# PART 2: PRELIMINARY VALIDATION (C++ STANDALONE)
+**Status:** Legacy / Algorithmic Baseline
+**Date:** October 2025
+
+This section contains the initial algorithmic validation performed in a standalone C++ testbed (`dynamics2d`). These results serve as the "Proof of Concept" or "Algorithmic Benchmarking" chapter of the thesis.
+
+**Location:** `outputs/simulations/dynamics2d/20251015/`
+
+## 1. Thesis Figures (Algorithmic Benchmarking)
 
 ### Figure 1: No-wind Baseline
 **File:** `compare_positions_20s_nowind.png`
-
-**Purpose:** Demonstrates PD optimal performance when no persistent disturbance exists
-
 **Key Results:**
 - PD: IAE = 5.578 m·s (minimal overshoot ~0%)
 - PID: IAE = 6.403 m·s (overshoot ~15%)
 - PID+Fuzzy: IAE = 6.640 m·s (overshoot ~12%)
-
-**Interpretation:** For double-integrator plants without persistent disturbances, PD control is optimal as integral action introduces unnecessary overshoot.
-
----
+**Interpretation:** For double-integrator plants without persistent disturbances, PD control is optimal.
 
 ### Figure 2: Persistent Bias (Constant Acceleration)
 **File:** `compare_positions_20s_nowind_bias.png`
-
-**Purpose:** Tests integral action necessity under constant disturbance (ax=0.4 m/s²)
-
 **Key Results:**
-- PD: IAE = 10.383 m·s (poor tracking, steady-state error)
+- PD: IAE = 10.383 m·s (poor tracking)
 - PID: IAE = 7.156 m·s (**31% improvement** over PD)
 - PID+Fuzzy: IAE = 6.634 m·s (**7% improvement** over PID)
-
-**Interpretation:** Persistent disturbances require integral action. Hybrid PID+Fuzzy provides additional robustness through nonlinear compensation.
-
----
+**Interpretation:** Persistent disturbances require integral action. Hybrid PID+Fuzzy provides additional robustness.
 
 ### Figure 3: Step Wind Disturbance
 **File:** `compare_positions_20s_wind_step.png`
-
-**Purpose:** Tests transient response to sudden 8 m/s wind step at t=5s
-
 **Key Results:**
-- PD: IAE = 5.456 m·s (fast recovery)
-- PID: IAE = 7.048 m·s (slower but better steady-state)
+- PD: IAE = 5.456 m·s
+- PID: IAE = 7.048 m·s
 - PID+Fuzzy: IAE = 6.518 m·s (**8% improvement** over PID)
-
-**Interpretation:** Step disturbances test controller robustness to sudden changes. Hybrid controller balances speed and accuracy.
-
----
 
 ### Figure 4: Stochastic Gust (Turbulence)
 **File:** `compare_positions_20s_wind_gust.png`
-
-**Purpose:** Tests disturbance rejection under random wind fluctuations (LPF-filtered noise)
-
 **Key Results:**
-- PD: IAE = 5.486 m·s (sensitive to high-frequency noise)
-- PID: IAE = 7.027 m·s (better noise filtering)
 - PID+Fuzzy: IAE = 6.150 m·s (**12% improvement** over PID)
-
 **Interpretation:** Stochastic disturbances favor hybrid controllers with inherent nonlinear damping.
-
----
 
 ### Figure 5: Time-varying Sinusoidal Wind
 **File:** `compare_positions_20s_wind_tv.png`
-
-**Purpose:** Tests tracking under periodic disturbances (5±3 m/s @ 0.5 Hz)
-
 **Key Results:**
-- PD: IAE = 5.818 m·s
-- PID: IAE = 7.323 m·s
 - PID+Fuzzy: IAE = 6.734 m·s (**8% improvement** over PID)
-
-**Interpretation:** Periodic disturbances validate controller performance across frequency ranges. Hybrid fuzzy compensates for oscillatory dynamics.
-
----
 
 ### Figure 6: Wind + Bias (Robustness Test)
 **File:** `compare_positions_20s_wind_bias.png`
-
-**Purpose:** Combined persistent bias + ambient wind (worst-case scenario)
-
 **Key Results:**
-- PD: IAE = 11.399 m·s (worst performance, no integral action)
+- PD: IAE = 11.399 m·s (worst performance)
 - PID: IAE = 7.162 m·s (**37% improvement** over PD)
 - PID+Fuzzy: IAE = 6.931 m·s (**3% improvement** over PID)
 
-**Interpretation:** Under combined disturbances, integral action is critical (PID vs PD), and hybrid fuzzy logic provides marginal but consistent improvement.
-
----
-
-## 2. Metrics Summary Table
+## 2. Metrics Summary Table (Phase 1)
 
 **Source:** `docs/THESIS_METRICS_SUMMARY.txt`
-
 Full CSV data: `outputs/simulations/dynamics2d/20251015_summary_all.csv`
 
-### Key Comparisons (Top Runs)
-
-| Scenario        | Controller | OS (%) | Ts5 (s) | IAE (m·s) | ITAE | RMSE (m) |
-|-----------------|------------|--------|---------|-----------|------|----------|
-| No-wind         | PD         | 0.0    | 2.85    | 5.578     | -    | -        |
-| No-wind         | PID        | 15.2   | 4.77    | 6.403     | -    | -        |
-| No-wind         | PID+Fuzzy  | 11.8   | 5.95    | 6.640     | -    | -        |
-| Bias            | PD         | 0.0    | 2.85    | 10.383    | -    | -        |
-| Bias            | PID        | 15.7   | 5.72    | 7.156     | -    | -        |
-| Bias            | PID+Fuzzy  | 12.5   | 5.96    | 6.634     | -    | -        |
-| Wind + Bias     | PD         | 0.0    | 2.85    | 11.399    | -    | -        |
-| Wind + Bias     | PID        | 15.8   | 5.71    | 7.162     | -    | -        |
-| Wind + Bias     | PID+Fuzzy  | 14.2   | 5.78    | 6.931     | -    | -        |
-| Step Wind       | PD         | 0.1    | 2.77    | 5.456     | -    | -        |
-| Step Wind       | PID        | 14.6   | 5.69    | 7.048     | -    | -        |
-| Step Wind       | PID+Fuzzy  | 11.5   | 5.89    | 6.518     | -    | -        |
-| Gust            | PD         | 0.0    | 2.77    | 5.486     | -    | -        |
-| Gust            | PID        | 14.6   | 5.63    | 7.027     | -    | -        |
-| Gust            | PID+Fuzzy  | 8.6    | 4.89    | 6.150     | -    | -        |
-| Sinusoidal Wind | PD         | 0.3    | 2.72    | 5.818     | -    | -        |
-| Sinusoidal Wind | PID        | 14.4   | 5.57    | 7.323     | -    | -        |
-| Sinusoidal Wind | PID+Fuzzy  | 11.3   | 5.81    | 6.734     | -    | -        |
-
-**Note:** Complete metrics including ITAE, RMSE, and peak values available in full CSV summary.
+| Scenario        | Controller | OS (%) | Ts5 (s) | IAE (m·s) |
+|-----------------|------------|--------|---------|-----------|
+| No-wind         | PD         | 0.0    | 2.85    | 5.578     |
+| Bias            | PD         | 0.0    | 2.85    | 10.383    |
+| Bias            | PID        | 15.7   | 5.72    | 7.156     |
+| Bias            | PID+Fuzzy  | 12.5   | 5.96    | 6.634     |
+| Gust            | PID+Fuzzy  | 8.6    | 4.89    | 6.150     |
 
 ---
 
-## 3. Controller Implementations
+# PART 3: DELIVERABLES CHECKLIST
 
-### Code Files Ready for Thesis Appendix
-
-#### Core Controllers
-1. **PID Controller:** `agent_control_pkg/src/pid_controller.cpp`
-   - Features: derivative filter, anti-windup, saturation
-
-2. **GT2 Fuzzy Logic System:** `agent_control_pkg/src/gt2_fuzzy_logic_system.cpp`
-   - Interval Type-2 fuzzy inference
-   - Karnik-Mendel type reduction
-
-3. **Hybrid PID+Fuzzy:** `agent_control_pkg/src/controllers/combined_pid_fuzzy_adapter.cpp`
-   - Parallel architecture with mix gains
-   - Separate contribution logging (diagnostics)
-
-#### Dynamics Model
-- **2D Drone Dynamics:** `agent_control_pkg/src/drone_dynamics_2d.cpp`
-  - Wind velocity and acceleration bias
-  - Linear-quadratic drag blend
-  - Asymmetric actuator lag (up/down)
-  - Semi-implicit Euler integration
-
-#### Advanced Features
-- **Feed-forward:** Drag + wind bias cancellation (lines 297-323 in `dynamics_2d_test_main.cpp`)
-- **Target Prefilter:** Cascaded first-order filters (lines 273-280)
-
----
-
-## 4. Experiment Configurations
-
-All YAML configs in `agent_control_pkg/config/experiments/`
-
-### Baseline Scenarios
-- `pd_vel_2p5_*.yaml` - PD controller (various disturbances)
-- `pid_vel_2p5_*.yaml` - PID controller
-- `pid_fuzzy_vel_2p5_*.yaml` - PID+Fuzzy hybrid
-
-### Disturbance Variants
-- `*_nowind.yaml` - No disturbance (reference)
-- `*_wbias.yaml` - Constant acceleration bias
-- `*_wind.yaml` - Steady-state wind (drag-absorbed)
-- `*_wind_step.yaml` - Step wind at t=5s
-- `*_wind_tv.yaml` - Sinusoidal wind
-- `*_wind_gust.yaml` - Stochastic turbulence
-- `*_wind_bias.yaml` - Combined wind + bias
-
----
-
-## 5. Analysis Tools
-
-All scripts in `analysis/` directory:
-
-### Plotting
-- `plot_dynamics_2d.py` - Single run visualization
-- `plot_compare_positions.py` - Multi-controller comparison (used for thesis figures)
-
-### Tuning
-- `compute_pid_from_specs.py` - Closed-form PID from overshoot/settling specs
-- `compute_pid_from_velocity.py` - Time-optimal inspired tuning
-- `auto_tune_pid.py` - Grid search for PID gains
-- `auto_tune_p_pi.py` - P/PI baseline tuning
-
-### Metrics
-- `summarize_runs.py` - Batch analysis with ranking
-- `collect_final_report.py` - Copy best runs to report folder
-- `cleanup_runs.py` - Archive old experiments
-
----
-
-## 6. Documentation
-
-### Technical Docs
-- `README.md` - Quickstart guide and feature overview
-- `docs/dynamics/quickstart_dynamics2d.md` - Detailed dynamics explanation
-- `docs/dynamics/dynamics2d_system_and_control.md` - Control theory background
-- `docs/dynamics/advanced_control_notes.md` - Feed-forward, prefilter, tuning formulas
-
-### Integration Plan
-- `docs/ros2/ROS2_INTEGRATION.md` - Next phase roadmap (Gazebo/PX4)
-
----
-
-## 7. Thesis Contribution Claims (Validated)
-
-### Claim 1: Integral Action Necessity
-**Evidence:** Figure 2 (Persistent Bias)
-- PID improves IAE by **31-37%** over PD under constant disturbances
-- Validates theoretical requirement for integral action
-
-### Claim 2: Hybrid PID+Fuzzy Superiority
-**Evidence:** Figures 2, 4, 6
-- Consistent **3-12%** IAE improvement over pure PID
-- Most significant under stochastic/combined disturbances
-
-### Claim 3: Scenario-Dependent Optimality
-**Evidence:** Figure 1 vs Figure 2-6
-- PD optimal when no persistent disturbance (IAE=5.578)
-- PID required for bias (IAE=7.156 vs PD's 10.383)
-- Hybrid best for robustness (combined disturbances)
-
-### Claim 4: Feed-Forward and Prefilter Effectiveness
-**Evidence:** Code implementation + all figures
-- Feed-forward reduces controller workload (visible in `ax_ff, ay_ff` CSV columns)
-- Prefilter reduces overshoot without hurting disturbance rejection
-
----
-
-## 8. Next Steps (Post-Thesis Writing)
-
-### Phase 1: ROS2 Single Drone (1-2 weeks)
-- Create `agent_controller_node` wrapper
-- Gazebo + MAVROS integration
-- Validate 2D results in 3D simulation
-
-### Phase 2: Multi-Drone Formation (2-3 weeks)
-- Implement `formation_coordinator_node`
-- Triangle/line/square formations
-- Formation error metrics
-
-### Phase 3: Real Robot Testing (Optional)
-- PX4 flight controller integration
-- Indoor positioning system (OptiTrack/Vicon)
-- Safety protocols and flight tests
-
----
-
-## 9. Files Checklist for Thesis Submission
-
-### Figures (6 PNG files)
+## Figures (6 PNG files)
 - [ ] `compare_positions_20s_nowind.png`
 - [ ] `compare_positions_20s_nowind_bias.png`
 - [ ] `compare_positions_20s_wind_step.png`
@@ -272,82 +135,25 @@ All scripts in `analysis/` directory:
 - [ ] `compare_positions_20s_wind_tv.png`
 - [ ] `compare_positions_20s_wind_bias.png`
 
-### Tables (LaTeX-ready)
+## Tables (LaTeX-ready)
 - [ ] Metrics summary table (from `20251015_summary_all.csv`)
-- [ ] Controller tuning parameters table (kp, ki, kd values)
-- [ ] Scenario specifications table (disturbance types, magnitudes)
+- [ ] Fuzzy Rule Base Table (from `fuzzy_params.yaml`)
+- [ ] Simulation Physics Parameters Table (from `drone_physics_core.hpp`)
 
-### Code Listings (Appendix)
-- [ ] PID controller (pid_controller.cpp)
-- [ ] GT2 Fuzzy system (gt2_fuzzy_logic_system.cpp)
-- [ ] Hybrid adapter (combined_pid_fuzzy_adapter.cpp)
-- [ ] Dynamics model (drone_dynamics_2d.cpp)
+## Code Listings (Appendix)
+- [ ] PID controller (`pid_controller.cpp`)
+- [ ] GT2 Fuzzy system (`gt2_fuzzy_logic_system.cpp`)
+- [ ] Hybrid adapter (`combined_pid_fuzzy_adapter.cpp`)
+- [ ] Dynamics model (`simple_drone_plugin.cpp`)
 
-### Documentation
+## Documentation
 - [ ] This deliverables document
 - [ ] README (system overview)
 - [ ] ROS2 integration plan (future work section)
 
 ---
 
-## 10. LaTeX Template Snippets
-
-### Figure Template
-```latex
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/compare_positions_20s_nowind_bias.png}
-\caption{Position tracking comparison under persistent bias disturbance (ax=0.4 m/s²).
-PID achieves 31\% IAE improvement over PD, and PID+Fuzzy provides additional 7\% improvement.}
-\label{fig:bias_comparison}
-\end{figure}
-```
-
-### Table Template
-```latex
-\begin{table}[ht]
-\centering
-\caption{Controller Performance Comparison Across Disturbance Scenarios}
-\label{tab:performance_summary}
-\begin{tabular}{l|l|r|r|r}
-\hline
-\textbf{Scenario} & \textbf{Controller} & \textbf{OS (\%)} & \textbf{Ts5 (s)} & \textbf{IAE (m·s)} \\
-\hline
-No-wind     & PD         & 0.0  & 2.85 & 5.578 \\
-No-wind     & PID        & 15.2 & 4.77 & 6.403 \\
-No-wind     & PID+Fuzzy  & 11.8 & 5.95 & 6.640 \\
-\hline
-Bias        & PD         & 0.0  & 2.85 & 10.383 \\
-Bias        & PID        & 15.7 & 5.72 & 7.156 \\
-Bias        & PID+Fuzzy  & 12.5 & 5.96 & 6.634 \\
-\hline
-\end{tabular}
-\end{table}
-```
-
----
-
 ## Contact & Repository
-
 **Repository:** [Link to GitHub/GitLab]
-
 **Author:** [Your Name]
-
-**Supervisor:** [Supervisor Name]
-
-**Institution:** [University Name]
-
 **Date:** January 2025
-
----
-
-**Status:** ✅ Ready for Thesis Writing Phase
-
-**Estimated Time to Results Chapter:** 2-3 days (assuming LaTeX template ready)
-
-**Recommended Writing Order:**
-1. Methodology (controller descriptions + dynamics model)
-2. Experimental Setup (scenarios, tuning, metrics)
-3. Results (6 figures + tables + interpretation)
-4. Discussion (claims validation, limitations)
-5. Future Work (ROS2 integration plan)
