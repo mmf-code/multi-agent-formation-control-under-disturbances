@@ -75,7 +75,7 @@ public:
 
     target_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
       "target_pose",
-      rclcpp::SensorDataQoS(),
+      10,
       std::bind(&MetricsPublisherNode::targetCallback, this, std::placeholders::_1)
     );
 

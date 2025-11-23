@@ -1,25 +1,15 @@
 CompileFlags:
   Add:
-    # Workspace includes
-    - -Iagent_control_pkg/include
-    - -Iother_packages/formation_coordinator_pkg/include
-    - -Iinstall/agent_control_pkg/include
-    - -Iinstall/formation_coordinator_pkg/include
-    - -Iinstall/my_custom_interfaces_pkg/include
-    - -Ibuild/agent_control_pkg
-    - -Ibuild/formation_coordinator_pkg
-    # ROS 2 headers
-    - -I/usr/include/gazebo-11
-    - -I/usr/include/ignition/math6
-    - -I/usr/include/ignition/math6/ignition
-    - -I/opt/ros/humble/include
-    # Compiler flags
     - -std=c++17
-  Remove:
-    - -W*
+    - -isystem/usr/include/c++/11
+    - -isystem/usr/include/x86_64-linux-gnu/c++/11
+    - -isystem/usr/include/c++/11/backward
+    - -isystem/usr/lib/gcc/x86_64-linux-gnu/11/include
+  Compiler: /usr/bin/g++
+
 Diagnostics:
-  ClangTidy:
-    Add: [performance-*, readability-*, modernize-*]
-    Remove: [readability-magic-numbers, readability-identifier-length, readability-braces-around-statements, performance-avoid-endl, readability-function-cognitive-complexity]
+  UnusedIncludes: None
+  MissingIncludes: None
+  
 Index:
   Background: Build

@@ -12,16 +12,16 @@
     formation.shape: triangle
 
     # Spacing between agents (meters) - INCREASED for collision avoidance
-    formation.spacing: 3.0
+    formation.spacing: 3.0  # Optimal spacing for triangle formation
 
     # Formation center position (initial target for group centroid)
     # Start at spawn centroid along X for step-wise trajectory.
     formation.center.x: -3.5
-    formation.center.y: 4.0
-    formation.center.z: 7.0  # Match drone spawn altitude (Group 2 at Z=7.0m)
+    formation.center.y: 15.0  # FAR RIGHT - prevent inter-group collision
+    formation.center.z: 3.0  # EQUAL HEIGHT for fair wind comparison
 
     # Formation orientation (degrees)
-    formation.yaw_deg: 0.0
+    formation.yaw_deg: 0.0  # LOCKED - no rotation
 
     # Reference frame
     frame_id: odom
@@ -30,7 +30,7 @@
     publish_frequency_hz: 10.0
 
     # PSO parameters for formation optimization
-    pso.enable: true
+    pso.enable: true  # ENABLED - optimize spacing only
     pso.num_particles: 20
     pso.max_iterations: 50
     pso.inertia_weight: 0.7
@@ -53,5 +53,5 @@
     waypoints.x: [-2.0, -2.0, 6.0, 6.0, 14.0, 14.0, 22.0, 22.0]
 
     # Y/Z stay on the same altitude lane
-    waypoints.y: [4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0]
-    waypoints.z: [7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0]
+    waypoints.y: [15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0]
+    waypoints.z: [3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0]

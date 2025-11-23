@@ -35,6 +35,7 @@ NC='\033[0m' # No Color
 
 # Duration
 DURATION=${1:-60}
+WIND_PID=""
 
 # Banner
 if [ -t 1 ]; then clear 2>/dev/null || true; fi
@@ -60,13 +61,13 @@ else
 fi
 
 # 1. CD to workspace
-echo -e "${CYAN}[1/7] Navigating to workspace...${NC}"
+echo -e "${CYAN}[1/8] Navigating to workspace...${NC}"
 cd "$WORKSPACE_DIR"
 echo -e "${GREEN}✓ Current directory: ${PWD}${NC}"
 echo ""
 
 # 2. ROS2 Setup
-echo -e "${CYAN}[2/7] Setting up ROS2 environment...${NC}"
+echo -e "${CYAN}[2/8] Setting up ROS2 environment...${NC}"
 source /opt/ros/humble/setup.bash
 source install/setup.bash
 echo -e "${GREEN}✓ ROS2 Humble loaded${NC}"
@@ -78,12 +79,12 @@ DATE=$(date +%Y-%m-%d)
 TIME=$(date +%H-%M-%S)
 OUTPUT_DIR="thesis_data/${DATE}/${TIME}_full_demo"
 mkdir -p "$OUTPUT_DIR"
-echo -e "${CYAN}[3/7] Output directory created${NC}"
+echo -e "${CYAN}[3/8] Output directory created${NC}"
 echo -e "${GREEN}✓ ${OUTPUT_DIR}${NC}"
 echo ""
 
 # 4. Cleanup old processes
-echo -e "${CYAN}[4/7] Cleaning up old processes...${NC}"
+echo -e "${CYAN}[4/8] Cleaning up old processes...${NC}"
 pkill -9 gzserver 2>/dev/null || true
 pkill -9 gzclient 2>/dev/null || true
 pkill -9 rviz2 2>/dev/null || true
@@ -91,9 +92,26 @@ sleep 2
 echo -e "${GREEN}✓ Clean slate${NC}"
 echo ""
 
-# 5. Launch simulation (background)
-echo -e "${CYAN}[5/7] Launching Gazebo + RViz...${NC}"
+# 5. Wind publisher fallback (if Gazebo wind plugin is missing)
 TOTAL_TIME=$((DURATION + 15))
+WIND_SCRIPT="${WORKSPACE_DIR}/scripts/run_wind.sh"
+if ! find /opt/ros/humble /usr/lib -name "libgazebo_ros_wind.so" -print -quit | grep -q .; then
+    echo -e "${YELLOW}[5/8] Gazebo wind plugin not found; starting Python wind publisher...${NC}"
+    if [ -f "${WIND_SCRIPT}" ]; then
+        # Run slightly longer than simulation timeout to keep wind active until shutdown
+        bash "${WIND_SCRIPT}" --x 2.0 --y 8.0 --z 0.0 --duration "${TOTAL_TIME}" --mode both >/dev/null 2>&1 &
+        WIND_PID=$!
+        echo -e "${GREEN}✓ Wind publisher running (PID: ${WIND_PID})${NC}"
+    else
+        echo -e "${RED}✗ Wind script missing at ${WIND_SCRIPT}${NC}"
+    fi
+else
+    echo -e "${GREEN}[5/8] Gazebo wind plugin found (libgazebo_ros_wind.so); no Python wind fallback needed.${NC}"
+fi
+echo ""
+
+# 6. Launch simulation (background)
+echo -e "${CYAN}[6/8] Launching Gazebo + RViz...${NC}"
 timeout ${TOTAL_TIME} ros2 launch agent_control_pkg formation_comparison_demo.launch.py \
     gazebo_gui:=true rviz:=true > "$OUTPUT_DIR/simulation.log" 2>&1 &
 SIM_PID=$!
@@ -103,9 +121,9 @@ sleep 15
 echo -e "${GREEN}✓ Simulation running (PID: ${SIM_PID})${NC}"
 echo ""
 
-# 6. Check topics
-echo -e "${CYAN}[6/7] Verifying ROS2 topics...${NC}"
-TOPIC_COUNT=$(ros2 topic list | grep -E "/agent_[036]/metrics" | wc -l)
+# 7. Check topics
+echo -e "${CYAN}[7/8] Verifying ROS2 topics...${NC}"
+TOPIC_COUNT=$(ros2 topic list --no-daemon 2>/dev/null | grep -E "/agent_[036]/metrics" | wc -l)
 if [ "$TOPIC_COUNT" -eq 3 ]; then
     echo -e "${GREEN}✓ All 3 metrics topics active${NC}"
 else
@@ -115,8 +133,8 @@ else
 fi
 echo ""
 
-# 7. Start CSV recording
-echo -e "${CYAN}[7/7] Starting CSV data recording...${NC}"
+# 8. Start CSV recording
+echo -e "${CYAN}[8/8] Starting CSV data recording...${NC}"
 echo ""
 echo -e "${MAGENTA}╔═══════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${MAGENTA}║                  DEMO IS RUNNING!                             ║${NC}"
@@ -162,6 +180,9 @@ sleep 1
 pkill -9 gzserver 2>/dev/null || true
 pkill -9 gzclient 2>/dev/null || true
 pkill -9 rviz2 2>/dev/null || true
+if [ -n "${WIND_PID}" ]; then
+    kill "${WIND_PID}" 2>/dev/null || true
+fi
 sleep 1
 
 # Results

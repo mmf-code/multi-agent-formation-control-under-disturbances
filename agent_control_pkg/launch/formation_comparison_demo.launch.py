@@ -354,43 +354,55 @@ def generate_launch_description():
     )
 
     # Group 0 Formation Coordinator (PID+Fuzzy)
-    formation_coordinator_group0 = Node(
-        package='formation_coordinator_pkg',
-        executable='formation_coordinator_node',
-        name='formation_coordinator_group0',
-        namespace='formation_0',
-        output='screen',
-        parameters=[
-            formation_config_group0,
-            {'use_sim_time': use_sim_time}
-        ]
-    )
+    formation_coordinator_group0 = GroupAction([
+        PushRosNamespace('formation_0'),
+        Node(
+            package='formation_coordinator_pkg',
+            executable='formation_coordinator_node',
+            name='formation_coordinator_group0',
+            output='screen',
+            # Force node name and namespace using explicit arguments
+            arguments=['--ros-args', '-r', '__node:=formation_coordinator_group0', '-r', '__ns:=/formation_0'],
+            parameters=[
+                formation_config_group0,
+                {'use_sim_time': use_sim_time}
+            ]
+        )
+    ])
 
     # Group 1 Formation Coordinator (PD)
-    formation_coordinator_group1 = Node(
-        package='formation_coordinator_pkg',
-        executable='formation_coordinator_node',
-        name='formation_coordinator_group1',
-        namespace='formation_1',
-        output='screen',
-        parameters=[
-            formation_config_group1,
-            {'use_sim_time': use_sim_time}
-        ]
-    )
+    formation_coordinator_group1 = GroupAction([
+        PushRosNamespace('formation_1'),
+        Node(
+            package='formation_coordinator_pkg',
+            executable='formation_coordinator_node',
+            name='formation_coordinator_group1',
+            output='screen',
+            # Force node name and namespace using explicit arguments
+            arguments=['--ros-args', '-r', '__node:=formation_coordinator_group1', '-r', '__ns:=/formation_1'],
+            parameters=[
+                formation_config_group1,
+                {'use_sim_time': use_sim_time}
+            ]
+        )
+    ])
 
     # Group 2 Formation Coordinator (PID)
-    formation_coordinator_group2 = Node(
-        package='formation_coordinator_pkg',
-        executable='formation_coordinator_node',
-        name='formation_coordinator_group2',
-        namespace='formation_2',
-        output='screen',
-        parameters=[
-            formation_config_group2,
-            {'use_sim_time': use_sim_time}
-        ]
-    )
+    formation_coordinator_group2 = GroupAction([
+        PushRosNamespace('formation_2'),
+        Node(
+            package='formation_coordinator_pkg',
+            executable='formation_coordinator_node',
+            name='formation_coordinator_group2',
+            output='screen',
+            # Force node name and namespace using explicit arguments
+            arguments=['--ros-args', '-r', '__node:=formation_coordinator_group2', '-r', '__ns:=/formation_2'],
+            parameters=[
+                formation_config_group2,
+                {'use_sim_time': use_sim_time}
+            ]
+        )
+    ])
 
     # ===== RViz Visualization =====
     rviz_node = Node(

@@ -183,18 +183,34 @@ timeout ${TOTAL_TIME} ros2 launch agent_control_pkg formation_long_scenario_demo
     gazebo_gui:=${GAZEBO_GUI} rviz:=${RVIZ} > "$OUTPUT_DIR/simulation.log" 2>&1 &
 SIM_PID=$!
 
-echo -e "${YELLOW}  Waiting for simulation initialization (15 seconds)...${NC}"
-sleep 15
+echo -e "${YELLOW}  Waiting for simulation initialization...${NC}"
+sleep 10
+
+# Wait for topics to become available (max 30 seconds)
+echo -e "${YELLOW}  Waiting for ROS2 topics...${NC}"
+WAIT_TIME=0
+MAX_WAIT=30
+while [ $WAIT_TIME -lt $MAX_WAIT ]; do
+    TOPIC_COUNT=$(ros2 topic list --no-daemon 2>/dev/null | grep -E "/agent_[036]/metrics" | wc -l)
+    if [ "$TOPIC_COUNT" -eq 3 ]; then
+        break
+    fi
+    sleep 2
+    WAIT_TIME=$((WAIT_TIME + 2))
+    echo -ne "  Waiting... ${WAIT_TIME}s/${MAX_WAIT}s (found ${TOPIC_COUNT}/3 topics)\r"
+done
+echo ""
+
 echo -e "${GREEN}✓ Simulation running (PID: ${SIM_PID})${NC}"
 echo ""
 
 # Verify topics
 echo -e "${CYAN}[6/8] Verifying ROS2 topics...${NC}"
-TOPIC_COUNT=$(ros2 topic list 2>/dev/null | grep -E "/agent_[036]/metrics" | wc -l)
+TOPIC_COUNT=$(ros2 topic list --no-daemon 2>/dev/null | grep -E "/agent_[036]/metrics" | wc -l)
 if [ "$TOPIC_COUNT" -eq 3 ]; then
     echo -e "${GREEN}✓ All 3 metrics topics active${NC}"
 else
-    echo -e "${YELLOW}⚠ Found ${TOPIC_COUNT}/3 topics (may still work)${NC}"
+    echo -e "${YELLOW}⚠ Found ${TOPIC_COUNT}/3 topics - continuing anyway${NC}"
 fi
 echo ""
 
