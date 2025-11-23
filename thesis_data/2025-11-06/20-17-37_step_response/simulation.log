@@ -1,0 +1,93 @@
+[INFO] [launch]: All log files can be found below /home/mmf/.ros/log/2025-11-06-20-17-40-190431-mmf-ABRA-A5-V15-2-151697
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [gzserver-1]: process started with pid [151698]
+[INFO] [agent_controller_node-2]: process started with pid [151700]
+[INFO] [path_visualizer_node-3]: process started with pid [151702]
+[INFO] [metrics_publisher_node-4]: process started with pid [151704]
+[INFO] [agent_controller_node-5]: process started with pid [151706]
+[INFO] [path_visualizer_node-6]: process started with pid [151708]
+[INFO] [metrics_publisher_node-7]: process started with pid [151710]
+[INFO] [agent_controller_node-8]: process started with pid [151712]
+[INFO] [path_visualizer_node-9]: process started with pid [151714]
+[INFO] [metrics_publisher_node-10]: process started with pid [151716]
+[INFO] [agent_controller_node-11]: process started with pid [151718]
+[INFO] [path_visualizer_node-12]: process started with pid [151720]
+[INFO] [metrics_publisher_node-13]: process started with pid [151734]
+[INFO] [agent_controller_node-14]: process started with pid [151756]
+[INFO] [path_visualizer_node-15]: process started with pid [151765]
+[INFO] [metrics_publisher_node-16]: process started with pid [151775]
+[INFO] [agent_controller_node-17]: process started with pid [151800]
+[INFO] [path_visualizer_node-18]: process started with pid [151804]
+[INFO] [metrics_publisher_node-19]: process started with pid [151831]
+[INFO] [agent_controller_node-20]: process started with pid [151841]
+[INFO] [path_visualizer_node-21]: process started with pid [151843]
+[INFO] [metrics_publisher_node-22]: process started with pid [151846]
+[INFO] [agent_controller_node-23]: process started with pid [151855]
+[INFO] [path_visualizer_node-24]: process started with pid [151857]
+[INFO] [metrics_publisher_node-25]: process started with pid [151859]
+[INFO] [agent_controller_node-26]: process started with pid [151862]
+[INFO] [path_visualizer_node-27]: process started with pid [151867]
+[INFO] [metrics_publisher_node-28]: process started with pid [151872]
+[INFO] [formation_coordinator_node-29]: process started with pid [151880]
+[INFO] [formation_coordinator_node-30]: process started with pid [151883]
+[INFO] [formation_coordinator_node-31]: process started with pid [151893]
+[path_visualizer_node-3] [INFO] [1762449460.486908844] [agent_0.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[agent_controller_node-5] [INFO] [1762449460.389206313] [agent_1.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[agent_controller_node-5] [INFO] [1762449460.402530019] [agent_1.agent_controller]: Agent controller node initialised: type=pid_fuzzy, dt=0.005000 s, PID[Kp=5.000, Ki=2.500, Kd=5.000], mix[k_pid=1.00, k_fuzzy=0.70]
+[path_visualizer_node-9] [INFO] [1762449460.626203498] [agent_2.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[agent_controller_node-8] [INFO] [1762449460.695350987] [agent_2.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[metrics_publisher_node-7] [INFO] [1762449460.753087214] [agent_1.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[agent_controller_node-20] [37;1m2025-11-06 20:17:40.871 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7443: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-19] [37;1m2025-11-06 20:17:40.888 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7443: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-28] [37;1m2025-11-06 20:17:40.899 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7443: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-22] [37;1m2025-11-06 20:17:41.006 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7443: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[formation_coordinator_node-30] [37;1m2025-11-06 20:17:41.014 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7443: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-11] [INFO] [1762449461.019377072] [agent_3.agent_controller]: Agent controller node initialised: type=pd, dt=0.005000 s, PID[Kp=5.000, Ki=0.000, Kd=5.000], mix[k_pid=1.00, k_fuzzy=1.00]
+[agent_controller_node-23] [37;1m2025-11-06 20:17:41.038 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7443: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-13] [INFO] [1762449461.067511484] [agent_3.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[formation_coordinator_node-31] [37;1m2025-11-06 20:17:41.068 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7443: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[formation_coordinator_node-29] [37;1m2025-11-06 20:17:41.068 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7443: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-16] [INFO] [1762449461.114863393] [agent_4.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[agent_controller_node-2] [INFO] [1762449461.149749802] [agent_0.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[path_visualizer_node-12] [INFO] [1762449461.153519196] [agent_3.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[metrics_publisher_node-10] [INFO] [1762449461.192123340] [agent_2.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[path_visualizer_node-6] [INFO] [1762449461.274935138] [agent_1.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[path_visualizer_node-15] [INFO] [1762449461.335016571] [agent_4.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[formation_coordinator_node-30] [INFO] [1762449461.349710015] [formation_1.formation_coordinator_group1]: Loaded 5 waypoints for trajectory
+[formation_coordinator_node-30] [INFO] [1762449461.349851465] [formation_1.formation_coordinator_group1]:   WP[0]: t=0.0-0.0 s, pos=(-15.00, 0.00, 4.00)
+[formation_coordinator_node-30] [INFO] [1762449461.349900741] [formation_1.formation_coordinator_group1]:   WP[1]: t=0.0-15.0 s, pos=(-10.00, 3.00, 4.50)
+[formation_coordinator_node-30] [INFO] [1762449461.349918045] [formation_1.formation_coordinator_group1]:   WP[2]: t=15.0-30.0 s, pos=(-5.00, 0.00, 4.00)
+[formation_coordinator_node-30] [INFO] [1762449461.349944262] [formation_1.formation_coordinator_group1]:   WP[3]: t=30.0-45.0 s, pos=(0.00, 3.00, 4.80)
+[formation_coordinator_node-30] [INFO] [1762449461.349970740] [formation_1.formation_coordinator_group1]:   WP[4]: t=45.0-60.0 s, pos=(5.00, 1.50, 4.50)
+[agent_controller_node-8] [INFO] [1762449461.358852010] [agent_2.agent_controller]: Agent controller node initialised: type=pid_fuzzy, dt=0.005000 s, PID[Kp=5.000, Ki=2.500, Kd=5.000], mix[k_pid=1.00, k_fuzzy=0.70]
+[path_visualizer_node-21] [INFO] [1762449461.369710589] [agent_6.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[formation_coordinator_node-29] [INFO] [1762449461.434017429] [formation_0.formation_coordinator_group0]: Loaded 5 waypoints for trajectory
+[formation_coordinator_node-29] [INFO] [1762449461.434156987] [formation_0.formation_coordinator_group0]:   WP[0]: t=0.0-0.0 s, pos=(-15.00, -5.00, 1.00)
+[formation_coordinator_node-29] [INFO] [1762449461.434197733] [formation_0.formation_coordinator_group0]:   WP[1]: t=0.0-15.0 s, pos=(-10.00, -2.00, 1.50)
+[formation_coordinator_node-29] [INFO] [1762449461.434222430] [formation_0.formation_coordinator_group0]:   WP[2]: t=15.0-30.0 s, pos=(-5.00, -5.00, 1.00)
+[formation_coordinator_node-29] [INFO] [1762449461.434244730] [formation_0.formation_coordinator_group0]:   WP[3]: t=30.0-45.0 s, pos=(0.00, -2.00, 1.80)
+[formation_coordinator_node-29] [INFO] [1762449461.434267695] [formation_0.formation_coordinator_group0]:   WP[4]: t=45.0-60.0 s, pos=(5.00, -3.50, 1.50)
+[path_visualizer_node-27] [INFO] [1762449461.477883606] [agent_8.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[formation_coordinator_node-30] [INFO] [1762449461.483598831] [formation_1.formation_coordinator_group1]: Formation coordinator online: shape=triangle spacing=3.00 m, rate=10.0 Hz
+[metrics_publisher_node-28] [INFO] [1762449461.555535870] [agent_8.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[agent_controller_node-2] [INFO] [1762449461.601956579] [agent_0.agent_controller]: Agent controller node initialised: type=pid_fuzzy, dt=0.005000 s, PID[Kp=5.000, Ki=2.500, Kd=5.000], mix[k_pid=1.00, k_fuzzy=0.70]
+[metrics_publisher_node-25] [INFO] [1762449461.626597123] [agent_7.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[formation_coordinator_node-29] [INFO] [1762449461.650260858] [formation_0.formation_coordinator_group0]: Formation coordinator online: shape=triangle spacing=3.00 m, rate=10.0 Hz
+[agent_controller_node-23] [INFO] [1762449461.650510052] [agent_7.agent_controller]: Agent controller node initialised: type=pid, dt=0.005000 s, PID[Kp=5.000, Ki=2.500, Kd=5.000], mix[k_pid=1.00, k_fuzzy=1.00]
+[agent_controller_node-14] [INFO] [1762449461.699457728] [agent_4.agent_controller]: Agent controller node initialised: type=pd, dt=0.005000 s, PID[Kp=5.000, Ki=0.000, Kd=5.000], mix[k_pid=1.00, k_fuzzy=1.00]
+[path_visualizer_node-18] [INFO] [1762449461.736384011] [agent_5.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[metrics_publisher_node-4] [INFO] [1762449461.939925301] [agent_0.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[path_visualizer_node-24] [INFO] [1762449461.990400395] [agent_7.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[metrics_publisher_node-22] [INFO] [1762449462.190865092] [agent_6.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[metrics_publisher_node-19] [INFO] [1762449462.331032652] [agent_5.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[agent_controller_node-20] [INFO] [1762449462.473675328] [agent_6.agent_controller]: Agent controller node initialised: type=pid, dt=0.005000 s, PID[Kp=5.000, Ki=2.500, Kd=5.000], mix[k_pid=1.00, k_fuzzy=1.00]
+[formation_coordinator_node-31] [INFO] [1762449462.770027990] [formation_2.formation_coordinator_group2]: Loaded 5 waypoints for trajectory
+[formation_coordinator_node-31] [INFO] [1762449462.770216192] [formation_2.formation_coordinator_group2]:   WP[0]: t=0.0-0.0 s, pos=(-15.00, 5.00, 7.00)
+[formation_coordinator_node-31] [INFO] [1762449462.770246958] [formation_2.formation_coordinator_group2]:   WP[1]: t=0.0-15.0 s, pos=(-10.00, 2.00, 7.50)
+[formation_coordinator_node-31] [INFO] [1762449462.770262252] [formation_2.formation_coordinator_group2]:   WP[2]: t=15.0-30.0 s, pos=(-5.00, 5.00, 7.00)
+[formation_coordinator_node-31] [INFO] [1762449462.770278228] [formation_2.formation_coordinator_group2]:   WP[3]: t=30.0-45.0 s, pos=(0.00, 2.00, 7.80)
+[formation_coordinator_node-31] [INFO] [1762449462.770293607] [formation_2.formation_coordinator_group2]:   WP[4]: t=45.0-60.0 s, pos=(5.00, 3.50, 7.50)
+[agent_controller_node-26] [INFO] [1762449463.173999171] [agent_8.agent_controller]: Agent controller node initialised: type=pid, dt=0.005000 s, PID[Kp=5.000, Ki=2.500, Kd=5.000], mix[k_pid=1.00, k_fuzzy=1.00]
+[formation_coordinator_node-31] [INFO] [1762449463.260552116] [formation_2.formation_coordinator_group2]: Formation coordinator online: shape=triangle spacing=3.00 m, rate=10.0 Hz
+[agent_controller_node-17] [INFO] [1762449465.883017833] [agent_5.agent_controller]: Agent controller node initialised: type=pd, dt=0.005000 s, PID[Kp=5.000, Ki=0.000, Kd=5.000], mix[k_pid=1.00, k_fuzzy=1.00]
+[ERROR] [gzserver-1]: process has died [pid 151698, exit code 255, cmd 'gzserver -s libgazebo_ros_init.so -s libgazebo_ros_factory.so /home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/worlds/formation_comparison.world'].

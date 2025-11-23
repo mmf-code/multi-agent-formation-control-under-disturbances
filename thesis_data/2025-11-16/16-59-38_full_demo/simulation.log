@@ -1,0 +1,207 @@
+[INFO] [launch]: All log files can be found below /home/mmf/.ros/log/2025-11-16-16-59-41-445191-mmf-ABRA-A5-V15-2-52641
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [gzserver-1]: process started with pid [52672]
+[INFO] [gzclient-2]: process started with pid [52674]
+[INFO] [agent_controller_node-3]: process started with pid [52676]
+[INFO] [path_visualizer_node-4]: process started with pid [52678]
+[INFO] [metrics_publisher_node-5]: process started with pid [52680]
+[INFO] [agent_controller_node-6]: process started with pid [52682]
+[INFO] [path_visualizer_node-7]: process started with pid [52684]
+[INFO] [metrics_publisher_node-8]: process started with pid [52686]
+[INFO] [agent_controller_node-9]: process started with pid [52688]
+[INFO] [path_visualizer_node-10]: process started with pid [52690]
+[INFO] [metrics_publisher_node-11]: process started with pid [52692]
+[INFO] [agent_controller_node-12]: process started with pid [52695]
+[INFO] [path_visualizer_node-13]: process started with pid [52720]
+[INFO] [metrics_publisher_node-14]: process started with pid [52740]
+[INFO] [agent_controller_node-15]: process started with pid [52753]
+[INFO] [path_visualizer_node-16]: process started with pid [52764]
+[INFO] [metrics_publisher_node-17]: process started with pid [52767]
+[INFO] [agent_controller_node-18]: process started with pid [52772]
+[INFO] [path_visualizer_node-19]: process started with pid [52777]
+[INFO] [metrics_publisher_node-20]: process started with pid [52784]
+[INFO] [agent_controller_node-21]: process started with pid [52791]
+[INFO] [path_visualizer_node-22]: process started with pid [52805]
+[INFO] [metrics_publisher_node-23]: process started with pid [52825]
+[INFO] [agent_controller_node-24]: process started with pid [52838]
+[INFO] [path_visualizer_node-25]: process started with pid [52846]
+[INFO] [metrics_publisher_node-26]: process started with pid [52851]
+[INFO] [agent_controller_node-27]: process started with pid [52855]
+[INFO] [path_visualizer_node-28]: process started with pid [52862]
+[INFO] [metrics_publisher_node-29]: process started with pid [52866]
+[INFO] [formation_coordinator_node-30]: process started with pid [52881]
+[INFO] [formation_coordinator_node-31]: process started with pid [52891]
+[INFO] [formation_coordinator_node-32]: process started with pid [52903]
+[INFO] [rviz2-33]: process started with pid [52910]
+[agent_controller_node-3] [INFO] [1763301581.672080398] [agent_0.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[agent_controller_node-3] [INFO] [1763301581.717630849] [agent_0.agent_controller]: Agent controller node initialised: type=pid_fuzzy, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=0.70]
+[path_visualizer_node-4] [INFO] [1763301581.644246264] [agent_0.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[metrics_publisher_node-5] [INFO] [1763301581.694739422] [agent_0.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[agent_controller_node-6] [INFO] [1763301581.680166010] [agent_1.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[agent_controller_node-6] [INFO] [1763301581.727727565] [agent_1.agent_controller]: Agent controller node initialised: type=pid_fuzzy, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=0.70]
+[metrics_publisher_node-8] [INFO] [1763301581.724266239] [agent_1.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[agent_controller_node-9] [INFO] [1763301581.684047919] [agent_2.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[agent_controller_node-9] [INFO] [1763301581.738883100] [agent_2.agent_controller]: Agent controller node initialised: type=pid_fuzzy, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=0.70]
+[path_visualizer_node-10] [INFO] [1763301581.676447142] [agent_2.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[path_visualizer_node-7] [INFO] [1763301581.756613700] [agent_1.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[path_visualizer_node-13] [INFO] [1763301581.759672700] [agent_3.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[rviz2-33] qt.qpa.plugin: Could not find the Qt platform plugin "wayland" in ""
+[metrics_publisher_node-11] [INFO] [1763301581.844161498] [agent_2.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[metrics_publisher_node-14] [INFO] [1763301581.877481412] [agent_3.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[metrics_publisher_node-17] [INFO] [1763301581.899581515] [agent_4.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[agent_controller_node-18] [INFO] [1763301581.914479614] [agent_5.agent_controller]: Agent controller node initialised: type=pd, dt=0.005000 s, PID[Kp=3.500, Ki=0.000, Kd=3.610], mix[k_pid=1.00, k_fuzzy=1.00]
+[agent_controller_node-12] [INFO] [1763301581.923478685] [agent_3.agent_controller]: Agent controller node initialised: type=pd, dt=0.005000 s, PID[Kp=3.500, Ki=0.000, Kd=3.610], mix[k_pid=1.00, k_fuzzy=1.00]
+[metrics_publisher_node-20] [INFO] [1763301581.935744625] [agent_5.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[path_visualizer_node-22] [INFO] [1763301581.944360254] [agent_6.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[formation_coordinator_node-31] [INFO] [1763301582.002371286] [formation_1.formation_coordinator_group1]: Formation coordinator online: shape=triangle spacing=3.00 m, rate=10.0 Hz
+[path_visualizer_node-19] [INFO] [1763301582.013012442] [agent_5.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[metrics_publisher_node-26] [INFO] [1763301582.042211655] [agent_7.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[agent_controller_node-15] [INFO] [1763301582.050641591] [agent_4.agent_controller]: Agent controller node initialised: type=pd, dt=0.005000 s, PID[Kp=3.500, Ki=0.000, Kd=3.610], mix[k_pid=1.00, k_fuzzy=1.00]
+[formation_coordinator_node-30] [INFO] [1763301582.053238139] [formation_0.formation_coordinator_group0]: Formation coordinator online: shape=triangle spacing=3.00 m, rate=10.0 Hz
+[rviz2-33] /opt/ros/humble/lib/rviz2/rviz2: symbol lookup error: /snap/core20/current/lib/x86_64-linux-gnu/libpthread.so.0: undefined symbol: __libc_pthread_init, version GLIBC_PRIVATE
+[ERROR] [rviz2-33]: process has died [pid 52910, exit code 127, cmd '/opt/ros/humble/lib/rviz2/rviz2 -d /home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/rviz/formation_demo.rviz --ros-args -r __node:=rviz2 --params-file /tmp/launch_params_g00w_9xy'].
+[agent_controller_node-27] [INFO] [1763301582.094127557] [agent_8.agent_controller]: Agent controller node initialised: type=pid, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=1.00]
+[path_visualizer_node-16] [INFO] [1763301582.245891670] [agent_4.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[metrics_publisher_node-29] [INFO] [1763301582.302075966] [agent_8.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[formation_coordinator_node-32] [INFO] [1763301582.335259942] [formation_2.formation_coordinator_group2]: Formation coordinator online: shape=triangle spacing=3.00 m, rate=10.0 Hz
+[agent_controller_node-21] [INFO] [1763301582.354167385] [agent_6.agent_controller]: Agent controller node initialised: type=pid, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=1.00]
+[agent_controller_node-24] [INFO] [1763301582.357633773] [agent_7.agent_controller]: Agent controller node initialised: type=pid, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=1.00]
+[path_visualizer_node-28] [INFO] [1763301582.426523165] [agent_8.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[path_visualizer_node-25] [INFO] [1763301582.434816204] [agent_7.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[metrics_publisher_node-23] [INFO] [1763301582.576811403] [agent_6.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[gzserver-1] [INFO] [1763301584.213084698] [agent_0.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_0, mass: 1.50 kg, target_altitude: 1.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763301584.281873166] [agent_0.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1763301584.313691003] [agent_1.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_1, mass: 1.50 kg, target_altitude: 1.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763301584.327857501] [agent_1.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1763301584.362989644] [agent_2.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_2, mass: 1.50 kg, target_altitude: 1.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763301584.378554871] [agent_2.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1763301584.417049822] [agent_3.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_3, mass: 1.50 kg, target_altitude: 4.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763301584.433014269] [agent_3.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1763301584.469399616] [agent_4.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_4, mass: 1.50 kg, target_altitude: 4.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763301584.485225167] [agent_4.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1763301584.525448229] [agent_5.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_5, mass: 1.50 kg, target_altitude: 4.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763301584.541324109] [agent_5.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1763301584.582012954] [agent_6.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_6, mass: 1.50 kg, target_altitude: 7.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763301584.599230422] [agent_6.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1763301584.630726422] [agent_7.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_7, mass: 1.50 kg, target_altitude: 7.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763301584.637606943] [agent_7.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1763301584.651965528] [agent_8.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_8, mass: 1.50 kg, target_altitude: 7.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763301584.656356219] [agent_8.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[metrics_publisher_node-8] [INFO] [1763301590.224455755] [agent_1.metrics_publisher]: Metrics: error=3.015m, RMSE=2.961m, IAE=(0.37,0.16), settling_time=0.10s, settled=NO
+[metrics_publisher_node-23] [INFO] [1763301590.376985682] [agent_6.metrics_publisher]: Metrics: error=2.419m, RMSE=2.428m, IAE=(0.00,0.03), settling_time=0.00s, settled=NO
+[metrics_publisher_node-29] [INFO] [1763301592.502306508] [agent_8.metrics_publisher]: Metrics: error=1.618m, RMSE=1.620m, IAE=(0.04,0.01), settling_time=0.00s, settled=NO
+[metrics_publisher_node-5] [INFO] [1763301592.695169324] [agent_0.metrics_publisher]: Metrics: error=7.782m, RMSE=7.836m, IAE=(0.18,0.00), settling_time=0.00s, settled=NO
+[metrics_publisher_node-14] [INFO] [1763301592.777861512] [agent_3.metrics_publisher]: Metrics: error=1.251m, RMSE=1.289m, IAE=(0.15,0.10), settling_time=0.10s, settled=NO
+[metrics_publisher_node-17] [INFO] [1763301592.799917577] [agent_4.metrics_publisher]: Metrics: error=0.445m, RMSE=0.473m, IAE=(0.02,0.07), settling_time=0.10s, settled=NO
+[metrics_publisher_node-20] [INFO] [1763301592.836289412] [agent_5.metrics_publisher]: Metrics: error=0.710m, RMSE=0.726m, IAE=(0.08,0.02), settling_time=0.10s, settled=NO
+[metrics_publisher_node-26] [INFO] [1763301592.842544524] [agent_7.metrics_publisher]: Metrics: error=0.096m, RMSE=0.099m, IAE=(0.01,0.01), settling_time=0.10s, settled=NO
+[metrics_publisher_node-11] [INFO] [1763301593.344605924] [agent_2.metrics_publisher]: Metrics: error=0.101m, RMSE=0.247m, IAE=(0.02,0.01), settling_time=0.10s, settled=NO
+[metrics_publisher_node-8] [INFO] [1763301595.224660547] [agent_1.metrics_publisher]: Metrics: error=1.316m, RMSE=1.292m, IAE=(0.17,0.03), settling_time=0.10s, settled=NO
+[metrics_publisher_node-23] [INFO] [1763301595.377173849] [agent_6.metrics_publisher]: Metrics: error=1.063m, RMSE=1.061m, IAE=(0.01,0.00), settling_time=0.00s, settled=NO
+[metrics_publisher_node-29] [INFO] [1763301597.502400821] [agent_8.metrics_publisher]: Metrics: error=1.149m, RMSE=1.233m, IAE=(0.26,0.22), settling_time=0.20s, settled=NO
+[metrics_publisher_node-5] [INFO] [1763301597.695180548] [agent_0.metrics_publisher]: Metrics: error=2.214m, RMSE=2.204m, IAE=(0.01,0.05), settling_time=0.00s, settled=NO
+[metrics_publisher_node-14] [INFO] [1763301597.777735564] [agent_3.metrics_publisher]: Metrics: error=0.662m, RMSE=0.655m, IAE=(0.01,0.02), settling_time=0.00s, settled=NO
+[metrics_publisher_node-17] [INFO] [1763301597.799931900] [agent_4.metrics_publisher]: Metrics: error=0.604m, RMSE=0.563m, IAE=(0.02,0.00), settling_time=0.00s, settled=NO
+[metrics_publisher_node-20] [INFO] [1763301597.836106819] [agent_5.metrics_publisher]: Metrics: error=0.308m, RMSE=0.308m, IAE=(0.00,0.00), settling_time=0.00s, settled=NO
+[metrics_publisher_node-26] [INFO] [1763301597.842485436] [agent_7.metrics_publisher]: Metrics: error=1.234m, RMSE=1.299m, IAE=(0.84,0.41), settling_time=0.50s, settled=NO
+[metrics_publisher_node-11] [INFO] [1763301599.044402926] [agent_2.metrics_publisher]: Metrics: error=1.396m, RMSE=1.508m, IAE=(0.10,0.21), settling_time=0.10s, settled=NO
+[metrics_publisher_node-8] [INFO] [1763301600.224938630] [agent_1.metrics_publisher]: Metrics: error=3.016m, RMSE=2.959m, IAE=(0.22,0.34), settling_time=0.10s, settled=NO
+[metrics_publisher_node-23] [INFO] [1763301600.377376695] [agent_6.metrics_publisher]: Metrics: error=0.501m, RMSE=1.624m, IAE=(4.35,4.07), settling_time=2.90s, settled=NO
+[metrics_publisher_node-29] [INFO] [1763301602.502662131] [agent_8.metrics_publisher]: Metrics: error=1.188m, RMSE=1.059m, IAE=(6.07,5.12), settling_time=5.00s, settled=NO
+[metrics_publisher_node-5] [INFO] [1763301602.695152974] [agent_0.metrics_publisher]: Metrics: error=3.032m, RMSE=3.048m, IAE=(0.06,0.03), settling_time=0.00s, settled=NO
+[metrics_publisher_node-14] [INFO] [1763301602.777794812] [agent_3.metrics_publisher]: Metrics: error=1.009m, RMSE=1.052m, IAE=(0.10,0.10), settling_time=0.10s, settled=NO
+[metrics_publisher_node-17] [INFO] [1763301602.799926274] [agent_4.metrics_publisher]: Metrics: error=0.142m, RMSE=0.212m, IAE=(0.04,0.00), settling_time=0.10s, settled=NO
+[metrics_publisher_node-20] [INFO] [1763301602.836164341] [agent_5.metrics_publisher]: Metrics: error=0.521m, RMSE=0.535m, IAE=(0.01,0.00), settling_time=0.00s, settled=NO
+[metrics_publisher_node-26] [INFO] [1763301602.843078908] [agent_7.metrics_publisher]: Metrics: error=0.954m, RMSE=0.980m, IAE=(4.91,4.42), settling_time=5.40s, settled=NO
+[metrics_publisher_node-11] [INFO] [1763301605.044886331] [agent_2.metrics_publisher]: Metrics: error=0.757m, RMSE=0.833m, IAE=(0.01,0.11), settling_time=0.10s, settled=NO
+[metrics_publisher_node-8] [INFO] [1763301605.225050817] [agent_1.metrics_publisher]: Metrics: error=0.580m, RMSE=0.591m, IAE=(0.01,0.02), settling_time=0.00s, settled=NO
+[metrics_publisher_node-23] [INFO] [1763301605.378420523] [agent_6.metrics_publisher]: Metrics: error=0.847m, RMSE=1.163m, IAE=(9.49,9.28), settling_time=7.80s, settled=NO
+[metrics_publisher_node-29] [INFO] [1763301607.502485439] [agent_8.metrics_publisher]: Metrics: error=1.398m, RMSE=1.128m, IAE=(11.36,10.19), settling_time=9.80s, settled=NO
+[metrics_publisher_node-5] [INFO] [1763301607.695546436] [agent_0.metrics_publisher]: Metrics: error=2.447m, RMSE=2.403m, IAE=(0.02,0.05), settling_time=0.00s, settled=NO
+[metrics_publisher_node-14] [INFO] [1763301607.779506521] [agent_3.metrics_publisher]: Metrics: error=0.367m, RMSE=0.503m, IAE=(1.94,1.79), settling_time=3.90s, settled=NO
+[metrics_publisher_node-17] [INFO] [1763301607.800544739] [agent_4.metrics_publisher]: Metrics: error=0.600m, RMSE=0.352m, IAE=(2.50,1.36), settling_time=3.90s, settled=NO
+[metrics_publisher_node-20] [INFO] [1763301607.837183020] [agent_5.metrics_publisher]: Metrics: error=0.494m, RMSE=0.396m, IAE=(2.03,1.73), settling_time=3.90s, settled=NO
+[metrics_publisher_node-26] [INFO] [1763301607.843707843] [agent_7.metrics_publisher]: Metrics: error=0.948m, RMSE=0.946m, IAE=(8.70,8.64), settling_time=10.10s, settled=NO
+[metrics_publisher_node-8] [INFO] [1763301610.224928156] [agent_1.metrics_publisher]: Metrics: error=0.616m, RMSE=0.570m, IAE=(0.03,0.07), settling_time=0.10s, settled=NO
+[metrics_publisher_node-23] [INFO] [1763301610.378080522] [agent_6.metrics_publisher]: Metrics: error=0.606m, RMSE=1.177m, IAE=(15.06,14.52), settling_time=12.50s, settled=NO
+[metrics_publisher_node-11] [INFO] [1763301610.745114768] [agent_2.metrics_publisher]: Metrics: error=1.372m, RMSE=1.295m, IAE=(0.10,0.16), settling_time=0.10s, settled=NO
+[metrics_publisher_node-29] [INFO] [1763301612.502799005] [agent_8.metrics_publisher]: Metrics: error=1.824m, RMSE=1.244m, IAE=(16.85,15.24), settling_time=14.60s, settled=NO
+[metrics_publisher_node-5] [INFO] [1763301612.695338976] [agent_0.metrics_publisher]: Metrics: error=1.462m, RMSE=1.482m, IAE=(0.03,0.02), settling_time=0.00s, settled=NO
+[metrics_publisher_node-14] [INFO] [1763301612.778263544] [agent_3.metrics_publisher]: Metrics: error=0.494m, RMSE=0.315m, IAE=(3.67,3.55), settling_time=8.70s, settled=NO
+[metrics_publisher_node-17] [INFO] [1763301612.800386531] [agent_4.metrics_publisher]: Metrics: error=0.559m, RMSE=0.386m, IAE=(4.47,2.25), settling_time=8.70s, settled=NO
+[metrics_publisher_node-20] [INFO] [1763301612.836483997] [agent_5.metrics_publisher]: Metrics: error=0.506m, RMSE=0.307m, IAE=(3.82,2.76), settling_time=8.80s, settled=NO
+[metrics_publisher_node-26] [INFO] [1763301612.842934716] [agent_7.metrics_publisher]: Metrics: error=0.862m, RMSE=0.992m, IAE=(12.97,12.82), settling_time=15.00s, settled=NO
+[metrics_publisher_node-8] [INFO] [1763301615.225429725] [agent_1.metrics_publisher]: Metrics: error=3.511m, RMSE=3.533m, IAE=(0.10,0.08), settling_time=0.00s, settled=NO
+[metrics_publisher_node-23] [INFO] [1763301615.378281826] [agent_6.metrics_publisher]: Metrics: error=0.942m, RMSE=0.921m, IAE=(20.65,19.94), settling_time=17.50s, settled=NO
+[metrics_publisher_node-11] [INFO] [1763301615.745396973] [agent_2.metrics_publisher]: Metrics: error=3.495m, RMSE=3.593m, IAE=(0.48,0.20), settling_time=0.10s, settled=NO
+[metrics_publisher_node-29] [INFO] [1763301617.502916014] [agent_8.metrics_publisher]: Metrics: error=1.273m, RMSE=1.118m, IAE=(22.07,20.03), settling_time=19.60s, settled=NO
+[metrics_publisher_node-5] [INFO] [1763301617.695404678] [agent_0.metrics_publisher]: Metrics: error=2.356m, RMSE=2.362m, IAE=(0.28,0.05), settling_time=0.10s, settled=NO
+[metrics_publisher_node-14] [INFO] [1763301617.778490858] [agent_3.metrics_publisher]: Metrics: error=0.146m, RMSE=0.404m, IAE=(5.77,4.80), settling_time=13.60s, settled=NO
+[metrics_publisher_node-17] [INFO] [1763301617.800685780] [agent_4.metrics_publisher]: Metrics: error=0.275m, RMSE=0.303m, IAE=(6.38,3.10), settling_time=13.70s, settled=NO
+[metrics_publisher_node-20] [INFO] [1763301617.836772553] [agent_5.metrics_publisher]: Metrics: error=0.134m, RMSE=0.369m, IAE=(5.83,3.54), settling_time=13.70s, settled=NO
+[metrics_publisher_node-26] [INFO] [1763301617.843306334] [agent_7.metrics_publisher]: Metrics: error=0.774m, RMSE=0.813m, IAE=(17.18,16.73), settling_time=19.90s, settled=NO
+[metrics_publisher_node-8] [INFO] [1763301620.224899145] [agent_1.metrics_publisher]: Metrics: error=1.794m, RMSE=1.860m, IAE=(0.05,0.04), settling_time=0.00s, settled=NO
+[metrics_publisher_node-23] [INFO] [1763301620.377665860] [agent_6.metrics_publisher]: Metrics: error=0.888m, RMSE=1.080m, IAE=(25.41,25.53), settling_time=22.40s, settled=NO
+[metrics_publisher_node-11] [INFO] [1763301620.844755145] [agent_2.metrics_publisher]: Metrics: error=5.254m, RMSE=4.996m, IAE=(0.02,0.23), settling_time=0.00s, settled=NO
+[metrics_publisher_node-29] [INFO] [1763301622.502920222] [agent_8.metrics_publisher]: Metrics: error=0.944m, RMSE=1.049m, IAE=(26.39,24.75), settling_time=24.50s, settled=NO
+[metrics_publisher_node-5] [INFO] [1763301622.695388508] [agent_0.metrics_publisher]: Metrics: error=8.612m, RMSE=8.586m, IAE=(0.99,0.30), settling_time=0.10s, settled=NO
+[metrics_publisher_node-14] [INFO] [1763301622.778446198] [agent_3.metrics_publisher]: Metrics: error=0.045m, RMSE=0.365m, IAE=(7.06,6.53), settling_time=18.50s, settled=NO
+[metrics_publisher_node-17] [INFO] [1763301622.800748107] [agent_4.metrics_publisher]: Metrics: error=0.227m, RMSE=0.251m, IAE=(7.89,4.09), settling_time=18.60s, settled=NO
+[metrics_publisher_node-20] [INFO] [1763301622.837232245] [agent_5.metrics_publisher]: Metrics: error=0.329m, RMSE=0.245m, IAE=(7.11,4.89), settling_time=18.60s, settled=NO
+[metrics_publisher_node-26] [INFO] [1763301622.843070591] [agent_7.metrics_publisher]: Metrics: error=0.801m, RMSE=0.898m, IAE=(21.19,21.14), settling_time=24.80s, settled=NO
+[metrics_publisher_node-8] [INFO] [1763301625.224927378] [agent_1.metrics_publisher]: Metrics: error=2.890m, RMSE=2.918m, IAE=(0.26,0.30), settling_time=0.10s, settled=NO
+[metrics_publisher_node-23] [INFO] [1763301625.377804997] [agent_6.metrics_publisher]: Metrics: error=0.841m, RMSE=1.072m, IAE=(29.95,30.41), settling_time=27.30s, settled=NO
+[metrics_publisher_node-11] [INFO] [1763301625.945137993] [agent_2.metrics_publisher]: Metrics: error=4.819m, RMSE=4.846m, IAE=(0.18,0.10), settling_time=0.00s, settled=NO
+[metrics_publisher_node-29] [INFO] [1763301627.503154339] [agent_8.metrics_publisher]: Metrics: error=0.892m, RMSE=0.932m, IAE=(30.67,29.10), settling_time=29.30s, settled=NO
+[metrics_publisher_node-5] [INFO] [1763301627.695418896] [agent_0.metrics_publisher]: Metrics: error=3.955m, RMSE=3.851m, IAE=(0.09,0.00), settling_time=0.00s, settled=NO
+[metrics_publisher_node-14] [INFO] [1763301627.778425552] [agent_3.metrics_publisher]: Metrics: error=0.147m, RMSE=0.271m, IAE=(8.30,7.41), settling_time=23.40s, settled=NO
+[metrics_publisher_node-17] [INFO] [1763301627.800602947] [agent_4.metrics_publisher]: Metrics: error=0.170m, RMSE=0.249m, IAE=(9.03,4.70), settling_time=23.40s, settled=NO
+[metrics_publisher_node-20] [INFO] [1763301627.836586595] [agent_5.metrics_publisher]: Metrics: error=0.193m, RMSE=0.286m, IAE=(8.36,5.73), settling_time=23.50s, settled=NO
+[metrics_publisher_node-26] [INFO] [1763301627.843036774] [agent_7.metrics_publisher]: Metrics: error=0.594m, RMSE=0.913m, IAE=(24.91,25.48), settling_time=29.70s, settled=NO
+[metrics_publisher_node-8] [INFO] [1763301630.225273101] [agent_1.metrics_publisher]: Metrics: error=2.739m, RMSE=2.769m, IAE=(0.00,0.11), settling_time=0.00s, settled=NO
+[metrics_publisher_node-23] [INFO] [1763301630.377676406] [agent_6.metrics_publisher]: Metrics: error=0.900m, RMSE=0.889m, IAE=(34.19,35.15), settling_time=32.20s, settled=NO
+[metrics_publisher_node-11] [INFO] [1763301631.045303614] [agent_2.metrics_publisher]: Metrics: error=5.757m, RMSE=5.656m, IAE=(0.20,0.17), settling_time=0.00s, settled=NO
+[metrics_publisher_node-29] [INFO] [1763301632.502903693] [agent_8.metrics_publisher]: Metrics: error=0.895m, RMSE=0.978m, IAE=(35.08,33.79), settling_time=34.30s, settled=NO
+[metrics_publisher_node-5] [INFO] [1763301632.695483755] [agent_0.metrics_publisher]: Metrics: error=4.859m, RMSE=4.918m, IAE=(0.11,0.02), settling_time=0.00s, settled=NO
+[metrics_publisher_node-14] [INFO] [1763301632.778452593] [agent_3.metrics_publisher]: Metrics: error=0.070m, RMSE=0.131m, IAE=(9.06,8.28), settling_time=28.40s, settled=NO
+[metrics_publisher_node-17] [INFO] [1763301632.800429169] [agent_4.metrics_publisher]: Metrics: error=0.017m, RMSE=0.131m, IAE=(9.82,5.66), settling_time=28.10s, settled=NO
+[metrics_publisher_node-20] [INFO] [1763301632.837146490] [agent_5.metrics_publisher]: Metrics: error=0.055m, RMSE=0.093m, IAE=(9.11,6.47), settling_time=28.40s, settled=NO
+[metrics_publisher_node-26] [INFO] [1763301632.843379960] [agent_7.metrics_publisher]: Metrics: error=0.430m, RMSE=0.869m, IAE=(28.49,29.85), settling_time=34.60s, settled=NO
+[metrics_publisher_node-8] [INFO] [1763301635.225038823] [agent_1.metrics_publisher]: Metrics: error=2.476m, RMSE=2.596m, IAE=(0.17,0.32), settling_time=0.10s, settled=NO
+[metrics_publisher_node-23] [INFO] [1763301635.377800052] [agent_6.metrics_publisher]: Metrics: error=1.284m, RMSE=0.868m, IAE=(38.44,39.68), settling_time=37.10s, settled=NO
+[metrics_publisher_node-11] [INFO] [1763301636.044936755] [agent_2.metrics_publisher]: Metrics: error=1.371m, RMSE=1.782m, IAE=(0.16,0.24), settling_time=0.10s, settled=NO
+[metrics_publisher_node-29] [INFO] [1763301637.502801464] [agent_8.metrics_publisher]: Metrics: error=0.457m, RMSE=1.018m, IAE=(39.33,38.85), settling_time=39.20s, settled=NO
+[metrics_publisher_node-5] [INFO] [1763301637.695828614] [agent_0.metrics_publisher]: Metrics: error=7.757m, RMSE=7.701m, IAE=(0.17,0.02), settling_time=0.00s, settled=NO
+[metrics_publisher_node-14] [INFO] [1763301637.778956914] [agent_3.metrics_publisher]: Metrics: error=0.392m, RMSE=0.355m, IAE=(10.53,9.40), settling_time=33.30s, settled=NO
+[metrics_publisher_node-17] [INFO] [1763301637.800786585] [agent_4.metrics_publisher]: Metrics: error=0.325m, RMSE=0.348m, IAE=(11.42,6.47), settling_time=33.30s, settled=NO
+[metrics_publisher_node-20] [INFO] [1763301637.837254616] [agent_5.metrics_publisher]: Metrics: error=0.421m, RMSE=0.316m, IAE=(10.65,7.45), settling_time=33.40s, settled=NO
+[metrics_publisher_node-26] [INFO] [1763301637.843467301] [agent_7.metrics_publisher]: Metrics: error=0.666m, RMSE=0.807m, IAE=(32.38,34.36), settling_time=39.60s, settled=NO
+[metrics_publisher_node-8] [INFO] [1763301640.225319078] [agent_1.metrics_publisher]: Metrics: error=4.011m, RMSE=4.014m, IAE=(0.10,0.11), settling_time=0.00s, settled=NO
+[metrics_publisher_node-23] [INFO] [1763301640.378189656] [agent_6.metrics_publisher]: Metrics: error=1.170m, RMSE=0.884m, IAE=(42.54,44.15), settling_time=42.10s, settled=NO
+[metrics_publisher_node-11] [INFO] [1763301641.145749817] [agent_2.metrics_publisher]: Metrics: error=2.576m, RMSE=2.504m, IAE=(0.36,0.06), settling_time=0.10s, settled=NO
+[metrics_publisher_node-29] [INFO] [1763301642.503782259] [agent_8.metrics_publisher]: Metrics: error=0.354m, RMSE=1.019m, IAE=(43.46,43.85), settling_time=44.10s, settled=NO
+[metrics_publisher_node-5] [INFO] [1763301642.695633417] [agent_0.metrics_publisher]: Metrics: error=1.086m, RMSE=1.137m, IAE=(0.02,0.01), settling_time=0.00s, settled=NO
+[metrics_publisher_node-14] [INFO] [1763301642.778802567] [agent_3.metrics_publisher]: Metrics: error=0.033m, RMSE=0.117m, IAE=(11.67,10.13), settling_time=37.50s, settled=YES
+[metrics_publisher_node-17] [INFO] [1763301642.801068559] [agent_4.metrics_publisher]: Metrics: error=0.107m, RMSE=0.085m, IAE=(12.49,7.14), settling_time=38.20s, settled=NO
+[metrics_publisher_node-20] [INFO] [1763301642.836946563] [agent_5.metrics_publisher]: Metrics: error=0.130m, RMSE=0.123m, IAE=(11.73,8.24), settling_time=38.20s, settled=NO
+[metrics_publisher_node-26] [INFO] [1763301642.843607452] [agent_7.metrics_publisher]: Metrics: error=0.839m, RMSE=0.870m, IAE=(36.21,38.90), settling_time=44.40s, settled=NO
+[metrics_publisher_node-8] [INFO] [1763301645.226148270] [agent_1.metrics_publisher]: Metrics: error=2.306m, RMSE=2.160m, IAE=(0.03,0.29), settling_time=0.10s, settled=NO
+[metrics_publisher_node-23] [INFO] [1763301645.378009298] [agent_6.metrics_publisher]: Metrics: error=0.958m, RMSE=0.997m, IAE=(46.33,48.44), settling_time=46.80s, settled=NO
+[metrics_publisher_node-11] [INFO] [1763301646.745843583] [agent_2.metrics_publisher]: Metrics: error=2.407m, RMSE=2.419m, IAE=(0.27,0.22), settling_time=0.10s, settled=NO
+[metrics_publisher_node-29] [INFO] [1763301647.503752338] [agent_8.metrics_publisher]: Metrics: error=0.512m, RMSE=1.104m, IAE=(48.17,49.32), settling_time=48.90s, settled=NO
+[metrics_publisher_node-5] [INFO] [1763301647.695890978] [agent_0.metrics_publisher]: Metrics: error=3.372m, RMSE=3.360m, IAE=(0.06,0.02), settling_time=0.00s, settled=NO
+[metrics_publisher_node-14] [INFO] [1763301647.778367026] [agent_3.metrics_publisher]: Metrics: error=0.266m, RMSE=0.236m, IAE=(12.65,11.10), settling_time=43.00s, settled=NO
+[metrics_publisher_node-17] [INFO] [1763301647.800439208] [agent_4.metrics_publisher]: Metrics: error=0.257m, RMSE=0.254m, IAE=(13.53,8.16), settling_time=43.00s, settled=NO
+[metrics_publisher_node-20] [INFO] [1763301647.836752076] [agent_5.metrics_publisher]: Metrics: error=0.250m, RMSE=0.239m, IAE=(12.71,9.20), settling_time=43.00s, settled=NO
+[metrics_publisher_node-26] [INFO] [1763301647.843254725] [agent_7.metrics_publisher]: Metrics: error=0.644m, RMSE=0.896m, IAE=(40.16,43.93), settling_time=49.20s, settled=NO
+[metrics_publisher_node-8] [INFO] [1763301650.226234909] [agent_1.metrics_publisher]: Metrics: error=4.143m, RMSE=4.182m, IAE=(0.01,0.10), settling_time=0.00s, settled=NO
+[metrics_publisher_node-23] [INFO] [1763301650.378073959] [agent_6.metrics_publisher]: Metrics: error=1.057m, RMSE=0.971m, IAE=(49.52,52.58), settling_time=50.90s, settled=NO
+[metrics_publisher_node-11] [INFO] [1763301651.946647920] [agent_2.metrics_publisher]: Metrics: error=0.504m, RMSE=0.603m, IAE=(0.00,0.02), settling_time=0.00s, settled=NO
+[metrics_publisher_node-29] [INFO] [1763301652.503189065] [agent_8.metrics_publisher]: Metrics: error=2.185m, RMSE=2.123m, IAE=(52.52,55.15), settling_time=52.20s, settled=NO
+[metrics_publisher_node-5] [INFO] [1763301652.696338605] [agent_0.metrics_publisher]: Metrics: error=1.271m, RMSE=1.301m, IAE=(0.02,0.01), settling_time=0.00s, settled=NO
+[metrics_publisher_node-14] [INFO] [1763301652.778670451] [agent_3.metrics_publisher]: Metrics: error=0.238m, RMSE=0.214m, IAE=(13.35,11.72), settling_time=46.20s, settled=NO
+[metrics_publisher_node-17] [INFO] [1763301652.800738018] [agent_4.metrics_publisher]: Metrics: error=0.321m, RMSE=0.211m, IAE=(14.22,8.62), settling_time=46.20s, settled=NO
+[metrics_publisher_node-20] [INFO] [1763301652.836821135] [agent_5.metrics_publisher]: Metrics: error=0.366m, RMSE=0.247m, IAE=(13.39,9.84), settling_time=46.30s, settled=NO
+[metrics_publisher_node-26] [INFO] [1763301652.843302051] [agent_7.metrics_publisher]: Metrics: error=1.549m, RMSE=1.848m, IAE=(44.97,48.86), settling_time=52.50s, settled=NO
+[metrics_publisher_node-8] [INFO] [1763301655.226009034] [agent_1.metrics_publisher]: Metrics: error=4.804m, RMSE=4.706m, IAE=(0.08,0.12), settling_time=0.00s, settled=NO
+[metrics_publisher_node-23] [INFO] [1763301655.377915578] [agent_6.metrics_publisher]: Metrics: error=5.223m, RMSE=3.781m, IAE=(60.23,60.57), settling_time=54.40s, settled=NO

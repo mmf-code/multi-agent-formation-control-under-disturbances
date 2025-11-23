@@ -1,0 +1,9 @@
+CHECKPOINT SUMMARY - Phase 3
+============================================================
+
+Time: 180s
+Phase: Phase 3
+
+agent_0: 1192 samples
+agent_3: 1200 samples
+agent_6: 1200 samples

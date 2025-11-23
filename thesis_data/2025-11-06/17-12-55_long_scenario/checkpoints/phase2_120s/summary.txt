@@ -1,0 +1,9 @@
+CHECKPOINT SUMMARY - Phase 2
+============================================================
+
+Time: 120s
+Phase: Phase 2
+
+agent_0: 600 samples
+agent_3: 601 samples
+agent_6: 591 samples

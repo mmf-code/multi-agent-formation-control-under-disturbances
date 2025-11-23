@@ -1,0 +1,249 @@
+[INFO] [launch]: All log files can be found below /home/mmf/.ros/log/2025-11-06-19-50-58-123832-mmf-ABRA-A5-V15-2-139349
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [gzserver-1]: process started with pid [139350]
+[INFO] [gzclient-2]: process started with pid [139352]
+[INFO] [agent_controller_node-3]: process started with pid [139354]
+[INFO] [path_visualizer_node-4]: process started with pid [139356]
+[INFO] [metrics_publisher_node-5]: process started with pid [139358]
+[INFO] [agent_controller_node-6]: process started with pid [139360]
+[INFO] [path_visualizer_node-7]: process started with pid [139362]
+[INFO] [metrics_publisher_node-8]: process started with pid [139364]
+[INFO] [agent_controller_node-9]: process started with pid [139366]
+[INFO] [path_visualizer_node-10]: process started with pid [139368]
+[INFO] [metrics_publisher_node-11]: process started with pid [139370]
+[INFO] [agent_controller_node-12]: process started with pid [139372]
+[INFO] [path_visualizer_node-13]: process started with pid [139395]
+[INFO] [metrics_publisher_node-14]: process started with pid [139408]
+[INFO] [agent_controller_node-15]: process started with pid [139418]
+[INFO] [path_visualizer_node-16]: process started with pid [139432]
+[INFO] [metrics_publisher_node-17]: process started with pid [139434]
+[INFO] [agent_controller_node-18]: process started with pid [139441]
+[INFO] [path_visualizer_node-19]: process started with pid [139452]
+[INFO] [metrics_publisher_node-20]: process started with pid [139459]
+[INFO] [agent_controller_node-21]: process started with pid [139472]
+[INFO] [path_visualizer_node-22]: process started with pid [139478]
+[INFO] [metrics_publisher_node-23]: process started with pid [139482]
+[INFO] [agent_controller_node-24]: process started with pid [139485]
+[INFO] [path_visualizer_node-25]: process started with pid [139493]
+[INFO] [metrics_publisher_node-26]: process started with pid [139503]
+[INFO] [agent_controller_node-27]: process started with pid [139513]
+[INFO] [path_visualizer_node-28]: process started with pid [139526]
+[INFO] [metrics_publisher_node-29]: process started with pid [139534]
+[INFO] [formation_coordinator_node-30]: process started with pid [139542]
+[INFO] [formation_coordinator_node-31]: process started with pid [139562]
+[INFO] [formation_coordinator_node-32]: process started with pid [139570]
+[INFO] [rviz2-33]: process started with pid [139575]
+[path_visualizer_node-7] [37;1m2025-11-06 19:50:58.436 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7431: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-8] [37;1m2025-11-06 19:50:58.291 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7431: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-9] [37;1m2025-11-06 19:50:58.433 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7431: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-10] [37;1m2025-11-06 19:50:58.324 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7431: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-14] [37;1m2025-11-06 19:50:58.434 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7431: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-17] [37;1m2025-11-06 19:50:58.412 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7431: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-3] [INFO] [1762447858.409450649] [agent_0.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[agent_controller_node-3] [INFO] [1762447858.438517237] [agent_0.agent_controller]: Agent controller node initialised: type=pid_fuzzy, dt=0.005000 s, PID[Kp=5.000, Ki=2.500, Kd=5.000], mix[k_pid=1.00, k_fuzzy=0.70]
+[metrics_publisher_node-8] [INFO] [1762447858.446061768] [agent_1.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[path_visualizer_node-10] [INFO] [1762447858.521890770] [agent_2.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[agent_controller_node-12] [37;1m2025-11-06 19:50:58.523 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-14] [37;1m2025-11-06 19:50:58.526 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[rviz2-33] qt.qpa.plugin: Could not find the Qt platform plugin "wayland" in ""
+[agent_controller_node-9] [INFO] [1762447858.535177311] [agent_2.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[metrics_publisher_node-5] [INFO] [1762447858.537431689] [agent_0.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[path_visualizer_node-4] [INFO] [1762447858.560235563] [agent_0.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[agent_controller_node-9] [INFO] [1762447858.641239747] [agent_2.agent_controller]: Agent controller node initialised: type=pid_fuzzy, dt=0.005000 s, PID[Kp=5.000, Ki=2.500, Kd=5.000], mix[k_pid=1.00, k_fuzzy=0.70]
+[metrics_publisher_node-14] [INFO] [1762447858.643719217] [agent_3.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[rviz2-33] /opt/ros/humble/lib/rviz2/rviz2: symbol lookup error: /snap/core20/current/lib/x86_64-linux-gnu/libpthread.so.0: undefined symbol: __libc_pthread_init, version GLIBC_PRIVATE
+[ERROR] [rviz2-33]: process has died [pid 139575, exit code 127, cmd '/opt/ros/humble/lib/rviz2/rviz2 -d /home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/rviz/formation_demo.rviz --ros-args -r __node:=rviz2 --params-file /tmp/launch_params_ssewsfg5'].
+[metrics_publisher_node-11] [37;1m2025-11-06 19:51:00.491 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-15] [37;1m2025-11-06 19:51:00.495 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-6] [37;1m2025-11-06 19:51:00.499 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-11] [37;1m2025-11-06 19:51:00.499 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7465: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-13] [37;1m2025-11-06 19:51:00.500 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-15] [37;1m2025-11-06 19:51:00.503 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7465: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-28] [37;1m2025-11-06 19:51:00.503 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-16] [37;1m2025-11-06 19:51:00.505 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-26] [37;1m2025-11-06 19:51:00.508 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-6] [37;1m2025-11-06 19:51:00.510 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7465: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-22] [37;1m2025-11-06 19:51:00.511 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-13] [37;1m2025-11-06 19:51:00.512 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7465: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-21] [37;1m2025-11-06 19:51:00.513 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-26] [37;1m2025-11-06 19:51:00.525 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7465: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-28] [37;1m2025-11-06 19:51:00.520 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7465: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-16] [37;1m2025-11-06 19:51:00.526 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7465: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-21] [37;1m2025-11-06 19:51:00.541 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7465: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-28] [37;1m2025-11-06 19:51:00.564 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-22] [37;1m2025-11-06 19:51:00.576 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7465: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-29] [37;1m2025-11-06 19:51:00.594 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7431: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[formation_coordinator_node-31] [37;1m2025-11-06 19:51:00.595 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7431: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-16] [37;1m2025-11-06 19:51:00.599 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-21] [37;1m2025-11-06 19:51:00.620 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[formation_coordinator_node-32] [37;1m2025-11-06 19:51:00.624 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7431: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-13] [37;1m2025-11-06 19:51:00.626 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-22] [37;1m2025-11-06 19:51:00.643 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-23] [37;1m2025-11-06 19:51:00.641 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7431: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[formation_coordinator_node-31] [37;1m2025-11-06 19:51:00.647 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-29] [37;1m2025-11-06 19:51:00.653 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-29] [37;1m2025-11-06 19:51:00.671 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7465: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-6] [INFO] [1762447860.673551654] [agent_1.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[formation_coordinator_node-31] [37;1m2025-11-06 19:51:00.699 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7461: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[formation_coordinator_node-32] [37;1m2025-11-06 19:51:00.705 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-19] [37;1m2025-11-06 19:51:00.714 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-6] [INFO] [1762447860.717798925] [agent_1.agent_controller]: Agent controller node initialised: type=pid_fuzzy, dt=0.005000 s, PID[Kp=5.000, Ki=2.500, Kd=5.000], mix[k_pid=1.00, k_fuzzy=0.70]
+[metrics_publisher_node-29] [37;1m2025-11-06 19:51:00.721 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-23] [37;1m2025-11-06 19:51:00.778 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-12] [INFO] [1762447860.787902859] [agent_3.agent_controller]: Agent controller node initialised: type=pd, dt=0.005000 s, PID[Kp=5.000, Ki=0.000, Kd=5.000], mix[k_pid=1.00, k_fuzzy=1.00]
+[formation_coordinator_node-32] [37;1m2025-11-06 19:51:00.800 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-16] [INFO] [1762447860.808487902] [agent_4.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[path_visualizer_node-28] [INFO] [1762447860.814310962] [agent_8.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[path_visualizer_node-13] [INFO] [1762447860.820981706] [agent_3.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[formation_coordinator_node-31] [37;1m2025-11-06 19:51:00.823 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-11] [INFO] [1762447860.830832952] [agent_2.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[formation_coordinator_node-32] [37;1m2025-11-06 19:51:00.833 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7503: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-22] [INFO] [1762447860.851758830] [agent_6.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[metrics_publisher_node-29] [INFO] [1762447860.865185862] [agent_8.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[path_visualizer_node-19] [37;1m2025-11-06 19:51:00.866 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[formation_coordinator_node-32] [INFO] [1762447860.914387763] [formation_2.formation_coordinator_group2]: Loaded 5 waypoints for trajectory
+[formation_coordinator_node-32] [INFO] [1762447860.914574982] [formation_2.formation_coordinator_group2]:   WP[0]: t=0.0-0.0 s, pos=(-15.00, 5.00, 7.00)
+[formation_coordinator_node-32] [INFO] [1762447860.914615302] [formation_2.formation_coordinator_group2]:   WP[1]: t=0.0-15.0 s, pos=(-10.00, 2.00, 7.50)
+[formation_coordinator_node-32] [INFO] [1762447860.914636295] [formation_2.formation_coordinator_group2]:   WP[2]: t=15.0-30.0 s, pos=(-5.00, 5.00, 7.00)
+[formation_coordinator_node-32] [INFO] [1762447860.914654311] [formation_2.formation_coordinator_group2]:   WP[3]: t=30.0-45.0 s, pos=(0.00, 2.00, 7.80)
+[formation_coordinator_node-32] [INFO] [1762447860.914678451] [formation_2.formation_coordinator_group2]:   WP[4]: t=45.0-60.0 s, pos=(5.00, 3.50, 7.50)
+[formation_coordinator_node-32] [INFO] [1762447860.930379655] [formation_2.formation_coordinator_group2]: Formation coordinator online: shape=triangle spacing=3.00 m, rate=10.0 Hz
+[agent_controller_node-21] [INFO] [1762447860.960546907] [agent_6.agent_controller]: Agent controller node initialised: type=pid, dt=0.005000 s, PID[Kp=5.000, Ki=2.500, Kd=5.000], mix[k_pid=1.00, k_fuzzy=1.00]
+[metrics_publisher_node-23] [37;1m2025-11-06 19:51:00.972 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-19] [37;1m2025-11-06 19:51:01.011 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7503: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-23] [37;1m2025-11-06 19:51:01.035 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7503: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-15] [INFO] [1762447861.165196008] [agent_4.agent_controller]: Agent controller node initialised: type=pd, dt=0.005000 s, PID[Kp=5.000, Ki=0.000, Kd=5.000], mix[k_pid=1.00, k_fuzzy=1.00]
+[metrics_publisher_node-20] [37;1m2025-11-06 19:51:02.495 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-20] [37;1m2025-11-06 19:51:02.507 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-20] [37;1m2025-11-06 19:51:02.516 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7503: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-18] [37;1m2025-11-06 19:51:02.552 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-27] [37;1m2025-11-06 19:51:02.576 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-18] [37;1m2025-11-06 19:51:02.581 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-25] [37;1m2025-11-06 19:51:02.592 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-27] [37;1m2025-11-06 19:51:02.596 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[formation_coordinator_node-30] [37;1m2025-11-06 19:51:02.601 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-27] [37;1m2025-11-06 19:51:02.602 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7503: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-24] [37;1m2025-11-06 19:51:02.601 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-18] [37;1m2025-11-06 19:51:02.607 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7503: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-20] [INFO] [1762447862.609503755] [agent_5.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[formation_coordinator_node-30] [37;1m2025-11-06 19:51:02.611 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[formation_coordinator_node-30] [37;1m2025-11-06 19:51:02.617 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7503: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-25] [37;1m2025-11-06 19:51:02.620 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-25] [37;1m2025-11-06 19:51:02.628 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7503: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-24] [37;1m2025-11-06 19:51:02.636 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-24] [37;1m2025-11-06 19:51:02.651 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7503: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[agent_controller_node-27] [INFO] [1762447862.745669134] [agent_8.agent_controller]: Agent controller node initialised: type=pid, dt=0.005000 s, PID[Kp=5.000, Ki=2.500, Kd=5.000], mix[k_pid=1.00, k_fuzzy=1.00]
+[path_visualizer_node-25] [INFO] [1762447862.746581762] [agent_7.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[agent_controller_node-18] [INFO] [1762447862.758037870] [agent_5.agent_controller]: Agent controller node initialised: type=pd, dt=0.005000 s, PID[Kp=5.000, Ki=0.000, Kd=5.000], mix[k_pid=1.00, k_fuzzy=1.00]
+[metrics_publisher_node-17] [INFO] [1762447862.767139402] [agent_4.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[formation_coordinator_node-30] [INFO] [1762447862.794772662] [formation_0.formation_coordinator_group0]: Loaded 5 waypoints for trajectory
+[formation_coordinator_node-30] [INFO] [1762447862.794906050] [formation_0.formation_coordinator_group0]:   WP[0]: t=0.0-0.0 s, pos=(-15.00, -5.00, 1.00)
+[formation_coordinator_node-30] [INFO] [1762447862.794942428] [formation_0.formation_coordinator_group0]:   WP[1]: t=0.0-15.0 s, pos=(-10.00, -2.00, 1.50)
+[formation_coordinator_node-30] [INFO] [1762447862.794972019] [formation_0.formation_coordinator_group0]:   WP[2]: t=15.0-30.0 s, pos=(-5.00, -5.00, 1.00)
+[formation_coordinator_node-30] [INFO] [1762447862.794997570] [formation_0.formation_coordinator_group0]:   WP[3]: t=30.0-45.0 s, pos=(0.00, -2.00, 1.80)
+[formation_coordinator_node-30] [INFO] [1762447862.795013762] [formation_0.formation_coordinator_group0]:   WP[4]: t=45.0-60.0 s, pos=(5.00, -3.50, 1.50)
+[agent_controller_node-24] [INFO] [1762447862.881776360] [agent_7.agent_controller]: Agent controller node initialised: type=pid, dt=0.005000 s, PID[Kp=5.000, Ki=2.500, Kd=5.000], mix[k_pid=1.00, k_fuzzy=1.00]
+[formation_coordinator_node-30] [INFO] [1762447862.882528062] [formation_0.formation_coordinator_group0]: Formation coordinator online: shape=triangle spacing=3.00 m, rate=10.0 Hz
+[gzserver-1] [37;1m2025-11-06 19:51:03.046 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7451: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[path_visualizer_node-7] [INFO] [1762447863.089885697] [agent_1.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[gzserver-1] [37;1m2025-11-06 19:51:03.098 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7481: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[gzserver-1] [37;1m2025-11-06 19:51:03.119 [31;1m[[37;1mRTPS_TRANSPORT_SHM[31;1m Error] [37mFailed init_port fastrtps_port7503: open_and_lock_file failed[34;1m -> Function [36mopen_port_internal[m
+[metrics_publisher_node-26] [INFO] [1762447863.141352750] [agent_7.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[path_visualizer_node-19] [INFO] [1762447863.141934089] [agent_5.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[formation_coordinator_node-31] [INFO] [1762447863.201263640] [formation_1.formation_coordinator_group1]: Loaded 5 waypoints for trajectory
+[formation_coordinator_node-31] [INFO] [1762447863.201405937] [formation_1.formation_coordinator_group1]:   WP[0]: t=0.0-0.0 s, pos=(-15.00, 0.00, 4.00)
+[formation_coordinator_node-31] [INFO] [1762447863.201445521] [formation_1.formation_coordinator_group1]:   WP[1]: t=0.0-15.0 s, pos=(-10.00, 3.00, 4.50)
+[formation_coordinator_node-31] [INFO] [1762447863.201475829] [formation_1.formation_coordinator_group1]:   WP[2]: t=15.0-30.0 s, pos=(-5.00, 0.00, 4.00)
+[formation_coordinator_node-31] [INFO] [1762447863.201505519] [formation_1.formation_coordinator_group1]:   WP[3]: t=30.0-45.0 s, pos=(0.00, 3.00, 4.80)
+[formation_coordinator_node-31] [INFO] [1762447863.201527483] [formation_1.formation_coordinator_group1]:   WP[4]: t=45.0-60.0 s, pos=(5.00, 1.50, 4.50)
+[metrics_publisher_node-23] [INFO] [1762447863.266348308] [agent_6.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settling_threshold=0.050 m
+[formation_coordinator_node-31] [INFO] [1762447863.384096229] [formation_1.formation_coordinator_group1]: Formation coordinator online: shape=triangle spacing=3.00 m, rate=10.0 Hz
+[gzserver-1] [INFO] [1762447873.343552916] [agent_0.simple_drone_plugin]: Altitude hold target set to 1.00 m
+[gzserver-1] [INFO] [1762447873.344519708] [agent_0.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_0, mass: 1.50 kg
+[gzserver-1] [INFO] [1762447873.398696008] [agent_0.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1762447873.465467322] [agent_1.simple_drone_plugin]: Altitude hold target set to 1.00 m
+[gzserver-1] [INFO] [1762447873.465532087] [agent_1.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_1, mass: 1.50 kg
+[gzserver-1] [INFO] [1762447873.489923164] [agent_1.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1762447878.307384914] [agent_2.simple_drone_plugin]: Altitude hold target set to 1.00 m
+[gzserver-1] [INFO] [1762447878.307447099] [agent_2.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_2, mass: 1.50 kg
+[gzserver-1] [INFO] [1762447878.458044041] [agent_2.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1762447879.172126019] [agent_3.simple_drone_plugin]: Altitude hold target set to 4.00 m
+[gzserver-1] [INFO] [1762447879.172186118] [agent_3.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_3, mass: 1.50 kg
+[gzserver-1] [INFO] [1762447879.214748733] [agent_3.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1762447879.368832587] [agent_4.simple_drone_plugin]: Altitude hold target set to 4.00 m
+[gzserver-1] [INFO] [1762447879.368896076] [agent_4.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_4, mass: 1.50 kg
+[gzserver-1] [INFO] [1762447879.421046312] [agent_4.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1762447879.527684429] [agent_5.simple_drone_plugin]: Altitude hold target set to 4.00 m
+[gzserver-1] [INFO] [1762447879.527762466] [agent_5.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_5, mass: 1.50 kg
+[gzserver-1] [INFO] [1762447879.569349890] [agent_5.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1762447879.835834478] [agent_6.simple_drone_plugin]: Altitude hold target set to 7.00 m
+[gzserver-1] [INFO] [1762447879.835979850] [agent_6.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_6, mass: 1.50 kg
+[gzserver-1] [INFO] [1762447879.928702899] [agent_6.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1762447880.147149483] [agent_7.simple_drone_plugin]: Altitude hold target set to 7.00 m
+[gzserver-1] [INFO] [1762447880.147262597] [agent_7.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_7, mass: 1.50 kg
+[gzserver-1] [INFO] [1762447880.233765544] [agent_7.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1762447880.497402021] [agent_8.simple_drone_plugin]: Altitude hold target set to 7.00 m
+[gzserver-1] [INFO] [1762447880.497526660] [agent_8.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_8, mass: 1.50 kg
+[gzserver-1] [INFO] [1762447880.581577116] [agent_8.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[metrics_publisher_node-20] [INFO] [1762447885.509313239] [agent_5.metrics_publisher]: Metrics: error=0.659m, RMSE=0.630m, IAE=(0.02,0.00), settling_time=0.00s, settled=NO
+[metrics_publisher_node-8] [INFO] [1762447885.546006516] [agent_1.metrics_publisher]: Metrics: error=0.555m, RMSE=2.696m, IAE=(5.58,0.47), settling_time=1.70s, settled=NO
+[metrics_publisher_node-17] [INFO] [1762447885.667005124] [agent_4.metrics_publisher]: Metrics: error=0.543m, RMSE=0.641m, IAE=(0.02,0.01), settling_time=0.00s, settled=NO
+[metrics_publisher_node-11] [INFO] [1762447887.431024246] [agent_2.metrics_publisher]: Metrics: error=3.828m, RMSE=2.513m, IAE=(0.66,6.03), settling_time=1.80s, settled=NO
+[metrics_publisher_node-14] [INFO] [1762447887.444912606] [agent_3.metrics_publisher]: Metrics: error=1.752m, RMSE=1.723m, IAE=(0.07,0.03), settling_time=0.00s, settled=NO
+[metrics_publisher_node-5] [INFO] [1762447889.339241499] [agent_0.metrics_publisher]: Metrics: error=0.863m, RMSE=1.117m, IAE=(0.11,1.02), settling_time=1.90s, settled=NO
+[metrics_publisher_node-26] [INFO] [1762447890.141128467] [agent_7.metrics_publisher]: Metrics: error=2.364m, RMSE=2.395m, IAE=(0.23,0.16), settling_time=0.10s, settled=NO
+[metrics_publisher_node-20] [INFO] [1762447890.509253219] [agent_5.metrics_publisher]: Metrics: error=0.906m, RMSE=0.911m, IAE=(0.14,0.02), settling_time=0.10s, settled=NO
+[metrics_publisher_node-8] [INFO] [1762447890.546005406] [agent_1.metrics_publisher]: Metrics: error=0.947m, RMSE=2.316m, IAE=(6.02,0.59), settling_time=2.10s, settled=NO
+[metrics_publisher_node-17] [INFO] [1762447890.667922766] [agent_4.metrics_publisher]: Metrics: error=0.974m, RMSE=0.941m, IAE=(0.02,0.01), settling_time=0.00s, settled=NO
+[metrics_publisher_node-11] [INFO] [1762447892.431776189] [agent_2.metrics_publisher]: Metrics: error=1.968m, RMSE=2.707m, IAE=(1.04,9.51), settling_time=2.50s, settled=NO
+[metrics_publisher_node-14] [INFO] [1762447892.443487816] [agent_3.metrics_publisher]: Metrics: error=0.984m, RMSE=1.106m, IAE=(0.06,0.01), settling_time=0.00s, settled=NO
+[metrics_publisher_node-5] [INFO] [1762447895.037091755] [agent_0.metrics_publisher]: Metrics: error=3.493m, RMSE=1.282m, IAE=(0.98,3.40), settling_time=3.50s, settled=NO
+[metrics_publisher_node-26] [INFO] [1762447895.140926517] [agent_7.metrics_publisher]: Metrics: error=2.017m, RMSE=2.037m, IAE=(0.05,0.03), settling_time=0.00s, settled=NO
+[metrics_publisher_node-20] [INFO] [1762447895.509093148] [agent_5.metrics_publisher]: Metrics: error=0.157m, RMSE=0.166m, IAE=(0.00,0.02), settling_time=0.10s, settled=NO
+[metrics_publisher_node-8] [INFO] [1762447895.545709287] [agent_1.metrics_publisher]: Metrics: error=3.240m, RMSE=1.338m, IAE=(8.36,2.22), settling_time=3.80s, settled=NO
+[metrics_publisher_node-17] [INFO] [1762447896.366730558] [agent_4.metrics_publisher]: Metrics: error=0.240m, RMSE=0.259m, IAE=(0.01,0.00), settling_time=0.00s, settled=NO
+[metrics_publisher_node-11] [INFO] [1762447897.430795882] [agent_2.metrics_publisher]: Metrics: error=2.061m, RMSE=3.161m, IAE=(2.24,17.43), settling_time=4.60s, settled=NO
+[metrics_publisher_node-14] [INFO] [1762447899.943304720] [agent_3.metrics_publisher]: Metrics: error=0.405m, RMSE=0.417m, IAE=(0.01,0.00), settling_time=0.00s, settled=NO
+[metrics_publisher_node-26] [INFO] [1762447900.140995579] [agent_7.metrics_publisher]: Metrics: error=1.140m, RMSE=1.145m, IAE=(0.02,0.01), settling_time=0.00s, settled=NO
+[metrics_publisher_node-20] [INFO] [1762447900.509045597] [agent_5.metrics_publisher]: Metrics: error=0.240m, RMSE=0.256m, IAE=(0.02,0.01), settling_time=0.10s, settled=NO
+[metrics_publisher_node-8] [INFO] [1762447900.545895947] [agent_1.metrics_publisher]: Metrics: error=16.629m, RMSE=9.407m, IAE=(30.41,12.75), settling_time=5.60s, settled=NO
+[metrics_publisher_node-17] [INFO] [1762447901.366726041] [agent_4.metrics_publisher]: Metrics: error=0.250m, RMSE=0.251m, IAE=(0.00,0.00), settling_time=0.00s, settled=NO
+[metrics_publisher_node-11] [INFO] [1762447902.431489690] [agent_2.metrics_publisher]: Metrics: error=4.024m, RMSE=3.302m, IAE=(3.03,21.35), settling_time=5.90s, settled=NO
+[metrics_publisher_node-5] [INFO] [1762447902.500543999] [agent_0.metrics_publisher]: Metrics: error=29.687m, RMSE=16.414m, IAE=(16.04,39.62), settling_time=5.90s, settled=NO
+[metrics_publisher_node-26] [INFO] [1762447905.140858494] [agent_7.metrics_publisher]: Metrics: error=0.650m, RMSE=0.620m, IAE=(0.11,0.01), settling_time=0.20s, settled=NO
+[metrics_publisher_node-20] [INFO] [1762447905.509013943] [agent_5.metrics_publisher]: Metrics: error=0.275m, RMSE=0.304m, IAE=(0.07,0.04), settling_time=0.30s, settled=NO
+[metrics_publisher_node-8] [INFO] [1762447905.545983408] [agent_1.metrics_publisher]: Metrics: error=43.901m, RMSE=30.906m, IAE=(116.38,45.96), settling_time=7.70s, settled=NO
+[metrics_publisher_node-14] [INFO] [1762447907.643351790] [agent_3.metrics_publisher]: Metrics: error=0.402m, RMSE=0.403m, IAE=(0.00,0.00), settling_time=0.00s, settled=NO
+[metrics_publisher_node-11] [INFO] [1762447909.230650637] [agent_2.metrics_publisher]: Metrics: error=2.707m, RMSE=2.714m, IAE=(4.55,25.95), settling_time=8.30s, settled=NO
+[metrics_publisher_node-17] [INFO] [1762447909.966534151] [agent_4.metrics_publisher]: Metrics: error=0.362m, RMSE=0.372m, IAE=(0.01,0.01), settling_time=0.00s, settled=NO
+[metrics_publisher_node-20] [INFO] [1762447910.609965076] [agent_5.metrics_publisher]: Metrics: error=0.360m, RMSE=0.361m, IAE=(0.02,0.01), settling_time=0.10s, settled=NO
+[metrics_publisher_node-26] [INFO] [1762447910.643973863] [agent_7.metrics_publisher]: Metrics: error=1.321m, RMSE=1.343m, IAE=(0.15,0.01), settling_time=0.10s, settled=NO
+[metrics_publisher_node-8] [INFO] [1762447910.746099710] [agent_1.metrics_publisher]: Metrics: error=64.891m, RMSE=47.587m, IAE=(205.74,78.19), settling_time=8.90s, settled=NO
+[metrics_publisher_node-5] [INFO] [1762447913.011087627] [agent_0.metrics_publisher]: Metrics: error=89.611m, RMSE=47.489m, IAE=(59.73,141.39), settling_time=8.90s, settled=NO
+[metrics_publisher_node-8] [INFO] [1762447915.745535473] [agent_1.metrics_publisher]: Metrics: error=87.659m, RMSE=68.427m, IAE=(332.40,122.45), settling_time=10.10s, settled=NO
+[metrics_publisher_node-11] [INFO] [1762447915.830507985] [agent_2.metrics_publisher]: Metrics: error=4.430m, RMSE=2.970m, IAE=(6.12,28.34), settling_time=10.10s, settled=NO
+[metrics_publisher_node-20] [INFO] [1762447916.008808558] [agent_5.metrics_publisher]: Metrics: error=0.390m, RMSE=0.399m, IAE=(0.03,0.02), settling_time=0.10s, settled=NO
+[metrics_publisher_node-26] [INFO] [1762447916.240691757] [agent_7.metrics_publisher]: Metrics: error=1.072m, RMSE=1.073m, IAE=(0.02,0.00), settling_time=0.00s, settled=NO
+[metrics_publisher_node-14] [INFO] [1762447917.442954746] [agent_3.metrics_publisher]: Metrics: error=0.407m, RMSE=0.409m, IAE=(0.00,0.00), settling_time=0.00s, settled=NO
+[metrics_publisher_node-17] [INFO] [1762447919.066379133] [agent_4.metrics_publisher]: Metrics: error=0.356m, RMSE=0.356m, IAE=(0.00,0.00), settling_time=1.20s, settled=NO
+[metrics_publisher_node-8] [INFO] [1762447920.745257472] [agent_1.metrics_publisher]: Metrics: error=135.553m, RMSE=112.351m, IAE=(648.64,229.83), settling_time=12.10s, settled=NO
+[metrics_publisher_node-11] [INFO] [1762447920.830246190] [agent_2.metrics_publisher]: Metrics: error=4.265m, RMSE=3.723m, IAE=(8.13,33.59), settling_time=12.20s, settled=NO
+[metrics_publisher_node-20] [INFO] [1762447921.208876631] [agent_5.metrics_publisher]: Metrics: error=0.592m, RMSE=0.606m, IAE=(0.02,0.01), settling_time=0.00s, settled=NO
+[metrics_publisher_node-26] [INFO] [1762447921.240906247] [agent_7.metrics_publisher]: Metrics: error=1.063m, RMSE=1.067m, IAE=(0.01,0.00), settling_time=0.00s, settled=NO
+[metrics_publisher_node-5] [INFO] [1762447921.636815880] [agent_0.metrics_publisher]: Metrics: error=199.663m, RMSE=150.003m, IAE=(222.31,512.23), settling_time=12.60s, settled=NO
+[metrics_publisher_node-23] [INFO] [1762447922.565688383] [agent_6.metrics_publisher]: Metrics: error=513.376m, RMSE=513.225m, IAE=(6.14,0.40), settling_time=0.00s, settled=NO
+[metrics_publisher_node-8] [INFO] [1762447925.745222509] [agent_1.metrics_publisher]: Metrics: error=206.490m, RMSE=178.403m, IAE=(1270.83,435.55), settling_time=14.70s, settled=NO
+[metrics_publisher_node-20] [INFO] [1762447926.208696053] [agent_5.metrics_publisher]: Metrics: error=0.565m, RMSE=0.592m, IAE=(0.09,0.05), settling_time=0.20s, settled=NO
+[metrics_publisher_node-26] [INFO] [1762447926.240562112] [agent_7.metrics_publisher]: Metrics: error=1.106m, RMSE=1.094m, IAE=(0.43,0.05), settling_time=0.30s, settled=NO
+[metrics_publisher_node-17] [INFO] [1762447928.066326868] [agent_4.metrics_publisher]: Metrics: error=0.568m, RMSE=0.574m, IAE=(0.02,0.00), settling_time=0.10s, settled=NO
+[metrics_publisher_node-14] [INFO] [1762447928.342880310] [agent_3.metrics_publisher]: Metrics: error=0.568m, RMSE=0.577m, IAE=(0.02,0.00), settling_time=0.00s, settled=NO
+[metrics_publisher_node-11] [INFO] [1762447929.630326428] [agent_2.metrics_publisher]: Metrics: error=3.748m, RMSE=3.494m, IAE=(13.58,41.60), settling_time=15.90s, settled=NO
+[metrics_publisher_node-8] [INFO] [1762447930.745381533] [agent_1.metrics_publisher]: Metrics: error=279.873m, RMSE=247.924m, IAE=(2063.01,692.76), settling_time=17.00s, settled=NO
+[metrics_publisher_node-26] [INFO] [1762447931.240748218] [agent_7.metrics_publisher]: Metrics: error=1.108m, RMSE=1.087m, IAE=(1.84,0.30), settling_time=1.30s, settled=NO
+[metrics_publisher_node-20] [INFO] [1762447931.308701061] [agent_5.metrics_publisher]: Metrics: error=0.470m, RMSE=0.474m, IAE=(0.03,0.05), settling_time=0.70s, settled=NO
+[metrics_publisher_node-17] [INFO] [1762447933.066235817] [agent_4.metrics_publisher]: Metrics: error=0.568m, RMSE=0.574m, IAE=(0.02,0.00), settling_time=0.10s, settled=NO
+[metrics_publisher_node-8] [INFO] [1762447935.745036646] [agent_1.metrics_publisher]: Metrics: error=335.605m, RMSE=301.236m, IAE=(2761.95,917.35), settling_time=18.60s, settled=NO
+[metrics_publisher_node-20] [INFO] [1762447936.408709224] [agent_5.metrics_publisher]: Metrics: error=0.397m, RMSE=0.480m, IAE=(0.24,0.13), settling_time=0.80s, settled=NO
+[metrics_publisher_node-26] [INFO] [1762447936.442807012] [agent_7.metrics_publisher]: Metrics: error=1.256m, RMSE=1.121m, IAE=(1.18,0.12), settling_time=0.80s, settled=NO
+[metrics_publisher_node-11] [INFO] [1762447936.530089232] [agent_2.metrics_publisher]: Metrics: error=3.572m, RMSE=3.500m, IAE=(16.11,45.37), settling_time=18.80s, settled=NO
+[metrics_publisher_node-5] [INFO] [1762447937.049801360] [agent_0.metrics_publisher]: Metrics: error=422.408m, RMSE=268.220m, IAE=(553.52,1262.13), settling_time=18.10s, settled=NO

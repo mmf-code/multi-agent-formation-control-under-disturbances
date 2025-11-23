@@ -1,0 +1,137 @@
+[INFO] [launch]: All log files can be found below /home/mmf/.ros/log/2025-11-23-01-21-08-878686-mmf-ABRA-A5-V15-2-22695
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [gzserver-1]: process started with pid [22719]
+[INFO] [gzclient-2]: process started with pid [22721]
+[INFO] [agent_controller_node-3]: process started with pid [22723]
+[INFO] [path_visualizer_node-4]: process started with pid [22725]
+[INFO] [metrics_publisher_node-5]: process started with pid [22727]
+[INFO] [agent_controller_node-6]: process started with pid [22729]
+[INFO] [path_visualizer_node-7]: process started with pid [22731]
+[INFO] [metrics_publisher_node-8]: process started with pid [22733]
+[INFO] [agent_controller_node-9]: process started with pid [22735]
+[INFO] [path_visualizer_node-10]: process started with pid [22737]
+[INFO] [metrics_publisher_node-11]: process started with pid [22739]
+[INFO] [agent_controller_node-12]: process started with pid [22748]
+[INFO] [path_visualizer_node-13]: process started with pid [22757]
+[INFO] [metrics_publisher_node-14]: process started with pid [22761]
+[INFO] [agent_controller_node-15]: process started with pid [22764]
+[INFO] [path_visualizer_node-16]: process started with pid [22767]
+[INFO] [metrics_publisher_node-17]: process started with pid [22769]
+[INFO] [agent_controller_node-18]: process started with pid [22771]
+[INFO] [path_visualizer_node-19]: process started with pid [22773]
+[INFO] [metrics_publisher_node-20]: process started with pid [22775]
+[INFO] [agent_controller_node-21]: process started with pid [22777]
+[INFO] [path_visualizer_node-22]: process started with pid [22781]
+[INFO] [metrics_publisher_node-23]: process started with pid [22783]
+[INFO] [agent_controller_node-24]: process started with pid [22785]
+[INFO] [path_visualizer_node-25]: process started with pid [22787]
+[INFO] [metrics_publisher_node-26]: process started with pid [22789]
+[INFO] [agent_controller_node-27]: process started with pid [22791]
+[INFO] [path_visualizer_node-28]: process started with pid [22793]
+[INFO] [metrics_publisher_node-29]: process started with pid [22795]
+[INFO] [formation_coordinator_node-30]: process started with pid [22797]
+[INFO] [formation_coordinator_node-31]: process started with pid [22799]
+[INFO] [formation_coordinator_node-32]: process started with pid [22801]
+[INFO] [rviz2-33]: process started with pid [22803]
+[agent_controller_node-3] [INFO] [1763850069.146884671] [agent_0.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[agent_controller_node-3] [INFO] [1763850069.160139315] [agent_0.agent_controller]: Agent controller node initialised: type=pid_fuzzy, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=0.70]
+[path_visualizer_node-4] [INFO] [1763850069.154451467] [agent_0.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[rviz2-33] qt.qpa.plugin: Could not find the Qt platform plugin "wayland" in ""
+[rviz2-33] /opt/ros/humble/lib/rviz2/rviz2: symbol lookup error: /snap/core20/current/lib/x86_64-linux-gnu/libpthread.so.0: undefined symbol: __libc_pthread_init, version GLIBC_PRIVATE
+[ERROR] [rviz2-33]: process has died [pid 22803, exit code 127, cmd '/opt/ros/humble/lib/rviz2/rviz2 -d /home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/rviz/formation_demo.rviz --ros-args -r __node:=rviz2 --params-file /tmp/launch_params_pngvm4o4'].
+[metrics_publisher_node-5] [INFO] [1763850069.449968276] [agent_0.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[metrics_publisher_node-5] [INFO] [1763850069.451434800] [agent_0.metrics_publisher]: Group metrics enabled for namespace '/agent_0' (agent_0, group_0) on topic '/metrics/group_0' (window=30.0s)
+[path_visualizer_node-7] [INFO] [1763850069.452991083] [agent_1.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[path_visualizer_node-10] [INFO] [1763850070.158957978] [agent_2.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[agent_controller_node-9] [INFO] [1763850070.450008074] [agent_2.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[agent_controller_node-6] [INFO] [1763850070.502818758] [agent_1.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[agent_controller_node-9] [INFO] [1763850070.562777285] [agent_2.agent_controller]: Agent controller node initialised: type=pid_fuzzy, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=0.70]
+[agent_controller_node-6] [INFO] [1763850070.653564883] [agent_1.agent_controller]: Agent controller node initialised: type=pid_fuzzy, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=0.70]
+[metrics_publisher_node-8] [INFO] [1763850070.717857585] [agent_1.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[metrics_publisher_node-11] [INFO] [1763850070.729893025] [agent_2.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[path_visualizer_node-13] [INFO] [1763850070.769914974] [agent_3.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[metrics_publisher_node-17] [INFO] [1763850070.771982730] [agent_4.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[agent_controller_node-21] [INFO] [1763850070.872746483] [agent_6.agent_controller]: Agent controller node initialised: type=pid, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=0.00]
+[formation_coordinator_node-31] [INFO] [1763850070.902617757] [formation_1.formation_coordinator_group1]: Loaded 8 waypoints for trajectory
+[formation_coordinator_node-31] [INFO] [1763850070.902736949] [formation_1.formation_coordinator_group1]:   WP[0]: t=0.0-22.0 s, pos=(-6.00, 0.00, 3.00)
+[formation_coordinator_node-31] [INFO] [1763850070.902773849] [formation_1.formation_coordinator_group1]:   WP[1]: t=22.0-27.0 s, pos=(-6.00, 0.00, 3.00)
+[formation_coordinator_node-31] [INFO] [1763850070.902841125] [formation_1.formation_coordinator_group1]:   WP[2]: t=27.0-49.0 s, pos=(4.00, 0.00, 3.00)
+[formation_coordinator_node-31] [INFO] [1763850070.902868707] [formation_1.formation_coordinator_group1]:   WP[3]: t=49.0-54.0 s, pos=(4.00, 0.00, 3.00)
+[formation_coordinator_node-31] [INFO] [1763850070.902889014] [formation_1.formation_coordinator_group1]:   WP[4]: t=54.0-76.0 s, pos=(12.00, 0.00, 3.00)
+[formation_coordinator_node-31] [INFO] [1763850070.902919128] [formation_1.formation_coordinator_group1]:   WP[5]: t=76.0-81.0 s, pos=(12.00, 0.00, 3.00)
+[formation_coordinator_node-31] [INFO] [1763850070.902947980] [formation_1.formation_coordinator_group1]:   WP[6]: t=81.0-103.0 s, pos=(20.00, 0.00, 3.00)
+[formation_coordinator_node-31] [INFO] [1763850070.902973994] [formation_1.formation_coordinator_group1]:   WP[7]: t=103.0-110.0 s, pos=(20.00, 0.00, 3.00)
+[path_visualizer_node-28] [INFO] [1763850070.920435331] [agent_8.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[agent_controller_node-18] [INFO] [1763850070.935840909] [agent_5.agent_controller]: Agent controller node initialised: type=pd, dt=0.005000 s, PID[Kp=3.500, Ki=0.000, Kd=3.610], mix[k_pid=1.00, k_fuzzy=1.00]
+[path_visualizer_node-16] [INFO] [1763850071.192562574] [agent_4.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[agent_controller_node-15] [INFO] [1763850071.365435307] [agent_4.agent_controller]: Agent controller node initialised: type=pd, dt=0.005000 s, PID[Kp=3.500, Ki=0.000, Kd=3.610], mix[k_pid=1.00, k_fuzzy=1.00]
+[agent_controller_node-27] [INFO] [1763850071.421481272] [agent_8.agent_controller]: Agent controller node initialised: type=pid, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=0.00]
+[formation_coordinator_node-32] [INFO] [1763850071.474540994] [formation_2.formation_coordinator_group2]: Loaded 8 waypoints for trajectory
+[formation_coordinator_node-32] [INFO] [1763850071.474754408] [formation_2.formation_coordinator_group2]:   WP[0]: t=0.0-22.0 s, pos=(-2.00, 15.00, 3.00)
+[formation_coordinator_node-32] [INFO] [1763850071.474816899] [formation_2.formation_coordinator_group2]:   WP[1]: t=22.0-27.0 s, pos=(-2.00, 15.00, 3.00)
+[formation_coordinator_node-32] [INFO] [1763850071.474838986] [formation_2.formation_coordinator_group2]:   WP[2]: t=27.0-49.0 s, pos=(6.00, 15.00, 3.00)
+[formation_coordinator_node-32] [INFO] [1763850071.474858307] [formation_2.formation_coordinator_group2]:   WP[3]: t=49.0-54.0 s, pos=(6.00, 15.00, 3.00)
+[formation_coordinator_node-32] [INFO] [1763850071.474885837] [formation_2.formation_coordinator_group2]:   WP[4]: t=54.0-76.0 s, pos=(14.00, 15.00, 3.00)
+[formation_coordinator_node-32] [INFO] [1763850071.474906106] [formation_2.formation_coordinator_group2]:   WP[5]: t=76.0-81.0 s, pos=(14.00, 15.00, 3.00)
+[formation_coordinator_node-32] [INFO] [1763850071.474926175] [formation_2.formation_coordinator_group2]:   WP[6]: t=81.0-103.0 s, pos=(22.00, 15.00, 3.00)
+[formation_coordinator_node-32] [INFO] [1763850071.474947662] [formation_2.formation_coordinator_group2]:   WP[7]: t=103.0-110.0 s, pos=(22.00, 15.00, 3.00)
+[path_visualizer_node-25] [INFO] [1763850071.483037155] [agent_7.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[path_visualizer_node-19] [INFO] [1763850071.498465894] [agent_5.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[metrics_publisher_node-14] [INFO] [1763850071.502297341] [agent_3.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[metrics_publisher_node-14] [INFO] [1763850071.503721907] [agent_3.metrics_publisher]: Group metrics enabled for namespace '/agent_3' (agent_3, group_1) on topic '/metrics/group_1' (window=30.0s)
+[metrics_publisher_node-29] [INFO] [1763850071.503882671] [agent_8.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[metrics_publisher_node-23] [INFO] [1763850071.512491159] [agent_6.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[metrics_publisher_node-23] [INFO] [1763850071.523988255] [agent_6.metrics_publisher]: Group metrics enabled for namespace '/agent_6' (agent_6, group_2) on topic '/metrics/group_2' (window=30.0s)
+[metrics_publisher_node-20] [INFO] [1763850071.526783465] [agent_5.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[formation_coordinator_node-31] [INFO] [1763850071.528285468] [formation_1.formation_coordinator_group1]: Formation coordinator online: shape=triangle spacing=3.00 m, rate=10.0 Hz
+[metrics_publisher_node-26] [INFO] [1763850071.566379826] [agent_7.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[agent_controller_node-12] [INFO] [1763850071.595075796] [agent_3.agent_controller]: Agent controller node initialised: type=pd, dt=0.005000 s, PID[Kp=3.500, Ki=0.000, Kd=3.610], mix[k_pid=1.00, k_fuzzy=1.00]
+[path_visualizer_node-22] [INFO] [1763850071.606567415] [agent_6.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[formation_coordinator_node-32] [INFO] [1763850071.617413441] [formation_2.formation_coordinator_group2]: Formation coordinator online: shape=triangle spacing=3.00 m, rate=10.0 Hz
+[formation_coordinator_node-30] [INFO] [1763850071.621642975] [formation_0.formation_coordinator_group0]: Loaded 8 waypoints for trajectory
+[formation_coordinator_node-30] [INFO] [1763850071.621775301] [formation_0.formation_coordinator_group0]:   WP[0]: t=0.0-22.0 s, pos=(-8.00, -15.00, 3.00)
+[formation_coordinator_node-30] [INFO] [1763850071.621822814] [formation_0.formation_coordinator_group0]:   WP[1]: t=22.0-27.0 s, pos=(-8.00, -15.00, 3.00)
+[formation_coordinator_node-30] [INFO] [1763850071.621853165] [formation_0.formation_coordinator_group0]:   WP[2]: t=27.0-49.0 s, pos=(4.00, -15.00, 3.00)
+[formation_coordinator_node-30] [INFO] [1763850071.621887670] [formation_0.formation_coordinator_group0]:   WP[3]: t=49.0-54.0 s, pos=(4.00, -15.00, 3.00)
+[formation_coordinator_node-30] [INFO] [1763850071.621917671] [formation_0.formation_coordinator_group0]:   WP[4]: t=54.0-76.0 s, pos=(12.00, -15.00, 3.00)
+[formation_coordinator_node-30] [INFO] [1763850071.621947625] [formation_0.formation_coordinator_group0]:   WP[5]: t=76.0-81.0 s, pos=(12.00, -15.00, 3.00)
+[formation_coordinator_node-30] [INFO] [1763850071.621977366] [formation_0.formation_coordinator_group0]:   WP[6]: t=81.0-103.0 s, pos=(20.00, -15.00, 3.00)
+[formation_coordinator_node-30] [INFO] [1763850071.622004028] [formation_0.formation_coordinator_group0]:   WP[7]: t=103.0-110.0 s, pos=(20.00, -15.00, 3.00)
+[agent_controller_node-24] [INFO] [1763850071.653187547] [agent_7.agent_controller]: Agent controller node initialised: type=pid, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=0.00]
+[formation_coordinator_node-30] [INFO] [1763850071.673315432] [formation_0.formation_coordinator_group0]: Formation coordinator online: shape=triangle spacing=3.00 m, rate=10.0 Hz
+[gzserver-1] [INFO] [1763850073.806512556] [agent_0.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_0, mass: 1.50 kg, target_altitude: 3.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763850073.893892005] [agent_0.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1763850073.922531862] [agent_1.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_1, mass: 1.50 kg, target_altitude: 3.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763850073.935147466] [agent_1.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1763850073.969283233] [agent_2.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_2, mass: 1.50 kg, target_altitude: 3.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763850073.980723206] [agent_2.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1763850074.007868992] [agent_3.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_3, mass: 1.50 kg, target_altitude: 3.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763850074.025200827] [agent_3.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1763850074.057210139] [agent_4.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_4, mass: 1.50 kg, target_altitude: 3.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763850074.068747525] [agent_4.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1763850074.100196601] [agent_5.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_5, mass: 1.50 kg, target_altitude: 3.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763850074.112123132] [agent_5.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1763850074.133303052] [agent_6.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_6, mass: 1.50 kg, target_altitude: 3.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763850074.141728814] [agent_6.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1763850074.163676630] [agent_7.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_7, mass: 1.50 kg, target_altitude: 3.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763850074.172914676] [agent_7.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[gzserver-1] [INFO] [1763850074.194202070] [agent_8.simple_drone_plugin]: SimpleDronePlugin loading for namespace: agent_8, mass: 1.50 kg, target_altitude: 3.00 m, physics[tau_up=0.100, tau_down=0.150, cd_lin=0.120, cd_quad=0.050], wind[vx=0.00, vy=0.00, ax_bias=0.000, ay_bias=0.000]
+[gzserver-1] [INFO] [1763850074.203855267] [agent_8.simple_drone_plugin]: SimpleDronePlugin loaded successfully!
+[metrics_publisher_node-8] [INFO] [1763850079.117951022] [agent_1.metrics_publisher]: Metrics: error=5.473m, RMSE=5.516m, IAE=(0.01,0.16), settling_time=0.00s, settled=NO
+[metrics_publisher_node-20] [INFO] [1763850079.126925119] [agent_5.metrics_publisher]: Metrics: error=5.425m, RMSE=5.514m, IAE=(0.05,0.26), settling_time=0.00s, settled=NO
+[metrics_publisher_node-11] [INFO] [1763850079.129957924] [agent_2.metrics_publisher]: Metrics: error=5.809m, RMSE=5.868m, IAE=(0.00,0.21), settling_time=0.00s, settled=NO
+[metrics_publisher_node-5] [INFO] [1763850079.150690207] [agent_0.metrics_publisher]: Metrics: error=10.563m, RMSE=10.614m, IAE=(0.02,1.53), settling_time=0.10s, settled=NO
+[metrics_publisher_node-26] [INFO] [1763850079.167450737] [agent_7.metrics_publisher]: Metrics: error=5.973m, RMSE=6.078m, IAE=(0.07,0.93), settling_time=0.10s, settled=NO
+[metrics_publisher_node-17] [INFO] [1763850079.172129882] [agent_4.metrics_publisher]: Metrics: error=5.886m, RMSE=5.915m, IAE=(0.01,0.13), settling_time=0.00s, settled=NO
+[metrics_publisher_node-14] [INFO] [1763850079.202570299] [agent_3.metrics_publisher]: Metrics: error=10.072m, RMSE=10.113m, IAE=(0.04,0.36), settling_time=0.00s, settled=NO
+[metrics_publisher_node-29] [INFO] [1763850079.204935868] [agent_8.metrics_publisher]: Metrics: error=4.767m, RMSE=4.909m, IAE=(0.06,0.84), settling_time=0.10s, settled=NO
+[metrics_publisher_node-23] [INFO] [1763850079.512720278] [agent_6.metrics_publisher]: Metrics: error=10.743m, RMSE=10.781m, IAE=(0.02,0.33), settling_time=0.00s, settled=NO
+[metrics_publisher_node-8] [INFO] [1763850084.118187888] [agent_1.metrics_publisher]: Metrics: error=0.665m, RMSE=0.667m, IAE=(0.02,0.01), settling_time=0.00s, settled=NO
+[metrics_publisher_node-20] [INFO] [1763850084.127322677] [agent_5.metrics_publisher]: Metrics: error=2.096m, RMSE=2.100m, IAE=(0.02,0.10), settling_time=0.00s, settled=NO
+[metrics_publisher_node-11] [INFO] [1763850084.129907309] [agent_2.metrics_publisher]: Metrics: error=0.393m, RMSE=0.399m, IAE=(0.03,0.04), settling_time=0.10s, settled=NO
+[metrics_publisher_node-5] [INFO] [1763850084.150103886] [agent_0.metrics_publisher]: Metrics: error=0.281m, RMSE=0.314m, IAE=(0.04,0.02), settling_time=0.10s, settled=NO
+[metrics_publisher_node-26] [INFO] [1763850084.167129318] [agent_7.metrics_publisher]: Metrics: error=0.565m, RMSE=0.574m, IAE=(0.09,0.02), settling_time=0.10s, settled=NO
+[metrics_publisher_node-17] [INFO] [1763850084.172216942] [agent_4.metrics_publisher]: Metrics: error=2.194m, RMSE=2.197m, IAE=(0.01,0.05), settling_time=0.00s, settled=NO
+[metrics_publisher_node-14] [INFO] [1763850084.202755841] [agent_3.metrics_publisher]: Metrics: error=2.737m, RMSE=2.734m, IAE=(0.01,0.10), settling_time=0.00s, settled=NO
+[metrics_publisher_node-29] [INFO] [1763850084.204228468] [agent_8.metrics_publisher]: Metrics: error=0.126m, RMSE=0.178m, IAE=(0.03,0.00), settling_time=0.10s, settled=NO
+[metrics_publisher_node-23] [INFO] [1763850084.513427114] [agent_6.metrics_publisher]: Metrics: error=0.327m, RMSE=0.378m, IAE=(0.02,0.11), settling_time=0.20s, settled=NO

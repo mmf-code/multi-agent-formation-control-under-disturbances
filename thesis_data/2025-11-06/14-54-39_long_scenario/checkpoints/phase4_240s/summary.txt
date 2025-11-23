@@ -1,0 +1,9 @@
+CHECKPOINT SUMMARY - Phase 4
+============================================================
+
+Time: 240s
+Phase: Phase 4
+
+agent_0: 0 samples
+agent_3: 0 samples
+agent_6: 0 samples

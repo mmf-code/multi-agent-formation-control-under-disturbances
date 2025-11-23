@@ -105,6 +105,10 @@ final_project_results/
 !*.yml
 # Keep thesis metrics summary
 !docs/THESIS_*.txt
+# Keep thesis data files
+!thesis_data/**/*.csv
+!thesis_data/**/*.txt
+!thesis_data/**/*.log
 # Generated plots and images (keep only final thesis figures and docs)
 *.png
 *.jpg

@@ -1,0 +1,148 @@
+[INFO] [launch]: All log files can be found below /home/mmf/.ros/log/2025-11-22-14-23-55-467700-mmf-ABRA-A5-V15-2-10226
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [gzserver-1]: process started with pid [10256]
+[INFO] [gzclient-2]: process started with pid [10258]
+[INFO] [agent_controller_node-3]: process started with pid [10260]
+[INFO] [path_visualizer_node-4]: process started with pid [10262]
+[INFO] [metrics_publisher_node-5]: process started with pid [10264]
+[INFO] [agent_controller_node-6]: process started with pid [10266]
+[INFO] [path_visualizer_node-7]: process started with pid [10268]
+[INFO] [metrics_publisher_node-8]: process started with pid [10270]
+[INFO] [agent_controller_node-9]: process started with pid [10272]
+[INFO] [path_visualizer_node-10]: process started with pid [10274]
+[INFO] [metrics_publisher_node-11]: process started with pid [10276]
+[INFO] [agent_controller_node-12]: process started with pid [10278]
+[INFO] [path_visualizer_node-13]: process started with pid [10281]
+[INFO] [metrics_publisher_node-14]: process started with pid [10283]
+[INFO] [agent_controller_node-15]: process started with pid [10286]
+[INFO] [path_visualizer_node-16]: process started with pid [10288]
+[INFO] [metrics_publisher_node-17]: process started with pid [10291]
+[INFO] [agent_controller_node-18]: process started with pid [10294]
+[INFO] [path_visualizer_node-19]: process started with pid [10296]
+[INFO] [metrics_publisher_node-20]: process started with pid [10298]
+[INFO] [agent_controller_node-21]: process started with pid [10300]
+[INFO] [path_visualizer_node-22]: process started with pid [10302]
+[INFO] [metrics_publisher_node-23]: process started with pid [10304]
+[INFO] [agent_controller_node-24]: process started with pid [10306]
+[INFO] [path_visualizer_node-25]: process started with pid [10308]
+[INFO] [metrics_publisher_node-26]: process started with pid [10310]
+[INFO] [agent_controller_node-27]: process started with pid [10312]
+[INFO] [path_visualizer_node-28]: process started with pid [10314]
+[INFO] [metrics_publisher_node-29]: process started with pid [10316]
+[INFO] [formation_coordinator_node-30]: process started with pid [10319]
+[INFO] [formation_coordinator_node-31]: process started with pid [10322]
+[INFO] [formation_coordinator_node-32]: process started with pid [10326]
+[path_visualizer_node-4] [INFO] [1763810635.968629812] [agent_0.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[agent_controller_node-3] [INFO] [1763810636.023113362] [agent_0.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[agent_controller_node-3] [INFO] [1763810636.027287709] [agent_0.agent_controller]: Agent controller node initialised: type=pid_fuzzy, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=0.70]
+[metrics_publisher_node-5] [INFO] [1763810636.120762147] [agent_0.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[metrics_publisher_node-5] [INFO] [1763810636.121805146] [agent_0.metrics_publisher]: Group metrics enabled for namespace '/agent_0' (agent_0, group_0) on topic '/metrics/group_0' (window=30.0s)
+[agent_controller_node-6] [INFO] [1763810636.944791050] [agent_1.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[agent_controller_node-6] [INFO] [1763810636.954411943] [agent_1.agent_controller]: Agent controller node initialised: type=pid_fuzzy, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=0.70]
+[path_visualizer_node-7] [INFO] [1763810637.753292774] [agent_1.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[metrics_publisher_node-8] [INFO] [1763810637.837434252] [agent_1.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[path_visualizer_node-10] [INFO] [1763810637.948701804] [agent_2.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[agent_controller_node-9] [INFO] [1763810637.955064530] [agent_2.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[agent_controller_node-9] [INFO] [1763810637.964179219] [agent_2.agent_controller]: Agent controller node initialised: type=pid_fuzzy, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=0.70]
+[metrics_publisher_node-11] [INFO] [1763810638.001455469] [agent_2.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[agent_controller_node-12] [INFO] [1763810639.560287435] [agent_3.agent_controller]: Agent controller node initialised: type=pd, dt=0.005000 s, PID[Kp=3.500, Ki=0.000, Kd=3.610], mix[k_pid=1.00, k_fuzzy=1.00]
+[path_visualizer_node-13] [INFO] [1763810639.573506626] [agent_3.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[metrics_publisher_node-14] [INFO] [1763810639.610074954] [agent_3.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[agent_controller_node-18] [INFO] [1763810639.610825358] [agent_5.agent_controller]: Agent controller node initialised: type=pd, dt=0.005000 s, PID[Kp=3.500, Ki=0.000, Kd=3.610], mix[k_pid=1.00, k_fuzzy=1.00]
+[metrics_publisher_node-14] [INFO] [1763810639.621166880] [agent_3.metrics_publisher]: Group metrics enabled for namespace '/agent_3' (agent_3, group_1) on topic '/metrics/group_1' (window=30.0s)
+[metrics_publisher_node-17] [INFO] [1763810639.625049647] [agent_4.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[agent_controller_node-15] [INFO] [1763810639.635269160] [agent_4.agent_controller]: Agent controller node initialised: type=pd, dt=0.005000 s, PID[Kp=3.500, Ki=0.000, Kd=3.610], mix[k_pid=1.00, k_fuzzy=1.00]
+[path_visualizer_node-16] [INFO] [1763810639.690436796] [agent_4.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[metrics_publisher_node-20] [INFO] [1763810640.268049877] [agent_5.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[path_visualizer_node-19] [INFO] [1763810640.299300218] [agent_5.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[path_visualizer_node-22] [INFO] [1763810640.299300359] [agent_6.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[metrics_publisher_node-23] [INFO] [1763810640.305411042] [agent_6.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[metrics_publisher_node-23] [INFO] [1763810640.309162028] [agent_6.metrics_publisher]: Group metrics enabled for namespace '/agent_6' (agent_6, group_2) on topic '/metrics/group_2' (window=30.0s)
+[agent_controller_node-21] [INFO] [1763810640.311068011] [agent_6.agent_controller]: Agent controller node initialised: type=pid, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=0.00]
+[path_visualizer_node-25] [INFO] [1763810640.341561723] [agent_7.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[metrics_publisher_node-26] [INFO] [1763810641.039414285] [agent_7.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[path_visualizer_node-28] [INFO] [1763810641.579128697] [agent_8.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[agent_controller_node-27] [INFO] [1763810641.606098677] [agent_8.agent_controller]: Agent controller node initialised: type=pid, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=0.00]
+[formation_coordinator_node-32] [INFO] [1763810641.993409510] [formation_2.formation_coordinator_group2]: Loaded 8 waypoints for trajectory
+[formation_coordinator_node-32] [INFO] [1763810642.006455549] [formation_2.formation_coordinator_group2]:   WP[0]: t=0.0-22.0 s, pos=(-2.00, 4.00, 7.00)
+[formation_coordinator_node-32] [INFO] [1763810642.006589098] [formation_2.formation_coordinator_group2]:   WP[1]: t=22.0-27.0 s, pos=(-2.00, 4.00, 7.00)
+[formation_coordinator_node-32] [INFO] [1763810642.006682131] [formation_2.formation_coordinator_group2]:   WP[2]: t=27.0-49.0 s, pos=(6.00, 4.00, 7.00)
+[formation_coordinator_node-32] [INFO] [1763810642.006964660] [formation_2.formation_coordinator_group2]:   WP[3]: t=49.0-54.0 s, pos=(6.00, 4.00, 7.00)
+[formation_coordinator_node-32] [INFO] [1763810642.007294139] [formation_2.formation_coordinator_group2]:   WP[4]: t=54.0-76.0 s, pos=(14.00, 4.00, 7.00)
+[formation_coordinator_node-32] [INFO] [1763810642.007402737] [formation_2.formation_coordinator_group2]:   WP[5]: t=76.0-81.0 s, pos=(14.00, 4.00, 7.00)
+[formation_coordinator_node-32] [INFO] [1763810642.007499230] [formation_2.formation_coordinator_group2]:   WP[6]: t=81.0-103.0 s, pos=(22.00, 4.00, 7.00)
+[formation_coordinator_node-32] [INFO] [1763810642.007596243] [formation_2.formation_coordinator_group2]:   WP[7]: t=103.0-110.0 s, pos=(22.00, 4.00, 7.00)
+[formation_coordinator_node-32] [INFO] [1763810642.045358013] [formation_2.formation_coordinator_group2]: Formation coordinator online: shape=triangle spacing=3.00 m, rate=10.0 Hz
+[formation_coordinator_node-31] [INFO] [1763810642.013339960] [formation_1.formation_coordinator_group1]: Loaded 8 waypoints for trajectory
+[formation_coordinator_node-31] [INFO] [1763810642.013558018] [formation_1.formation_coordinator_group1]:   WP[0]: t=0.0-22.0 s, pos=(-6.00, 0.00, 4.00)
+[formation_coordinator_node-31] [INFO] [1763810642.013633456] [formation_1.formation_coordinator_group1]:   WP[1]: t=22.0-27.0 s, pos=(-6.00, 0.00, 4.00)
+[formation_coordinator_node-31] [INFO] [1763810642.013697380] [formation_1.formation_coordinator_group1]:   WP[2]: t=27.0-49.0 s, pos=(4.00, 0.00, 4.00)
+[formation_coordinator_node-31] [INFO] [1763810642.013745126] [formation_1.formation_coordinator_group1]:   WP[3]: t=49.0-54.0 s, pos=(4.00, 0.00, 4.00)
+[formation_coordinator_node-31] [INFO] [1763810642.013793829] [formation_1.formation_coordinator_group1]:   WP[4]: t=54.0-76.0 s, pos=(12.00, 0.00, 4.00)
+[formation_coordinator_node-31] [INFO] [1763810642.013840811] [formation_1.formation_coordinator_group1]:   WP[5]: t=76.0-81.0 s, pos=(12.00, 0.00, 4.00)
+[formation_coordinator_node-31] [INFO] [1763810642.013907733] [formation_1.formation_coordinator_group1]:   WP[6]: t=81.0-103.0 s, pos=(20.00, 0.00, 4.00)
+[formation_coordinator_node-31] [INFO] [1763810642.013986815] [formation_1.formation_coordinator_group1]:   WP[7]: t=103.0-110.0 s, pos=(20.00, 0.00, 4.00)
+[formation_coordinator_node-31] [INFO] [1763810642.046115515] [formation_1.formation_coordinator_group1]: Formation coordinator online: shape=triangle spacing=3.00 m, rate=10.0 Hz
+[formation_coordinator_node-30] [INFO] [1763810642.064716335] [formation_0.formation_coordinator_group0]: Loaded 8 waypoints for trajectory
+[formation_coordinator_node-30] [INFO] [1763810642.064824287] [formation_0.formation_coordinator_group0]:   WP[0]: t=0.0-22.0 s, pos=(-8.00, -4.00, 1.00)
+[formation_coordinator_node-30] [INFO] [1763810642.064853145] [formation_0.formation_coordinator_group0]:   WP[1]: t=22.0-27.0 s, pos=(-8.00, -4.00, 1.00)
+[formation_coordinator_node-30] [INFO] [1763810642.064872349] [formation_0.formation_coordinator_group0]:   WP[2]: t=27.0-49.0 s, pos=(4.00, -4.00, 1.00)
+[formation_coordinator_node-30] [INFO] [1763810642.064890047] [formation_0.formation_coordinator_group0]:   WP[3]: t=49.0-54.0 s, pos=(4.00, -4.00, 1.00)
+[formation_coordinator_node-30] [INFO] [1763810642.064917453] [formation_0.formation_coordinator_group0]:   WP[4]: t=54.0-76.0 s, pos=(12.00, -4.00, 1.00)
+[formation_coordinator_node-30] [INFO] [1763810642.064944499] [formation_0.formation_coordinator_group0]:   WP[5]: t=76.0-81.0 s, pos=(12.00, -4.00, 1.00)
+[formation_coordinator_node-30] [INFO] [1763810642.064963976] [formation_0.formation_coordinator_group0]:   WP[6]: t=81.0-103.0 s, pos=(20.00, -4.00, 1.00)
+[formation_coordinator_node-30] [INFO] [1763810642.064982622] [formation_0.formation_coordinator_group0]:   WP[7]: t=103.0-110.0 s, pos=(20.00, -4.00, 1.00)
+[formation_coordinator_node-30] [INFO] [1763810642.145641186] [formation_0.formation_coordinator_group0]: Formation coordinator online: shape=triangle spacing=3.00 m, rate=10.0 Hz
+[metrics_publisher_node-29] [INFO] [1763810642.148068839] [agent_8.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[agent_controller_node-24] [INFO] [1763810642.156401207] [agent_7.agent_controller]: Agent controller node initialised: type=pid, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=0.00]
+[formation_coordinator_node-32] [INFO] [1763810677.807761655] [rclcpp]: signal_handler(signum=2)
+[formation_coordinator_node-30] [INFO] [1763810677.807767337] [rclcpp]: signal_handler(signum=2)
+[formation_coordinator_node-31] [INFO] [1763810677.807761522] [rclcpp]: signal_handler(signum=2)
+[metrics_publisher_node-29] [INFO] [1763810677.807775596] [rclcpp]: signal_handler(signum=2)
+[agent_controller_node-24] [INFO] [1763810677.807856049] [rclcpp]: signal_handler(signum=2)
+[metrics_publisher_node-20] [INFO] [1763810677.807861071] [rclcpp]: signal_handler(signum=2)
+[metrics_publisher_node-17] [INFO] [1763810677.807899095] [rclcpp]: signal_handler(signum=2)
+[agent_controller_node-27] [INFO] [1763810677.807961699] [rclcpp]: signal_handler(signum=2)
+[agent_controller_node-21] [INFO] [1763810677.807971994] [rclcpp]: signal_handler(signum=2)
+[agent_controller_node-18] [INFO] [1763810677.807976707] [rclcpp]: signal_handler(signum=2)
+[path_visualizer_node-19] [INFO] [1763810677.807983957] [rclcpp]: signal_handler(signum=2)
+[metrics_publisher_node-23] [INFO] [1763810677.808022641] [rclcpp]: signal_handler(signum=2)
+[path_visualizer_node-28] [INFO] [1763810677.808090920] [rclcpp]: signal_handler(signum=2)
+[agent_controller_node-6] [INFO] [1763810677.808107511] [rclcpp]: signal_handler(signum=2)
+[agent_controller_node-15] [INFO] [1763810677.808127358] [rclcpp]: signal_handler(signum=2)
+[path_visualizer_node-25] [INFO] [1763810677.808143006] [rclcpp]: signal_handler(signum=2)
+[agent_controller_node-3] [INFO] [1763810677.808275215] [rclcpp]: signal_handler(signum=2)
+[agent_controller_node-9] [INFO] [1763810677.808467202] [rclcpp]: signal_handler(signum=2)
+[path_visualizer_node-13] [INFO] [1763810677.808596499] [rclcpp]: signal_handler(signum=2)
+[agent_controller_node-12] [INFO] [1763810677.809006826] [rclcpp]: signal_handler(signum=2)
+[metrics_publisher_node-14] [INFO] [1763810677.809096077] [rclcpp]: signal_handler(signum=2)
+[path_visualizer_node-7] [INFO] [1763810677.809237437] [rclcpp]: signal_handler(signum=2)
+[path_visualizer_node-22] [INFO] [1763810677.809445367] [rclcpp]: signal_handler(signum=2)
+[path_visualizer_node-4] [INFO] [1763810677.809580033] [rclcpp]: signal_handler(signum=2)
+[metrics_publisher_node-8] [INFO] [1763810677.809806844] [rclcpp]: signal_handler(signum=2)
+[path_visualizer_node-16] [INFO] [1763810677.810333388] [rclcpp]: signal_handler(signum=2)
+[metrics_publisher_node-11] [INFO] [1763810677.810526360] [rclcpp]: signal_handler(signum=2)
+[path_visualizer_node-10] [INFO] [1763810677.810664370] [rclcpp]: signal_handler(signum=2)
+[metrics_publisher_node-26] [INFO] [1763810677.810800235] [rclcpp]: signal_handler(signum=2)
+[metrics_publisher_node-5] [INFO] [1763810677.813690155] [rclcpp]: signal_handler(signum=2)
+[gzserver-1] [INFO] [1763810677.855913011] [rclcpp]: signal_handler(signum=2)
+[INFO] [agent_controller_node-21]: process has finished cleanly [pid 10300]
+[INFO] [path_visualizer_node-13]: process has finished cleanly [pid 10281]
+[INFO] [path_visualizer_node-22]: process has finished cleanly [pid 10302]
+[INFO] [path_visualizer_node-4]: process has finished cleanly [pid 10262]
+[INFO] [metrics_publisher_node-8]: process has finished cleanly [pid 10270]
+[INFO] [metrics_publisher_node-29]: process has finished cleanly [pid 10316]
+[INFO] [metrics_publisher_node-5]: process has finished cleanly [pid 10264]
+[INFO] [path_visualizer_node-19]: process has finished cleanly [pid 10296]
+[INFO] [agent_controller_node-24]: process has finished cleanly [pid 10306]
+[INFO] [metrics_publisher_node-23]: process has finished cleanly [pid 10304]
+[INFO] [formation_coordinator_node-31]: process has finished cleanly [pid 10322]
+[INFO] [formation_coordinator_node-32]: process has finished cleanly [pid 10326]
+[INFO] [path_visualizer_node-25]: process has finished cleanly [pid 10308]
+[INFO] [agent_controller_node-3]: process has finished cleanly [pid 10260]
+[INFO] [path_visualizer_node-7]: process has finished cleanly [pid 10268]
+[INFO] [metrics_publisher_node-20]: process has finished cleanly [pid 10298]
+[INFO] [metrics_publisher_node-26]: process has finished cleanly [pid 10310]
+[INFO] [agent_controller_node-18]: process has finished cleanly [pid 10294]
+[INFO] [metrics_publisher_node-17]: process has finished cleanly [pid 10291]
+[INFO] [agent_controller_node-27]: process has finished cleanly [pid 10312]

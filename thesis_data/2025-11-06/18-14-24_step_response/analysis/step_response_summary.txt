@@ -1,0 +1,40 @@
+======================================================================
+  STEP RESPONSE ANALYSIS SUMMARY
+======================================================================
+
+PID+Fuzzy:
+────────────────────────────────────────────────────────────
+  rise_time                     : nan
+  overshoot_percent             : 0.0000
+  peak_time                     : 32.3334
+  settling_time                 : nan
+  steady_state_error            : 0.4992
+  steady_state_error_percent    : 0.0000
+  initial_value                 : 1.6067
+  final_value                   : 0.4992
+  peak_value                    : 0.4992
+
+PD:
+────────────────────────────────────────────────────────────
+  rise_time                     : nan
+  overshoot_percent             : 0.0000
+  peak_time                     : 11.9534
+  settling_time                 : nan
+  steady_state_error            : 0.4992
+  steady_state_error_percent    : 0.0000
+  initial_value                 : 0.5113
+  final_value                   : 0.4992
+  peak_value                    : 0.4992
+
+PID:
+────────────────────────────────────────────────────────────
+  rise_time                     : nan
+  overshoot_percent             : 0.0000
+  peak_time                     : 32.1972
+  settling_time                 : nan
+  steady_state_error            : 0.4992
+  steady_state_error_percent    : 0.0000
+  initial_value                 : 1.2628
+  final_value                   : 0.4992
+  peak_value                    : 0.4992
+

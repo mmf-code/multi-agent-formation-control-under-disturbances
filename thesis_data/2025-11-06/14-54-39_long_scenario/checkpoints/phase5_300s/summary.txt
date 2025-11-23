@@ -1,0 +1,9 @@
+CHECKPOINT SUMMARY - Phase 5
+============================================================
+
+Time: 300s
+Phase: Phase 5
+
+agent_0: 0 samples
+agent_3: 0 samples
+agent_6: 0 samples

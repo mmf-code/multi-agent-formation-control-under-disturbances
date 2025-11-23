@@ -1,0 +1,50 @@
+[INFO] [launch]: All log files can be found below /home/mmf/.ros/log/2025-11-22-15-15-39-142780-mmf-ABRA-A5-V15-2-65072
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [gzserver-1]: process started with pid [65073]
+[INFO] [gzclient-2]: process started with pid [65075]
+[INFO] [agent_controller_node-3]: process started with pid [65077]
+[INFO] [path_visualizer_node-4]: process started with pid [65079]
+[INFO] [metrics_publisher_node-5]: process started with pid [65081]
+[INFO] [agent_controller_node-6]: process started with pid [65083]
+[INFO] [path_visualizer_node-7]: process started with pid [65085]
+[INFO] [metrics_publisher_node-8]: process started with pid [65087]
+[INFO] [agent_controller_node-9]: process started with pid [65089]
+[INFO] [path_visualizer_node-10]: process started with pid [65091]
+[INFO] [metrics_publisher_node-11]: process started with pid [65093]
+[INFO] [agent_controller_node-12]: process started with pid [65095]
+[INFO] [path_visualizer_node-13]: process started with pid [65099]
+[INFO] [metrics_publisher_node-14]: process started with pid [65130]
+[INFO] [agent_controller_node-15]: process started with pid [65136]
+[INFO] [path_visualizer_node-16]: process started with pid [65145]
+[INFO] [metrics_publisher_node-17]: process started with pid [65149]
+[INFO] [agent_controller_node-18]: process started with pid [65151]
+[INFO] [path_visualizer_node-19]: process started with pid [65157]
+[INFO] [metrics_publisher_node-20]: process started with pid [65163]
+[INFO] [agent_controller_node-21]: process started with pid [65169]
+[INFO] [path_visualizer_node-22]: process started with pid [65173]
+[INFO] [metrics_publisher_node-23]: process started with pid [65181]
+[INFO] [agent_controller_node-24]: process started with pid [65184]
+[INFO] [path_visualizer_node-25]: process started with pid [65197]
+[INFO] [metrics_publisher_node-26]: process started with pid [65204]
+[INFO] [agent_controller_node-27]: process started with pid [65208]
+[INFO] [path_visualizer_node-28]: process started with pid [65215]
+[INFO] [metrics_publisher_node-29]: process started with pid [65219]
+[INFO] [formation_coordinator_node-30]: process started with pid [65236]
+[INFO] [formation_coordinator_node-31]: process started with pid [65255]
+[INFO] [formation_coordinator_node-32]: process started with pid [65257]
+[INFO] [rviz2-33]: process started with pid [65262]
+[agent_controller_node-3] [INFO] [1763813739.362508335] [agent_0.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[agent_controller_node-3] [INFO] [1763813739.387758996] [agent_0.agent_controller]: Agent controller node initialised: type=pid_fuzzy, dt=0.005000 s, PID[Kp=3.501, Ki=1.946, Kd=3.608], mix[k_pid=1.00, k_fuzzy=0.70]
+[metrics_publisher_node-8] [INFO] [1763813739.535896969] [agent_1.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[rviz2-33] qt.qpa.plugin: Could not find the Qt platform plugin "wayland" in ""
+[metrics_publisher_node-5] [INFO] [1763813739.785113174] [agent_0.metrics_publisher]: Metrics Publisher initialized: rate=10.0 Hz, settled_pos_threshold=0.100 m, settled_time_window=1.00 s
+[path_visualizer_node-13] [INFO] [1763813739.803995502] [agent_3.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[agent_controller_node-9] [INFO] [1763813739.825005776] [agent_2.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[metrics_publisher_node-5] [INFO] [1763813739.832402103] [agent_0.metrics_publisher]: Group metrics enabled for namespace '/agent_0' (agent_0, group_0) on topic '/metrics/group_0' (window=30.0s)
+[path_visualizer_node-4] [INFO] [1763813739.890992283] [agent_0.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[path_visualizer_node-7] [INFO] [1763813739.925092473] [agent_1.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[rviz2-33] /opt/ros/humble/lib/rviz2/rviz2: symbol lookup error: /snap/core20/current/lib/x86_64-linux-gnu/libpthread.so.0: undefined symbol: __libc_pthread_init, version GLIBC_PRIVATE
+[ERROR] [rviz2-33]: process has died [pid 65262, exit code 127, cmd '/opt/ros/humble/lib/rviz2/rviz2 -d /home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/rviz/formation_demo.rviz --ros-args -r __node:=rviz2 --params-file /tmp/launch_params_hc7hrb5a'].
+[agent_controller_node-6] [INFO] [1763813740.045620279] [agent_1.agent_controller]: Loaded fuzzy parameters from '/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/install/agent_control_pkg/share/agent_control_pkg/config/fuzzy_params.yaml'
+[path_visualizer_node-10] [INFO] [1763813740.312045042] [agent_2.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz
+[path_visualizer_node-16] [INFO] [1763813740.403147229] [agent_4.path_visualizer]: Path Visualizer Node initialized: max_length=1000, rate=10.0 Hz

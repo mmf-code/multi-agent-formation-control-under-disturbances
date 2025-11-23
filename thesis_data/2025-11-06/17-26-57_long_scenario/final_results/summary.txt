@@ -1,0 +1,27 @@
+ENHANCED METRICS LOGGER - FINAL SUMMARY
+======================================================================
+
+Date: 2025-11-06 17:28:22
+Duration: 300s
+Phases: 5
+Checkpoints Saved: 2
+
+AGENTS & SAMPLES:
+----------------------------------------------------------------------
+  agent_0 (pidfuzzy  ):    660 samples
+  agent_3 (pd        ):    660 samples
+  agent_6 (pid       ):    660 samples
+
+  TOTAL: 1980 samples
+
+OUTPUT STRUCTURE:
+----------------------------------------------------------------------
+  raw_data/         - Full CSV files (all 300s)
+  checkpoints/      - Intermediate saves (phase1-5)
+  final_results/    - Summary + full data
+
+NEXT STEPS:
+----------------------------------------------------------------------
+  1. Analysis: python3 analysis/analyze_checkpoint_data.py thesis_data/2025-11-06/17-26-57_long_scenario
+  2. Plotting: python3 analysis/plot_long_scenario.py thesis_data/2025-11-06/17-26-57_long_scenario
+  3. Report:   python3 analysis/generate_thesis_report.py thesis_data/2025-11-06/17-26-57_long_scenario

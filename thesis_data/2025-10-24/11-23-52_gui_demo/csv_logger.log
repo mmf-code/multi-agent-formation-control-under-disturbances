@@ -1,0 +1,76 @@
+[INFO] [1761294240.290718771] [simple_metrics_logger]: Logger initialized. Recording to: thesis_data/2025-10-24/11-23-52_gui_demo
+[INFO] [1761294240.292147565] [simple_metrics_logger]: Duration: 60s
+[INFO] [1761294241.294433060] [simple_metrics_logger]: Progress: 1% (58s remaining)
+[INFO] [1761294242.294588012] [simple_metrics_logger]: Progress: 3% (57s remaining)
+[INFO] [1761294243.294640439] [simple_metrics_logger]: Progress: 5% (56s remaining)
+[INFO] [1761294244.294314890] [simple_metrics_logger]: Progress: 6% (55s remaining)
+[INFO] [1761294245.293278461] [simple_metrics_logger]: Progress: 8% (54s remaining)
+[INFO] [1761294246.294386922] [simple_metrics_logger]: Progress: 10% (53s remaining)
+[INFO] [1761294247.294371661] [simple_metrics_logger]: Progress: 11% (52s remaining)
+[INFO] [1761294248.294485502] [simple_metrics_logger]: Progress: 13% (51s remaining)
+[INFO] [1761294249.294335434] [simple_metrics_logger]: Progress: 15% (50s remaining)
+[INFO] [1761294250.294431141] [simple_metrics_logger]: Progress: 16% (49s remaining)
+[INFO] [1761294251.297028363] [simple_metrics_logger]: Progress: 18% (48s remaining)
+[INFO] [1761294252.292855515] [simple_metrics_logger]: Progress: 20% (47s remaining)
+[INFO] [1761294253.294338343] [simple_metrics_logger]: Progress: 21% (46s remaining)
+[INFO] [1761294254.294376683] [simple_metrics_logger]: Progress: 23% (45s remaining)
+[INFO] [1761294255.308729922] [simple_metrics_logger]: Progress: 25% (44s remaining)
+[INFO] [1761294256.293575555] [simple_metrics_logger]: Progress: 26% (43s remaining)
+[INFO] [1761294257.294607373] [simple_metrics_logger]: Progress: 28% (42s remaining)
+[INFO] [1761294258.295226956] [simple_metrics_logger]: Progress: 30% (41s remaining)
+[INFO] [1761294259.296103939] [simple_metrics_logger]: Progress: 31% (40s remaining)
+[INFO] [1761294260.295803501] [simple_metrics_logger]: Progress: 33% (39s remaining)
+[INFO] [1761294261.295788518] [simple_metrics_logger]: Progress: 35% (38s remaining)
+[INFO] [1761294262.295617788] [simple_metrics_logger]: Progress: 36% (37s remaining)
+[INFO] [1761294263.293322719] [simple_metrics_logger]: Progress: 38% (36s remaining)
+[INFO] [1761294264.294359336] [simple_metrics_logger]: Progress: 40% (35s remaining)
+[INFO] [1761294265.292880578] [simple_metrics_logger]: Progress: 41% (34s remaining)
+[INFO] [1761294266.294861108] [simple_metrics_logger]: Progress: 43% (33s remaining)
+[INFO] [1761294267.294299912] [simple_metrics_logger]: Progress: 45% (32s remaining)
+[INFO] [1761294268.295580720] [simple_metrics_logger]: Progress: 46% (31s remaining)
+[INFO] [1761294269.294334238] [simple_metrics_logger]: Progress: 48% (30s remaining)
+[INFO] [1761294270.293365789] [simple_metrics_logger]: Progress: 50% (29s remaining)
+[INFO] [1761294271.293441314] [simple_metrics_logger]: Progress: 51% (28s remaining)
+[INFO] [1761294272.293059571] [simple_metrics_logger]: Progress: 53% (27s remaining)
+[INFO] [1761294273.293381230] [simple_metrics_logger]: Progress: 55% (26s remaining)
+[INFO] [1761294274.293430563] [simple_metrics_logger]: Progress: 56% (25s remaining)
+[INFO] [1761294275.293629699] [simple_metrics_logger]: Progress: 58% (24s remaining)
+[INFO] [1761294276.293430765] [simple_metrics_logger]: Progress: 60% (23s remaining)
+[INFO] [1761294277.293424284] [simple_metrics_logger]: Progress: 61% (22s remaining)
+[INFO] [1761294278.294360735] [simple_metrics_logger]: Progress: 63% (21s remaining)
+[INFO] [1761294279.293067574] [simple_metrics_logger]: Progress: 65% (20s remaining)
+[INFO] [1761294280.293462530] [simple_metrics_logger]: Progress: 66% (19s remaining)
+[INFO] [1761294281.295650688] [simple_metrics_logger]: Progress: 68% (18s remaining)
+[INFO] [1761294282.293340719] [simple_metrics_logger]: Progress: 70% (17s remaining)
+[INFO] [1761294283.293568704] [simple_metrics_logger]: Progress: 71% (16s remaining)
+[INFO] [1761294284.293658907] [simple_metrics_logger]: Progress: 73% (15s remaining)
+[INFO] [1761294285.295797379] [simple_metrics_logger]: Progress: 75% (14s remaining)
+[INFO] [1761294286.292916925] [simple_metrics_logger]: Progress: 76% (13s remaining)
+[INFO] [1761294287.294771031] [simple_metrics_logger]: Progress: 78% (12s remaining)
+[INFO] [1761294288.296057915] [simple_metrics_logger]: Progress: 80% (11s remaining)
+[INFO] [1761294289.295667452] [simple_metrics_logger]: Progress: 81% (10s remaining)
+[INFO] [1761294290.292933243] [simple_metrics_logger]: Progress: 83% (9s remaining)
+[INFO] [1761294291.293100147] [simple_metrics_logger]: Progress: 85% (8s remaining)
+[INFO] [1761294292.294408503] [simple_metrics_logger]: Progress: 86% (7s remaining)
+[INFO] [1761294293.295707472] [simple_metrics_logger]: Progress: 88% (6s remaining)
+[INFO] [1761294294.295279277] [simple_metrics_logger]: Progress: 90% (5s remaining)
+[INFO] [1761294295.295227105] [simple_metrics_logger]: Progress: 91% (4s remaining)
+Recording metrics for agents: 0, 3, 6
+Output directory: thesis_data/2025-10-24/11-23-52_gui_demo
+Duration: 60s
+Traceback (most recent call last):
+  File "/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/scripts/simple_metrics_logger.py", line 148, in <module>
+    main()
+  File "/home/mmf/Documents/GitHub/multi-agent-formation-control-under-disturbances/scripts/simple_metrics_logger.py", line 140, in main
+    rclpy.spin(logger)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/__init__.py", line 226, in spin
+    executor.spin_once()
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 751, in spin_once
+    self._spin_once_impl(timeout_sec)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 740, in _spin_once_impl
+    handler, entity, node = self.wait_for_ready_callbacks(timeout_sec=timeout_sec)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 723, in wait_for_ready_callbacks
+    return next(self._cb_iter)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 624, in _wait_for_ready_callbacks
+    raise ExternalShutdownException()
+rclpy.executors.ExternalShutdownException
