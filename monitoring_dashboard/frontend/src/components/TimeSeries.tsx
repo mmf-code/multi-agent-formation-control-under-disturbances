@@ -19,6 +19,7 @@ interface TimeSeriesProps {
   timeWindow?: number; // seconds, 0 = full run
   viewMode?: 'individual' | 'aggregated';
   controllerParams?: Record<string, ControllerParams>;
+  selectedControllers?: Set<string>;
 }
 
 interface ZoomState {
@@ -27,25 +28,38 @@ interface ZoomState {
   yaxis2?: { range: [number, number]; autorange?: boolean };
 }
 
-// Sci-Fi Palette Colors
+// Professional Color Palette (softer, more readable)
 const COLORS = {
-  primary: '#00f3ff', // Neon Blue
-  secondary: '#bc13fe', // Neon Purple
-  success: '#0aff68', // Signal Green
-  warning: '#f59e0b', // Amber
-  danger: '#ff003c', // Alert Red
+  primary: '#3b82f6', // Blue 500 - softer blue
+  secondary: '#8b5cf6', // Violet 500 - softer purple
+  success: '#10b981', // Emerald 500 - softer green
+  warning: '#f59e0b', // Amber 500
+  danger: '#ef4444', // Red 500
   text: '#e2e8f0', // Slate 200
-  grid: '#1f2937', // Gray 800
+  grid: '#374151', // Gray 700 - slightly lighter grid
   bg: 'transparent',
 };
 
-// Controller type colors
+// Controller type colors (distinct and professional)
 const CONTROLLER_COLORS: Record<string, string> = {
-  pid: '#00f3ff', // Neon Blue
-  hybrid: '#0aff68', // Signal Green (Emerald)
-  fuzzy: '#bc13fe', // Neon Purple
-  unknown: '#f59e0b', // Amber
+  pid: '#3b82f6', // Blue 500
+  hybrid: '#10b981', // Emerald 500
+  fuzzy: '#a855f7', // Purple 500
+  pd: '#f97316', // Orange 500
+  unknown: '#6b7280', // Gray 500
 };
+
+// Individual agent colors (for individual view mode)
+const AGENT_COLORS = [
+  '#3b82f6', // Blue 500
+  '#10b981', // Emerald 500
+  '#a855f7', // Purple 500
+  '#f59e0b', // Amber 500
+  '#ef4444', // Red 500
+  '#06b6d4', // Cyan 500
+  '#ec4899', // Pink 500
+  '#84cc16', // Lime 500
+];
 
 export const TimeSeries: React.FC<TimeSeriesProps> = ({
   metricsHistory,
@@ -55,11 +69,15 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
   timeWindow: _timeWindow = 60,
   viewMode = 'individual',
   controllerParams = {},
+  selectedControllers = new Set(['pid', 'fuzzy', 'hybrid', 'pd']),
 }) => {
   // TODO: Use _timeWindow to filter data by time range
 
   // State to persist zoom across data updates
   const [zoomState, setZoomState] = useState<ZoomState>({});
+
+  // Stable uirevision key - only changes when user intentionally resets view
+  const [uirevision] = useState<string>('v1');
 
   // Callback to handle zoom/pan events
   const handleRelayout = useCallback((event: any) => {
@@ -288,15 +306,24 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
           plot_bgcolor: COLORS.bg,
           font: { color: COLORS.text, family: 'Inter, sans-serif' },
           margin: { l: 60, r: 40, t: 40, b: 60 },
-          uirevision: 'true', // Keep zoom state on update
+          uirevision: uirevision, // Keep zoom state on update
         },
       };
     }
 
     // Determine data source based on view mode
-    const dataSource = viewMode === 'aggregated' && !selectedAgent
+    let dataSource = viewMode === 'aggregated' && !selectedAgent
       ? aggregateByControllerType(metricsHistory, controllerParams)
       : metricsHistory;
+
+    // Filter by selected controllers if in aggregated mode
+    if (viewMode === 'aggregated' && !selectedAgent) {
+      dataSource = Object.fromEntries(
+        Object.entries(dataSource).filter(([controllerType, _]) =>
+          selectedControllers.has(controllerType)
+        )
+      );
+    }
 
     const agents = selectedAgent
       ? [selectedAgent]
@@ -308,7 +335,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
         // Use controller-specific colors for aggregated view, or cycle through colors for individual view
         const baseColor = viewMode === 'aggregated'
           ? CONTROLLER_COLORS[agent] || COLORS.primary
-          : (idx === 0 ? COLORS.primary : idx === 1 ? COLORS.secondary : COLORS.success);
+          : AGENT_COLORS[idx % AGENT_COLORS.length];
 
         const agentLabel = viewMode === 'aggregated'
           ? `${agent.toUpperCase()} Controller`
@@ -359,7 +386,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
           font: { color: COLORS.text, family: 'Inter, sans-serif' },
           margin: { l: 60, r: 40, t: 40, b: 60 },
           hovermode: 'closest' as const,
-          uirevision: 'true', // Keep zoom state on update
+          uirevision: uirevision, // Keep zoom state on update
         },
       };
     }
@@ -369,7 +396,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
         const history = dataSource[agent] || [];
         const baseColor = viewMode === 'aggregated'
           ? CONTROLLER_COLORS[agent] || COLORS.primary
-          : (idx === 0 ? COLORS.primary : idx === 1 ? COLORS.secondary : COLORS.success);
+          : AGENT_COLORS[idx % AGENT_COLORS.length];
         const agentLabel = viewMode === 'aggregated'
           ? `${agent.toUpperCase()} Controller`
           : agent;
@@ -418,7 +445,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
           plot_bgcolor: COLORS.bg,
           font: { color: COLORS.text, family: 'Inter, sans-serif' },
           margin: { l: 60, r: 40, t: 40, b: 60 },
-          uirevision: 'true', // Keep zoom state on update
+          uirevision: uirevision, // Keep zoom state on update
         },
       };
     }
@@ -428,7 +455,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
         const history = dataSource[agent] || [];
         const baseColor = viewMode === 'aggregated'
           ? CONTROLLER_COLORS[agent] || COLORS.primary
-          : (idx === 0 ? COLORS.primary : idx === 1 ? COLORS.secondary : COLORS.success);
+          : AGENT_COLORS[idx % AGENT_COLORS.length];
         const agentLabel = viewMode === 'aggregated'
           ? `${agent.toUpperCase()} Controller`
           : agent;
@@ -477,13 +504,13 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
           plot_bgcolor: COLORS.bg,
           font: { color: COLORS.text, family: 'Inter, sans-serif' },
           margin: { l: 60, r: 40, t: 40, b: 60 },
-          uirevision: 'true', // Keep zoom state on update
+          uirevision: uirevision, // Keep zoom state on update
         },
       };
     }
 
     return { data: [], layout: {} };
-  }, [metricsHistory, windHistory, selectedAgent, chartType, zoomState, viewMode, controllerParams, aggregateByControllerType]);
+  }, [metricsHistory, windHistory, selectedAgent, chartType, zoomState, viewMode, controllerParams, selectedControllers, aggregateByControllerType]);
 
   return (
     <div className="glass-panel rounded-lg p-4 transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,243,255,0.1)]">
@@ -498,7 +525,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
           responsive: true,
           displayModeBar: true,
           displaylogo: false,
-          modeBarButtonsToRemove: ['lasso2d', 'select2d'],
+          modeBarButtonsToRemove: ['lasso2d', 'select2d', 'autoScale2d'],
         }}
         style={{ width: '100%' }}
         onRelayout={handleRelayout}

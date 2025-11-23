@@ -269,6 +269,7 @@ async def websocket_endpoint(websocket: WebSocket):
     """
     await websocket.accept()
     active_connections.add(websocket)
+    active_websockets.add(websocket)
     logger.info(f"WebSocket client connected. Total connections: {len(active_connections)}")
 
     # Client subscription preferences
@@ -343,6 +344,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 latest = ros_bridge.latest_diagnostics.get(agent_id)
                 if latest:
                     data_payload = latest
+            elif data_type == 'aggregated_metrics' and agent_id:
+                # agent_id here is actually controller_type
+                data_payload = ros_bridge.get_aggregated_metrics(agent_id)
 
             if data_payload:
                 try:
@@ -463,6 +467,7 @@ async def websocket_endpoint(websocket: WebSocket):
         if ros_bridge and ros_callback:
             ros_bridge.remove_update_callback(ros_callback)
         active_connections.discard(websocket)
+        active_websockets.discard(websocket)
         logger.info(f"WebSocket client removed. Total connections: {len(active_connections)}")
 
 
@@ -520,6 +525,30 @@ import os
 simulation_process: Optional[subprocess.Popen] = None
 simulation_status = {"running": False, "pid": None, "script": None}
 
+# Active WebSocket connections
+active_websockets: Set[WebSocket] = set()
+
+async def broadcast_simulation_event(event_type: str, data: dict = None):
+    """Broadcast simulation lifecycle events to all connected WebSocket clients"""
+    message = {
+        "type": "simulation_event",
+        "event": event_type,
+        "timestamp": time.time(),
+        **(data or {})
+    }
+
+    disconnected = set()
+    for ws in active_websockets:
+        try:
+            if ws.client_state.name == "CONNECTED":
+                await ws.send_json(message)
+        except Exception as e:
+            logger.debug(f"Failed to broadcast to websocket: {e}")
+            disconnected.add(ws)
+
+    # Clean up disconnected websockets
+    active_websockets.difference_update(disconnected)
+
 @app.post("/api/simulation/start")
 async def start_simulation(script: str = "run_formation_demo.sh"):
     """Start a simulation script"""
@@ -573,6 +602,12 @@ async def start_simulation(script: str = "run_formation_demo.sh"):
 
         logger.info(f"Started simulation: {script} (PID: {simulation_process.pid})")
 
+        # Broadcast simulation started event
+        await broadcast_simulation_event("started", {
+            "script": script,
+            "pid": simulation_process.pid
+        })
+
         return {
             "status": "started",
             "pid": simulation_process.pid,
@@ -619,6 +654,10 @@ async def stop_simulation():
         logger.info(f"Stopped simulation and cleaned up Gazebo processes")
         simulation_status = {"running": False, "pid": None, "script": None}
         simulation_process = None
+
+        # Broadcast simulation ended event
+        await broadcast_simulation_event("stopped", {"reason": "user_requested"})
+
         return {"status": "stopped"}
 
     except Exception as e:

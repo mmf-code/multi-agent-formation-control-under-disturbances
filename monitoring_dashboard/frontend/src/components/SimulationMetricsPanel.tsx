@@ -497,27 +497,57 @@ const ChartsSection: React.FC<{
     const [chartType, setChartType] = useState<'error' | 'metrics' | 'wind' | 'overshoot'>('error');
     const [timeWindow, setTimeWindow] = useState<number>(60);
     const [viewMode, setViewMode] = useState<'individual' | 'aggregated'>('individual');
+    const [selectedControllers, setSelectedControllers] = useState<Set<string>>(new Set(['pid', 'fuzzy', 'hybrid', 'pd']));
+
+    const toggleController = (controller: string) => {
+        const newSet = new Set(selectedControllers);
+        if (newSet.has(controller)) {
+            newSet.delete(controller);
+        } else {
+            newSet.add(controller);
+        }
+        setSelectedControllers(newSet);
+    };
 
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between gap-3">
-                <div className="flex space-x-2 overflow-x-auto pb-2">
-                    {(['error', 'metrics', 'wind', 'overshoot'] as const).map((type) => (
-                        <button
-                            key={type}
-                            onClick={() => setChartType(type)}
-                            className={`px-3 py-1 rounded text-xs font-medium transition-all whitespace-nowrap ${
-                                chartType === type
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                            }`}
-                        >
-                            {type === 'error' && 'Position Error'}
-                            {type === 'metrics' && 'IAE/ITAE'}
-                            {type === 'wind' && 'Wind Velocity'}
-                            {type === 'overshoot' && 'Overshoot'}
-                        </button>
-                    ))}
+                <div className="flex flex-col gap-2">
+                    <div className="flex space-x-2 overflow-x-auto pb-2">
+                        {(['error', 'metrics', 'wind', 'overshoot'] as const).map((type) => (
+                            <button
+                                key={type}
+                                onClick={() => setChartType(type)}
+                                className={`px-3 py-1 rounded text-xs font-medium transition-all whitespace-nowrap ${
+                                    chartType === type
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                                }`}
+                            >
+                                {type === 'error' && 'Position Error'}
+                                {type === 'metrics' && 'IAE/ITAE'}
+                                {type === 'wind' && 'Wind Velocity'}
+                                {type === 'overshoot' && 'Overshoot'}
+                            </button>
+                        ))}
+                    </div>
+                    {viewMode === 'aggregated' && chartType !== 'wind' && (
+                        <div className="flex space-x-2 overflow-x-auto">
+                            {(['pid', 'fuzzy', 'hybrid', 'pd'] as const).map((controller) => (
+                                <button
+                                    key={controller}
+                                    onClick={() => toggleController(controller)}
+                                    className={`px-2.5 py-1 rounded text-xs font-medium transition-all whitespace-nowrap border ${
+                                        selectedControllers.has(controller)
+                                            ? 'bg-cyan-600 border-cyan-500 text-white shadow-sm'
+                                            : 'bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700'
+                                    }`}
+                                >
+                                    {controller.toUpperCase()}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
                 <div className="flex items-center gap-2">
                     {chartType !== 'wind' && (
@@ -564,6 +594,7 @@ const ChartsSection: React.FC<{
                     timeWindow={timeWindow}
                     viewMode={viewMode}
                     controllerParams={controllerParams}
+                    selectedControllers={selectedControllers}
                 />
             </div>
         </div>

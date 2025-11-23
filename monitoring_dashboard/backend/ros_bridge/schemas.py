@@ -158,6 +158,36 @@ class ControllerParams(BaseModel):
     dt: float
 
 
+class AggregatedMetrics(BaseModel):
+    """Aggregated metrics for a group of agents (e.g., by controller type)"""
+    controller_type: str
+    timestamp: float
+    agent_count: int
+
+    # Average position errors
+    avg_error_x: float
+    avg_error_y: float
+    avg_error_z: float
+    avg_error_magnitude: float
+
+    # Average RMSE
+    avg_rmse_x: float
+    avg_rmse_y: float
+    avg_rmse_z: float
+    avg_rmse_total: float
+
+    # Average integral metrics
+    avg_iae_x: float
+    avg_iae_y: float
+    avg_itae_x: float
+    avg_itae_y: float
+
+    # Response characteristics (max overshoot is max, not avg)
+    avg_settling_time: float
+    max_overshoot_x: float
+    max_overshoot_y: float
+
+
 class SystemStatus(BaseModel):
     """Overall system status"""
     timestamp: float

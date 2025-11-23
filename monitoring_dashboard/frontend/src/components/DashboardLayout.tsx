@@ -19,6 +19,8 @@ interface DashboardLayoutProps {
         active_agents: string[];
         active_topics?: string[];
     } | null;
+    simulationEnded?: boolean;
+    simulationEndReason?: string;
     leftPanel: React.ReactNode;
     rightPanel: React.ReactNode;
     bottomPanel: React.ReactNode;
@@ -27,6 +29,8 @@ interface DashboardLayoutProps {
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     connected,
     systemStatus,
+    simulationEnded = false,
+    simulationEndReason = '',
     leftPanel,
     rightPanel,
     bottomPanel,
@@ -277,6 +281,19 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                     </div>
                 </div>
             </header>
+
+            {/* Simulation Ended Banner */}
+            {simulationEnded && (
+                <div className="bg-yellow-900/30 border-b border-yellow-700/50 px-4 py-2 flex items-center justify-between z-10">
+                    <div className="flex items-center space-x-3">
+                        <Terminal className="w-4 h-4 text-yellow-500" />
+                        <span className="text-sm text-yellow-200">
+                            Simulation ended: <span className="font-mono text-yellow-400">{simulationEndReason || 'unknown'}</span>
+                        </span>
+                    </div>
+                    <span className="text-xs text-yellow-500/70">Historical data preserved</span>
+                </div>
+            )}
 
             {/* Main Content Area - Resizable 2-Column Layout */}
             <div className="flex-1 flex overflow-hidden z-10 relative">

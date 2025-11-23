@@ -27,6 +27,7 @@ from .schemas import (
     DiagnosticsData,
     ControllerParams,
     SystemStatus,
+    AggregatedMetrics,
     Vector3 as Vector3Schema,
     RosNode,
     RosEdge,
@@ -65,6 +66,14 @@ class ROSBridge(Node):
         self.latest_formation: Optional[FormationState] = None
         self.latest_wind: Optional[WindData] = None
 
+        # Aggregated metrics storage
+        self.aggregated_metrics_data: Dict[str, deque] = defaultdict(lambda: deque(maxlen=self.max_history))  # key: controller_type
+        self.latest_aggregated_metrics: Dict[str, AggregatedMetrics] = {}  # key: controller_type
+
+        # Time bucketing for aggregation (100ms buckets)
+        self.time_bucket_size = 0.1  # 100ms
+        self.pending_metrics: Dict[float, Dict[str, MetricsData]] = {}  # bucket_timestamp -> {agent_id: metrics}
+
         # Active agents tracking
         self.active_agents: set = set()
         self.discovered_topics: Dict[str, str] = {}  # topic_name -> msg_type
@@ -89,6 +98,9 @@ class ROSBridge(Node):
 
         # Auto-discovery of agents and topics
         self.discover_timer = self.create_timer(1.0, self.discover_topics)
+
+        # Aggregation timer (process buckets every 100ms)
+        self.aggregation_timer = self.create_timer(0.1, self.process_aggregation)
 
         logger.info("ROSBridge initialized - monitoring dashboard ready")
 
@@ -331,6 +343,12 @@ class ROSBridge(Node):
                 self.metrics_data[agent_id] = deque(maxlen=self.max_history)
             self.metrics_data[agent_id].append(data)
             self.latest_metrics[agent_id] = data
+
+            # Add to time bucket for aggregation
+            bucket_ts = self._round_to_bucket(timestamp)
+            if bucket_ts not in self.pending_metrics:
+                self.pending_metrics[bucket_ts] = {}
+            self.pending_metrics[bucket_ts][agent_id] = data
 
         self.notify_update('metrics', agent_id)
 
@@ -735,3 +753,93 @@ class ROSBridge(Node):
             edges=edges,
             timestamp=time.time()
         )
+
+    def _round_to_bucket(self, timestamp: float) -> float:
+        """Round timestamp to nearest time bucket"""
+        return round(timestamp / self.time_bucket_size) * self.time_bucket_size
+
+    def process_aggregation(self):
+        """
+        Process time-bucketed metrics and compute aggregated metrics by controller type.
+        Called every 100ms by timer.
+        """
+        current_time = time.time()
+        with self.data_lock:
+            # Find buckets that are ready to process (older than current bucket)
+            current_bucket = self._round_to_bucket(current_time)
+            ready_buckets = [ts for ts in self.pending_metrics.keys() if ts < current_bucket]
+
+            for bucket_ts in ready_buckets:
+                bucket_data = self.pending_metrics.pop(bucket_ts)
+
+                # Group by controller type
+                controller_groups: Dict[str, List[MetricsData]] = defaultdict(list)
+                for agent_id, metrics in bucket_data.items():
+                    # Get controller type from controller params
+                    controller_type = "unknown"
+                    if agent_id in self.latest_controller_params:
+                        controller_type = self.latest_controller_params[agent_id].controller_type
+
+                    controller_groups[controller_type].append(metrics)
+
+                # Compute aggregated metrics for each controller type
+                for controller_type, metrics_list in controller_groups.items():
+                    if not metrics_list:
+                        continue
+
+                    agent_count = len(metrics_list)
+
+                    # Calculate averages
+                    aggregated = AggregatedMetrics(
+                        controller_type=controller_type,
+                        timestamp=bucket_ts,
+                        agent_count=agent_count,
+
+                        # Average errors
+                        avg_error_x=sum(m.error_x for m in metrics_list) / agent_count,
+                        avg_error_y=sum(m.error_y for m in metrics_list) / agent_count,
+                        avg_error_z=sum(m.error_z for m in metrics_list) / agent_count,
+                        avg_error_magnitude=sum(m.error_magnitude for m in metrics_list) / agent_count,
+
+                        # Average RMSE
+                        avg_rmse_x=sum(m.rmse_x for m in metrics_list) / agent_count,
+                        avg_rmse_y=sum(m.rmse_y for m in metrics_list) / agent_count,
+                        avg_rmse_z=sum(m.rmse_z for m in metrics_list) / agent_count,
+                        avg_rmse_total=sum(m.rmse_total for m in metrics_list) / agent_count,
+
+                        # Average integral metrics
+                        avg_iae_x=sum(m.iae_x for m in metrics_list) / agent_count,
+                        avg_iae_y=sum(m.iae_y for m in metrics_list) / agent_count,
+                        avg_itae_x=sum(m.itae_x for m in metrics_list) / agent_count,
+                        avg_itae_y=sum(m.itae_y for m in metrics_list) / agent_count,
+
+                        # Settling time average, overshoot is max
+                        avg_settling_time=sum(m.settling_time for m in metrics_list) / agent_count,
+                        max_overshoot_x=max(m.max_overshoot_x for m in metrics_list),
+                        max_overshoot_y=max(m.max_overshoot_y for m in metrics_list),
+                    )
+
+                    # Store aggregated metrics
+                    self.aggregated_metrics_data[controller_type].append(aggregated)
+                    self.latest_aggregated_metrics[controller_type] = aggregated
+
+                    # Notify callbacks
+                    self.notify_update("aggregated_metrics", controller_type)
+
+    def get_aggregated_metrics(self, controller_type: str) -> Optional[AggregatedMetrics]:
+        """Get latest aggregated metrics for a controller type"""
+        with self.data_lock:
+            return self.latest_aggregated_metrics.get(controller_type)
+
+    def get_aggregated_metrics_history(self, controller_type: str, limit: int = 500) -> List[AggregatedMetrics]:
+        """Get historical aggregated metrics for a controller type"""
+        with self.data_lock:
+            if controller_type not in self.aggregated_metrics_data:
+                return []
+            history = list(self.aggregated_metrics_data[controller_type])
+            return history[-limit:] if limit else history
+
+    def get_all_aggregated_metrics(self) -> Dict[str, AggregatedMetrics]:
+        """Get latest aggregated metrics for all controller types"""
+        with self.data_lock:
+            return dict(self.latest_aggregated_metrics)

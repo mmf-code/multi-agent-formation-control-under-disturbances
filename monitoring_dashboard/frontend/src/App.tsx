@@ -30,6 +30,8 @@ function App() {
   const [formation, setFormation] = useState<FormationState | null>(null);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [controllerParams, setControllerParams] = useState<Record<string, ControllerParams>>({});
+  const [simulationEnded, setSimulationEnded] = useState(false);
+  const [simulationEndReason, setSimulationEndReason] = useState<string>('');
 
   // History for charts
   const [metricsHistory, setMetricsHistory] = useState<Record<string, MetricsData[]>>({});
@@ -77,6 +79,25 @@ function App() {
         setSystemStatus(data);
       } else if (dataType === 'controller_params' && agentId) {
         setControllerParams((prev) => ({ ...prev, [agentId]: data }));
+      } else if (dataType === 'simulation_event') {
+        const event = data as any;
+        if (event.event === 'stopped') {
+          setSimulationEnded(true);
+          setSimulationEndReason(event.reason || 'unknown');
+          setLogs((prev) => [{
+            timestamp: event.timestamp || Date.now() / 1000,
+            level: 'warning' as const,
+            message: `Simulation ended: ${event.reason || 'unknown'}`,
+          }, ...prev].slice(0, 100));
+        } else if (event.event === 'started') {
+          setSimulationEnded(false);
+          setSimulationEndReason('');
+          setLogs((prev) => [{
+            timestamp: event.timestamp || Date.now() / 1000,
+            level: 'success' as const,
+            message: `Simulation started: ${event.script || 'unknown'}`,
+          }, ...prev].slice(0, 100));
+        }
       }
     });
 
@@ -120,6 +141,8 @@ function App() {
     <DashboardLayout
       connected={connected}
       systemStatus={systemStatus}
+      simulationEnded={simulationEnded}
+      simulationEndReason={simulationEndReason}
       leftPanel={
         <SimulationMetricsPanel
           metrics={metrics}
