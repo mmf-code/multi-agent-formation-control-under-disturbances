@@ -10,18 +10,18 @@
         },
         {
             "name": "Formation Coordinator Package",
-            "path": "./formation_coordinator_pkg"
+            "path": "./other_packages/formation_coordinator_pkg"
         },
         {
             "name": "Custom Interfaces Package",
-            "path": "./my_custom_interfaces_pkg"
+            "path": "./other_packages/my_custom_interfaces_pkg"
         }
     ],
     "settings": {
         "cmake.sourceDirectory": "${workspaceFolder:Root}/agent_control_pkg",
         "cmake.buildDirectory": "${workspaceFolder:Root}/build",
-        // Use Windows-friendly path to the project's virtualenv
-        "python.defaultInterpreterPath": "${workspaceFolder:Agent Control Package}/.venv/Scripts/python.exe",
+        // Valid interpreter on this machine; adjust if you create a venv
+        "python.defaultInterpreterPath": "/usr/bin/python3",
         "files.exclude": {
             "**/build": true,
             "**/install": true,
