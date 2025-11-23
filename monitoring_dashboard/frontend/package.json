@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "clsx": "^2.0.0",
+    "html2canvas": "^1.4.1",
     "lucide-react": "^0.294.0",
     "plotly.js-basic-dist-min": "^3.3.0",
     "plotly.js-cartesian-dist-min": "^3.3.0",

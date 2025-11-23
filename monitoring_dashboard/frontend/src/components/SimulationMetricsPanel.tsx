@@ -11,6 +11,7 @@ import {
     CheckCircle,
     XCircle,
     Radio,
+    Info,
 } from 'lucide-react';
 import {
     MetricsData,
@@ -73,11 +74,10 @@ export const SimulationMetricsPanel: React.FC<SimulationMetricsPanelProps> = ({
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center px-3 py-2.5 text-sm font-medium transition-colors whitespace-nowrap ${
-                            activeTab === tab.id
-                                ? 'text-blue-400 border-b-2 border-blue-400 bg-gray-800/50'
-                                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/30'
-                        }`}
+                        className={`flex items-center px-3 py-2.5 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id
+                            ? 'text-blue-400 border-b-2 border-blue-400 bg-gray-800/50'
+                            : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/30'
+                            }`}
                     >
                         <span className="mr-1.5">{tab.icon}</span>
                         {tab.label}
@@ -257,11 +257,10 @@ const DashboardSection: React.FC<{
                     {Object.entries(groupStats).map(([type, stats]) => (
                         <div key={type} className="bg-gray-900 rounded-lg p-3">
                             <div className="flex items-center justify-between mb-2">
-                                <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded ${
-                                    type === 'hybrid' ? 'bg-emerald-900 text-emerald-300' :
+                                <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded ${type === 'hybrid' ? 'bg-emerald-900 text-emerald-300' :
                                     type === 'pid' ? 'bg-blue-900 text-blue-300' :
-                                    'bg-gray-700 text-gray-300'
-                                }`}>
+                                        'bg-gray-700 text-gray-300'
+                                    }`}>
                                     {type === 'hybrid' ? 'PID + Fuzzy' : type.toUpperCase()}
                                 </span>
                                 <span className="text-xs text-gray-500">{stats.count} agents</span>
@@ -269,10 +268,9 @@ const DashboardSection: React.FC<{
                             <div className="grid grid-cols-2 gap-2 text-sm">
                                 <div>
                                     <div className="text-xs text-gray-500">Avg Error</div>
-                                    <div className={`font-mono font-bold ${
-                                        stats.avgError < 0.3 ? 'text-green-400' :
+                                    <div className={`font-mono font-bold ${stats.avgError < 0.3 ? 'text-green-400' :
                                         stats.avgError < 0.7 ? 'text-yellow-400' : 'text-red-400'
-                                    }`}>
+                                        }`}>
                                         {stats.avgError.toFixed(3)}m
                                     </div>
                                 </div>
@@ -303,9 +301,8 @@ const DashboardSection: React.FC<{
                     <div className="space-y-2">
                         <div className="flex justify-between items-center">
                             <span className="text-xs text-gray-400">Average Error</span>
-                            <span className={`font-mono font-bold ${
-                                avgError < 0.3 ? 'text-green-400' : avgError < 0.7 ? 'text-yellow-400' : 'text-red-400'
-                            }`}>
+                            <span className={`font-mono font-bold ${avgError < 0.3 ? 'text-green-400' : avgError < 0.7 ? 'text-yellow-400' : 'text-red-400'
+                                }`}>
                                 {avgError.toFixed(3)} m
                             </span>
                         </div>
@@ -447,9 +444,8 @@ const OverviewSection: React.FC<{
             <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
                 <div className="flex items-center justify-between mb-2">
                     <h3 className="text-sm font-semibold text-gray-200">Avg Formation Error</h3>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                        avgError < 0.5 ? 'bg-green-900 text-green-300' : 'bg-yellow-900 text-yellow-300'
-                    }`}>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${avgError < 0.5 ? 'bg-green-900 text-green-300' : 'bg-yellow-900 text-yellow-300'
+                        }`}>
                         {avgError.toFixed(3)} m
                     </span>
                 </div>
@@ -518,11 +514,10 @@ const ChartsSection: React.FC<{
                             <button
                                 key={type}
                                 onClick={() => setChartType(type)}
-                                className={`px-3 py-1 rounded text-xs font-medium transition-all whitespace-nowrap ${
-                                    chartType === type
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                                }`}
+                                className={`px-3 py-1 rounded text-xs font-medium transition-all whitespace-nowrap ${chartType === type
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                                    }`}
                             >
                                 {type === 'error' && 'Position Error'}
                                 {type === 'metrics' && 'IAE/ITAE'}
@@ -537,11 +532,10 @@ const ChartsSection: React.FC<{
                                 <button
                                     key={controller}
                                     onClick={() => toggleController(controller)}
-                                    className={`px-2.5 py-1 rounded text-xs font-medium transition-all whitespace-nowrap border ${
-                                        selectedControllers.has(controller)
-                                            ? 'bg-cyan-600 border-cyan-500 text-white shadow-sm'
-                                            : 'bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700'
-                                    }`}
+                                    className={`px-2.5 py-1 rounded text-xs font-medium transition-all whitespace-nowrap border ${selectedControllers.has(controller)
+                                        ? 'bg-cyan-600 border-cyan-500 text-white shadow-sm'
+                                        : 'bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700'
+                                        }`}
                                 >
                                     {controller === 'pid_fuzzy' ? 'Hybrid (PID+Fuzzy)' : controller.toUpperCase()}
                                 </button>
@@ -553,11 +547,10 @@ const ChartsSection: React.FC<{
                     {chartType !== 'wind' && (
                         <button
                             onClick={() => setViewMode(viewMode === 'individual' ? 'aggregated' : 'individual')}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all whitespace-nowrap ${
-                                viewMode === 'aggregated'
-                                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/50'
-                                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                            }`}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all whitespace-nowrap ${viewMode === 'aggregated'
+                                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/50'
+                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                }`}
                             title="Toggle between individual agents and controller group averages"
                         >
                             {viewMode === 'aggregated' ? (
@@ -573,16 +566,25 @@ const ChartsSection: React.FC<{
                             )}
                         </button>
                     )}
-                    <select
-                        value={timeWindow}
-                        onChange={(e) => setTimeWindow(Number(e.target.value))}
-                        className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs"
-                    >
-                        <option value={30}>Last 30s</option>
-                        <option value={60}>Last 60s</option>
-                        <option value={120}>Last 2min</option>
-                        <option value={0}>Full Run</option>
-                    </select>
+                    <div className="flex items-center gap-1 relative group">
+                        <select
+                            value={timeWindow}
+                            onChange={(e) => setTimeWindow(Number(e.target.value))}
+                            className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs"
+                        >
+                            <option value={30}>Last 30s</option>
+                            <option value={60}>Last 60s</option>
+                            <option value={120}>Last 2min</option>
+                            <option value={0}>Full Run</option>
+                        </select>
+                        <Info className="w-3.5 h-3.5 text-gray-500 cursor-help" />
+
+                        {/* Tooltip */}
+                        <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-56 p-2 bg-gray-900 text-xs text-gray-300 rounded shadow-lg border border-gray-700 z-50">
+                            <p className="font-semibold mb-1 text-blue-400">Zooming Tips:</p>
+                            <p>Select <strong>Full Run</strong> to enable stable zooming and panning. Live windows (30s/60s) reset the view as new data arrives.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div className="h-72">
@@ -674,17 +676,15 @@ const AgentsSection: React.FC<{
                         </div>
                         <div className="flex items-center space-x-2">
                             {params && (
-                                <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                                    params.controller_type === 'hybrid'
-                                        ? 'bg-emerald-900/50 text-emerald-400'
-                                        : 'bg-blue-900/50 text-blue-400'
-                                }`}>
+                                <span className={`px-2 py-0.5 rounded text-xs font-bold ${params.controller_type === 'hybrid'
+                                    ? 'bg-emerald-900/50 text-emerald-400'
+                                    : 'bg-blue-900/50 text-blue-400'
+                                    }`}>
                                     {params.controller_type === 'hybrid' ? 'PID+Fuzzy' : 'PID'}
                                 </span>
                             )}
-                            <div className={`px-2 py-1 rounded text-xs font-bold ${
-                                m.is_settled ? 'bg-green-900/50 text-green-400' : 'bg-yellow-900/50 text-yellow-400'
-                            }`}>
+                            <div className={`px-2 py-1 rounded text-xs font-bold ${m.is_settled ? 'bg-green-900/50 text-green-400' : 'bg-yellow-900/50 text-yellow-400'
+                                }`}>
                                 {m.is_settled ? 'SETTLED' : 'MOVING'}
                             </div>
                         </div>
