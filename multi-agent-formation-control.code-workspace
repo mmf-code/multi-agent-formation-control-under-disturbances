@@ -33,7 +33,8 @@
         },
         "files.associations": {
             "string": "cpp"
-        }
+        },
+        "ros.distro": "humble"
     },
     "extensions": {
         "recommendations": [

@@ -4,7 +4,7 @@
  */
 import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { RosGraphData, ControllerParams } from '../api/ws';
-import { ZoomIn, ZoomOut, Filter, Eye, EyeOff, Maximize2 } from 'lucide-react';
+import { ZoomIn, ZoomOut, Filter, Eye, EyeOff, Maximize2, Activity } from 'lucide-react';
 
 // Friendly names for nodes
 const NODE_FRIENDLY_NAMES: Record<string, string> = {
@@ -57,6 +57,21 @@ const HIDDEN_PATTERNS = [
     '/get_parameter',
     '/list_parameters',
     '/set_parameters',
+    '/_action/',      // Action server internal topics
+    '/bond',          // Lifecycle node bond topics
+    '/transition_event', // Lifecycle transition events
+    '/events/read',   // Parameter events
+    '/events/write',
+];
+
+// Core topics to show in Strict Mode
+const CORE_TOPICS = [
+    'metrics',
+    'odom',
+    'formation',
+    'wind',
+    'target',
+    'cmd_vel'
 ];
 
 export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, controllerParams }) => {
@@ -91,6 +106,7 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, control
     // Filters
     const [showSystemTopics, setShowSystemTopics] = useState(false);
     const [filterAgentsOnly, setFilterAgentsOnly] = useState(false);
+    const [strictMode, setStrictMode] = useState(true); // Default to strict mode to reduce noise
     const [searchQuery, setSearchQuery] = useState('');
 
     // Build rqt_graph style layout: Nodes -> Topics -> Nodes
@@ -108,6 +124,11 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, control
             // Filter out system topics
             if (!showSystemTopics) {
                 if (HIDDEN_PATTERNS.some(p => topicName.includes(p))) return;
+            }
+
+            // Strict mode filtering
+            if (strictMode) {
+                if (!CORE_TOPICS.some(core => topicName.includes(core))) return;
             }
 
             if (!topicSet.has(topicName)) {
@@ -274,7 +295,7 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, control
         });
 
         return { nodes: layoutNodes, edges: layoutEdges, topics };
-    }, [graphData, showSystemTopics, filterAgentsOnly, searchQuery]);
+    }, [graphData, showSystemTopics, filterAgentsOnly, searchQuery, strictMode]);
 
     // Mouse handlers
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -311,26 +332,26 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, control
         // Controller type colors (for agent nodes)
         if (controllerType) {
             switch (controllerType) {
-                case 'hybrid': return { bg: '#059669', border: '#10B981', label: 'PID+Fuzzy' }; // Green - Hybrid
-                case 'pid': return { bg: '#2563EB', border: '#3B82F6', label: 'PID' };          // Blue - PID
-                case 'pd': return { bg: '#7C3AED', border: '#8B5CF6', label: 'PD' };            // Purple - PD
+                case 'hybrid': return { bg: 'rgba(10, 255, 104, 0.2)', border: '#0aff68', label: 'PID+Fuzzy' }; // Neon Green
+                case 'pid': return { bg: 'rgba(0, 243, 255, 0.2)', border: '#00f3ff', label: 'PID' };          // Neon Blue
+                case 'pd': return { bg: 'rgba(188, 19, 254, 0.2)', border: '#bc13fe', label: 'PD' };            // Neon Purple
             }
         }
         // Role-based colors
         switch (role) {
-            case 'controller': return { bg: '#2563EB', border: '#3B82F6', label: 'Controller' };
-            case 'sensor': return { bg: '#059669', border: '#10B981', label: 'Sensor' };
-            case 'metrics': return { bg: '#7C3AED', border: '#8B5CF6', label: 'Metrics' };
-            case 'agent_node': return { bg: '#D97706', border: '#F59E0B', label: 'Agent' };
-            default: return { bg: '#4B5563', border: '#6B7280', label: 'System' };
+            case 'controller': return { bg: 'rgba(0, 243, 255, 0.1)', border: '#00f3ff', label: 'Controller' };
+            case 'sensor': return { bg: 'rgba(10, 255, 104, 0.1)', border: '#0aff68', label: 'Sensor' };
+            case 'metrics': return { bg: 'rgba(188, 19, 254, 0.1)', border: '#bc13fe', label: 'Metrics' };
+            case 'agent_node': return { bg: 'rgba(245, 158, 11, 0.1)', border: '#f59e0b', label: 'Agent' };
+            default: return { bg: 'rgba(31, 41, 55, 0.5)', border: '#4b5563', label: 'System' };
         }
     };
 
     if (!graphData) {
         return (
-            <div className="w-full h-full flex items-center justify-center bg-gray-950 text-gray-500">
-                <div className="text-center">
-                    <div className="text-lg mb-2">Waiting for ROS2 graph data...</div>
+            <div className="w-full h-full flex items-center justify-center bg-space-950 text-gray-500">
+                <div className="text-center animate-pulse">
+                    <div className="text-lg mb-2 font-mono">Waiting for ROS2 graph data...</div>
                     <div className="text-sm">Start the simulation to see the graph</div>
                 </div>
             </div>
@@ -340,14 +361,17 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, control
     return (
         <div
             ref={containerRef}
-            className="w-full h-full bg-gray-950 relative overflow-hidden"
+            className="w-full h-full bg-space-950 relative overflow-hidden"
             onWheel={handleWheel}
         >
+            {/* Background Grid */}
+            <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
+
             {/* Toolbar */}
             <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-20">
-                <div className="flex items-center space-x-3">
-                    <h3 className="text-sm font-bold text-gray-200">ROS2 Graph</h3>
-                    <span className="text-xs text-gray-500">
+                <div className="flex items-center space-x-3 glass-panel px-3 py-1.5 rounded-lg">
+                    <h3 className="text-sm font-bold text-neon-blue uppercase tracking-wider">ROS2 Graph</h3>
+                    <span className="text-xs text-gray-400 border-l border-gray-700 pl-3">
                         {layout.nodes.filter(n => n.type === 'node').length} nodes |{' '}
                         {layout.nodes.filter(n => n.type === 'topic').length} topics
                     </span>
@@ -359,14 +383,15 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, control
                         placeholder="Search..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs w-28 text-gray-300"
+                        className="bg-space-900/80 border border-gray-700 rounded px-2 py-1 text-xs w-28 text-gray-300 focus:border-neon-blue focus:outline-none transition-colors"
                     />
 
                     <button
                         onClick={() => setFilterAgentsOnly(!filterAgentsOnly)}
-                        className={`px-2 py-1 rounded text-xs ${
-                            filterAgentsOnly ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'
-                        }`}
+                        className={`px-2 py-1 rounded text-xs border transition-all duration-300 ${filterAgentsOnly
+                            ? 'bg-neon-blue/20 border-neon-blue text-neon-blue shadow-[0_0_10px_rgba(0,243,255,0.3)]'
+                            : 'bg-space-800 border-gray-700 text-gray-400 hover:border-gray-500'
+                            }`}
                     >
                         <Filter className="w-3.5 h-3.5 inline mr-1" />
                         Agents
@@ -374,22 +399,35 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, control
 
                     <button
                         onClick={() => setShowSystemTopics(!showSystemTopics)}
-                        className={`px-2 py-1 rounded text-xs ${
-                            showSystemTopics ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'
-                        }`}
+                        className={`px-2 py-1 rounded text-xs border transition-all duration-300 ${showSystemTopics
+                            ? 'bg-neon-purple/20 border-neon-purple text-neon-purple shadow-[0_0_10px_rgba(188,19,254,0.3)]'
+                            : 'bg-space-800 border-gray-700 text-gray-400 hover:border-gray-500'
+                            }`}
                     >
                         {showSystemTopics ? <Eye className="w-3.5 h-3.5 inline mr-1" /> : <EyeOff className="w-3.5 h-3.5 inline mr-1" />}
                         System
                     </button>
 
-                    <div className="flex items-center space-x-1 ml-2">
-                        <button onClick={() => setScale(s => Math.min(s * 1.2, 2))} className="p-1.5 bg-gray-800 rounded hover:bg-gray-700 text-gray-300">
+                    <button
+                        onClick={() => setStrictMode(!strictMode)}
+                        className={`px-2 py-1 rounded text-xs border transition-all duration-300 ${strictMode
+                            ? 'bg-neon-green/20 border-neon-green text-neon-green shadow-[0_0_10px_rgba(10,255,104,0.3)]'
+                            : 'bg-space-800 border-gray-700 text-gray-400 hover:border-gray-500'
+                            }`}
+                        title="Show only core formation topics"
+                    >
+                        <Activity className="w-3.5 h-3.5 inline mr-1" />
+                        Focus
+                    </button>
+
+                    <div className="flex items-center space-x-1 ml-2 glass-panel p-1 rounded-lg">
+                        <button onClick={() => setScale(s => Math.min(s * 1.2, 2))} className="p-1.5 hover:bg-white/10 rounded text-gray-300 transition-colors">
                             <ZoomIn className="w-4 h-4" />
                         </button>
-                        <button onClick={() => setScale(s => Math.max(s / 1.2, 0.2))} className="p-1.5 bg-gray-800 rounded hover:bg-gray-700 text-gray-300">
+                        <button onClick={() => setScale(s => Math.max(s / 1.2, 0.2))} className="p-1.5 hover:bg-white/10 rounded text-gray-300 transition-colors">
                             <ZoomOut className="w-4 h-4" />
                         </button>
-                        <button onClick={resetView} className="p-1.5 bg-gray-800 rounded hover:bg-gray-700 text-gray-300" title="Reset View">
+                        <button onClick={resetView} className="p-1.5 hover:bg-white/10 rounded text-gray-300 transition-colors" title="Reset View">
                             <Maximize2 className="w-4 h-4" />
                         </button>
                     </div>
@@ -397,28 +435,24 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, control
             </div>
 
             {/* Legend */}
-            <div className="absolute bottom-3 left-3 bg-gray-900/95 p-3 rounded-lg border border-gray-700 z-20">
-                <div className="text-xs font-bold text-gray-400 mb-2">Controller Types</div>
+            <div className="absolute bottom-3 left-3 glass-panel p-3 rounded-lg z-20">
+                <div className="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide">Controller Types</div>
                 <div className="space-y-1.5">
                     <div className="flex items-center space-x-2">
-                        <div className="w-8 h-4 rounded" style={{ background: '#059669', border: '1px solid #10B981' }} />
+                        <div className="w-8 h-4 rounded border border-neon-green bg-neon-green/20" />
                         <span className="text-xs text-gray-300">PID + Fuzzy (Hybrid)</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <div className="w-8 h-4 rounded" style={{ background: '#2563EB', border: '1px solid #3B82F6' }} />
+                        <div className="w-8 h-4 rounded border border-neon-blue bg-neon-blue/20" />
                         <span className="text-xs text-gray-300">PID Only</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <div className="w-8 h-4 rounded" style={{ background: '#7C3AED', border: '1px solid #8B5CF6' }} />
+                        <div className="w-8 h-4 rounded border border-neon-purple bg-neon-purple/20" />
                         <span className="text-xs text-gray-300">PD Only</span>
                     </div>
                     <div className="flex items-center space-x-2 pt-1 border-t border-gray-700 mt-1">
-                        <div className="w-8 h-4 rounded-full bg-emerald-900 border border-emerald-700" />
+                        <div className="w-8 h-4 rounded-full bg-space-800 border border-gray-600" />
                         <span className="text-xs text-gray-300">Topic</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <div className="w-8 h-4 rounded" style={{ background: '#4B5563', border: '1px solid #6B7280' }} />
-                        <span className="text-xs text-gray-300">System Node</span>
                     </div>
                 </div>
             </div>
@@ -441,7 +475,7 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, control
                         markerHeight="6"
                         orient="auto-start-reverse"
                     >
-                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#6B7280" />
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#4B5563" />
                     </marker>
                     <marker
                         id="arrow-active"
@@ -452,8 +486,12 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, control
                         markerHeight="6"
                         orient="auto-start-reverse"
                     >
-                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#3B82F6" />
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#00f3ff" />
                     </marker>
+                    <filter id="glow-blue" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="2" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
                 </defs>
 
                 <g transform={`translate(${pan.x},${pan.y}) scale(${scale})`}>
@@ -467,10 +505,11 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, control
                                 y1={edge.sourcePos.y}
                                 x2={edge.targetPos.x}
                                 y2={edge.targetPos.y}
-                                stroke={isActive ? '#3B82F6' : '#4B5563'}
-                                strokeWidth={isActive ? 2.5 : 1.5}
+                                stroke={isActive ? '#00f3ff' : '#374151'}
+                                strokeWidth={isActive ? 2 : 1}
                                 markerEnd={isActive ? 'url(#arrow-active)' : 'url(#arrow)'}
                                 className="transition-all duration-150"
+                                style={{ filter: isActive ? 'drop-shadow(0 0 2px #00f3ff)' : 'none' }}
                             />
                         );
                     })}
@@ -485,8 +524,9 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, control
                             return (
                                 <g
                                     key={node.id}
-                                    className="graph-item cursor-pointer"
+                                    className="graph-item cursor-pointer transition-all duration-200"
                                     onClick={() => setSelectedItem(isSelected ? null : node.id)}
+                                    style={{ opacity: isSelected || !selectedItem ? 1 : 0.4 }}
                                 >
                                     <rect
                                         x={node.x}
@@ -494,18 +534,18 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, control
                                         width={node.width}
                                         height={node.height}
                                         rx={node.height / 2}
-                                        fill={isSelected ? '#065F46' : '#064E3B'}
-                                        stroke={isSelected ? '#10B981' : '#047857'}
+                                        fill={isSelected ? 'rgba(255, 255, 255, 0.1)' : '#111827'}
+                                        stroke={isSelected ? '#e2e8f0' : '#374151'}
                                         strokeWidth={isSelected ? 2 : 1}
                                     />
                                     <text
                                         x={node.x + node.width / 2}
                                         y={node.y + node.height / 2 + 4}
                                         textAnchor="middle"
-                                        fill="#D1FAE5"
+                                        fill="#9ca3af"
                                         fontSize="10"
                                         fontWeight="500"
-                                        className="pointer-events-none select-none"
+                                        className="pointer-events-none select-none font-mono"
                                     >
                                         {node.label.length > 20 ? node.label.substring(0, 18) + '...' : node.label}
                                     </text>
@@ -517,8 +557,9 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, control
                         return (
                             <g
                                 key={node.id}
-                                className="graph-item cursor-pointer"
+                                className="graph-item cursor-pointer transition-all duration-200"
                                 onClick={() => setSelectedItem(isSelected ? null : node.id)}
+                                style={{ opacity: isSelected || !selectedItem ? 1 : 0.4 }}
                             >
                                 <rect
                                     x={node.x}
@@ -526,15 +567,16 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, control
                                     width={node.width}
                                     height={node.height}
                                     rx={4}
-                                    fill={isSelected ? colors.border : colors.bg}
+                                    fill={colors.bg}
                                     stroke={colors.border}
                                     strokeWidth={isSelected ? 2 : 1}
+                                    style={{ filter: isSelected ? `drop-shadow(0 0 8px ${colors.border})` : 'none' }}
                                 />
                                 <text
                                     x={node.x + node.width / 2}
                                     y={node.y + node.height / 2 + 4}
                                     textAnchor="middle"
-                                    fill="#FFFFFF"
+                                    fill="#e2e8f0"
                                     fontSize="11"
                                     fontWeight="600"
                                     className="pointer-events-none select-none"
@@ -549,11 +591,11 @@ export const RosGraphPanel: React.FC<RosGraphPanelProps> = ({ graphData, control
 
             {/* Selected item info */}
             {selectedItem && (
-                <div className="absolute bottom-3 right-3 bg-gray-900/95 p-3 rounded-lg border border-gray-700 z-20 max-w-64">
-                    <div className="text-xs font-bold text-gray-200 mb-1">
+                <div className="absolute bottom-3 right-3 glass-panel p-3 rounded-lg z-20 max-w-64 animate-slide-up">
+                    <div className="text-xs font-bold text-neon-blue mb-1 uppercase tracking-wide">
                         {selectedItem.startsWith('topic:') ? 'Topic' : 'Node'}
                     </div>
-                    <div className="text-xs text-gray-400 break-all">
+                    <div className="text-xs text-gray-300 break-all font-mono">
                         {selectedItem.replace('topic:', '')}
                     </div>
                 </div>

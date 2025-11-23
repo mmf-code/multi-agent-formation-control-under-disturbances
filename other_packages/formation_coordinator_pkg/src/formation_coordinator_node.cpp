@@ -110,9 +110,9 @@ void FormationCoordinatorNode::rebuildPublishers()
 
   for (const auto & agent_id : agent_ids_) {
     // Publish to absolute topics so agent namespaces receive them as intended
-    // Use SensorDataQoS to match controllers' subscribers
+    // Use RELIABLE QoS to match controllers' subscribers
     auto pub = create_publisher<geometry_msgs::msg::PoseStamped>(
-      "/" + agent_id + "/target_pose", rclcpp::SensorDataQoS());
+      "/" + agent_id + "/target_pose", 10);
     agent_publishers_.push_back(AgentPublisher{agent_id, pub});
   }
 }

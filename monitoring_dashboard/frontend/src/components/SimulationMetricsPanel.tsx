@@ -130,6 +130,7 @@ export const SimulationMetricsPanel: React.FC<SimulationMetricsPanelProps> = ({
                     <ChartsSection
                         metricsHistory={metricsHistory}
                         windHistory={windHistory}
+                        controllerParams={controllerParams}
                     />
                 )}
 
@@ -491,13 +492,15 @@ const OverviewSection: React.FC<{
 const ChartsSection: React.FC<{
     metricsHistory: Record<string, MetricsData[]>;
     windHistory: WindData[];
-}> = ({ metricsHistory, windHistory }) => {
+    controllerParams?: Record<string, ControllerParams>;
+}> = ({ metricsHistory, windHistory, controllerParams = {} }) => {
     const [chartType, setChartType] = useState<'error' | 'metrics' | 'wind' | 'overshoot'>('error');
     const [timeWindow, setTimeWindow] = useState<number>(60);
+    const [viewMode, setViewMode] = useState<'individual' | 'aggregated'>('individual');
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
                 <div className="flex space-x-2 overflow-x-auto pb-2">
                     {(['error', 'metrics', 'wind', 'overshoot'] as const).map((type) => (
                         <button
@@ -516,16 +519,41 @@ const ChartsSection: React.FC<{
                         </button>
                     ))}
                 </div>
-                <select
-                    value={timeWindow}
-                    onChange={(e) => setTimeWindow(Number(e.target.value))}
-                    className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs"
-                >
-                    <option value={30}>Last 30s</option>
-                    <option value={60}>Last 60s</option>
-                    <option value={120}>Last 2min</option>
-                    <option value={0}>Full Run</option>
-                </select>
+                <div className="flex items-center gap-2">
+                    {chartType !== 'wind' && (
+                        <button
+                            onClick={() => setViewMode(viewMode === 'individual' ? 'aggregated' : 'individual')}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all whitespace-nowrap ${
+                                viewMode === 'aggregated'
+                                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/50'
+                                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                            }`}
+                            title="Toggle between individual agents and controller group averages"
+                        >
+                            {viewMode === 'aggregated' ? (
+                                <>
+                                    <Users className="w-3.5 h-3.5" />
+                                    <span>Controller Groups</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Users className="w-3.5 h-3.5" />
+                                    <span>Individual Agents</span>
+                                </>
+                            )}
+                        </button>
+                    )}
+                    <select
+                        value={timeWindow}
+                        onChange={(e) => setTimeWindow(Number(e.target.value))}
+                        className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs"
+                    >
+                        <option value={30}>Last 30s</option>
+                        <option value={60}>Last 60s</option>
+                        <option value={120}>Last 2min</option>
+                        <option value={0}>Full Run</option>
+                    </select>
+                </div>
             </div>
             <div className="h-72">
                 <TimeSeries
@@ -534,6 +562,8 @@ const ChartsSection: React.FC<{
                     selectedAgent={null}
                     chartType={chartType}
                     timeWindow={timeWindow}
+                    viewMode={viewMode}
+                    controllerParams={controllerParams}
                 />
             </div>
         </div>

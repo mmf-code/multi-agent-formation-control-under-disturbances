@@ -162,13 +162,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     const topicCount = systemStatus?.active_topics?.length || 0;
 
     return (
-        <div className={`flex flex-col h-screen bg-gray-950 text-gray-100 overflow-hidden font-sans selection:bg-blue-500/30 ${isResizingH || isResizingV ? 'select-none' : ''}`}>
+        <div className={`flex flex-col h-screen bg-space-950 text-gray-100 overflow-hidden font-sans selection:bg-neon-blue/30 ${isResizingH || isResizingV ? 'select-none' : ''}`}>
+            {/* Background Grid */}
+            <div className="absolute inset-0 bg-grid-pattern opacity-20 pointer-events-none z-0" />
+
             {/* Global Header */}
-            <header className="h-14 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-4 shrink-0 z-10 shadow-sm">
+            <header className="h-14 glass-panel border-b border-gray-800 flex items-center justify-between px-4 shrink-0 z-10 shadow-[0_4px_20px_rgba(0,0,0,0.5)] relative">
                 <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2 text-blue-400">
+                    <div className="flex items-center space-x-2 text-neon-blue animate-pulse-slow">
                         <Activity className="w-5 h-5" />
-                        <span className="font-bold text-lg tracking-tight text-gray-100">Formation Control Dashboard</span>
+                        <span className="font-bold text-lg tracking-tight text-gray-100 drop-shadow-[0_0_10px_rgba(0,243,255,0.3)]">Formation Control Dashboard</span>
                     </div>
                     <div className="h-6 w-px bg-gray-700 mx-2" />
 
@@ -178,14 +181,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                         <div className="relative">
                             <button
                                 onClick={() => setShowScriptDropdown(!showScriptDropdown)}
-                                className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 hover:bg-gray-700 flex items-center space-x-1 max-w-40"
+                                className="bg-space-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 hover:bg-space-700 hover:border-neon-blue/50 transition-all flex items-center space-x-1 max-w-40"
                                 disabled={simStatus.running}
                             >
                                 <span className="truncate">{selectedScript}</span>
                                 <ChevronDown className="w-3 h-3 flex-shrink-0" />
                             </button>
                             {showScriptDropdown && (
-                                <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-700 rounded shadow-lg z-50 max-h-48 overflow-y-auto min-w-48">
+                                <div className="absolute top-full left-0 mt-1 bg-space-900 border border-gray-700 rounded shadow-[0_0_15px_rgba(0,0,0,0.5)] z-50 max-h-48 overflow-y-auto min-w-48 animate-fade-in">
                                     {availableScripts.map(script => (
                                         <button
                                             key={script.name}
@@ -193,9 +196,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                                                 setSelectedScript(script.name);
                                                 setShowScriptDropdown(false);
                                             }}
-                                            className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 ${
-                                                selectedScript === script.name ? 'text-blue-400' : 'text-gray-300'
-                                            }`}
+                                            className={`w-full text-left px-3 py-1.5 text-xs hover:bg-space-800 transition-colors ${selectedScript === script.name ? 'text-neon-blue bg-neon-blue/10' : 'text-gray-300'
+                                                }`}
                                         >
                                             {script.name}
                                         </button>
@@ -208,15 +210,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                         </div>
 
                         {/* Control Buttons */}
-                        <div className="flex items-center space-x-1 bg-gray-800 rounded-md p-1">
+                        <div className="flex items-center space-x-1 bg-space-800 rounded-md p-1 border border-gray-700">
                             {simLoading ? (
                                 <div className="p-1.5">
-                                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                                    <Loader2 className="w-4 h-4 animate-spin text-neon-blue" />
                                 </div>
                             ) : simStatus.running ? (
                                 <button
                                     onClick={stopSimulation}
-                                    className="p-1.5 hover:bg-gray-700 rounded text-red-400 transition-colors"
+                                    className="p-1.5 hover:bg-red-900/30 rounded text-neon-red transition-all duration-300 hover:shadow-[0_0_10px_rgba(255,0,60,0.5)]"
                                     title="Stop Simulation"
                                 >
                                     <Square className="w-4 h-4 fill-current" />
@@ -224,7 +226,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                             ) : (
                                 <button
                                     onClick={startSimulation}
-                                    className="p-1.5 hover:bg-gray-700 rounded text-green-400 transition-colors"
+                                    className="p-1.5 hover:bg-green-900/30 rounded text-neon-green transition-all duration-300 hover:shadow-[0_0_10px_rgba(10,255,104,0.5)]"
                                     title={`Start ${selectedScript}`}
                                 >
                                     <Play className="w-4 h-4 fill-current" />
@@ -234,9 +236,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
                         {/* Running indicator */}
                         {simStatus.running && (
-                            <div className="flex items-center space-x-1 text-xs text-green-400">
-                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                                <span className="hidden sm:inline">Running</span>
+                            <div className="flex items-center space-x-1 text-xs text-neon-green animate-fade-in">
+                                <div className="w-2 h-2 bg-neon-green rounded-full animate-pulse shadow-[0_0_8px_#0aff68]" />
+                                <span className="hidden sm:inline font-mono">RUNNING</span>
                             </div>
                         )}
                     </div>
@@ -248,27 +250,27 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                         <div className="flex items-center space-x-2">
                             <Network className="w-3.5 h-3.5" />
                             <span>ROS2:</span>
-                            <span className={systemStatus?.ros_ok ? 'text-green-400' : 'text-red-400'}>
+                            <span className={systemStatus?.ros_ok ? 'text-neon-green drop-shadow-[0_0_5px_rgba(10,255,104,0.5)]' : 'text-neon-red'}>
                                 {systemStatus?.ros_ok ? 'OK' : 'ERR'}
                             </span>
                         </div>
                         <div className="flex items-center space-x-2">
                             <Settings className="w-3.5 h-3.5" />
                             <span>Agents:</span>
-                            <span className="text-gray-200">{systemStatus?.active_agents.length || 0}</span>
+                            <span className="text-gray-200 font-mono">{systemStatus?.active_agents.length || 0}</span>
                         </div>
                         <div className="flex items-center space-x-2">
                             <span>Topics:</span>
-                            <span className="text-gray-200">{topicCount}</span>
+                            <span className="text-gray-200 font-mono">{topicCount}</span>
                         </div>
                     </div>
 
                     {/* Connection Status */}
-                    <div className={`flex items-center space-x-2 px-2 py-1 rounded border ${connected
-                        ? 'bg-green-500/10 border-green-500/20 text-green-400'
-                        : 'bg-red-500/10 border-red-500/20 text-red-400'
+                    <div className={`flex items-center space-x-2 px-2 py-1 rounded border transition-all duration-500 ${connected
+                        ? 'bg-neon-green/10 border-neon-green/30 text-neon-green shadow-[0_0_10px_rgba(10,255,104,0.2)]'
+                        : 'bg-neon-red/10 border-neon-red/30 text-neon-red'
                         }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
+                        <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-neon-green animate-pulse shadow-[0_0_5px_#0aff68]' : 'bg-neon-red'}`} />
                         <span className="text-xs font-semibold uppercase tracking-wider">
                             {connected ? 'Live' : 'Offline'}
                         </span>
@@ -277,20 +279,20 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </header>
 
             {/* Main Content Area - Resizable 2-Column Layout */}
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex overflow-hidden z-10 relative">
                 {/* Left Column: Simulation & Metrics */}
                 <div
-                    className="flex flex-col border-r border-gray-800 bg-gray-900/50"
+                    className="flex flex-col border-r border-gray-800 bg-space-900/30 backdrop-blur-sm"
                     style={{ width: `${leftWidth}%` }}
                 >
-                    <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+                    <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent p-4">
                         {leftPanel}
                     </div>
                 </div>
 
                 {/* Horizontal Resize Handle */}
                 <div
-                    className={`w-1 bg-gray-800 hover:bg-blue-500 cursor-col-resize flex items-center justify-center transition-colors ${isResizingH ? 'bg-blue-500' : ''}`}
+                    className={`w-1 bg-gray-800 hover:bg-neon-blue cursor-col-resize flex items-center justify-center transition-all duration-300 ${isResizingH ? 'bg-neon-blue shadow-[0_0_10px_#00f3ff]' : ''}`}
                     onMouseDown={handleHorizontalResize}
                 >
                     <GripVertical className="w-3 h-3 text-gray-600" />
@@ -298,7 +300,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
                 {/* Right Column: ROS2 Graph */}
                 <div
-                    className="flex flex-col bg-gray-950 relative"
+                    className="flex flex-col bg-space-950 relative"
                     style={{ width: `${100 - leftWidth}%` }}
                 >
                     <div className="absolute inset-0 overflow-hidden">
@@ -310,26 +312,26 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             {/* Vertical Resize Handle */}
             {!bottomCollapsed && (
                 <div
-                    className={`h-1 bg-gray-800 hover:bg-blue-500 cursor-row-resize transition-colors ${isResizingV ? 'bg-blue-500' : ''}`}
+                    className={`h-1 bg-gray-800 hover:bg-neon-blue cursor-row-resize transition-all duration-300 z-20 ${isResizingV ? 'bg-neon-blue shadow-[0_0_10px_#00f3ff]' : ''}`}
                     onMouseDown={handleVerticalResize}
                 />
             )}
 
             {/* Bottom Strip: Diagnostics */}
             <div
-                className="bg-gray-900 border-t border-gray-800 flex flex-col shrink-0"
+                className="bg-space-900 border-t border-gray-800 flex flex-col shrink-0 z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]"
                 style={{ height: bottomCollapsed ? '32px' : `${bottomHeight}px` }}
             >
                 <div
-                    className="flex items-center px-4 py-1 bg-gray-800/50 border-b border-gray-800 cursor-pointer hover:bg-gray-800 transition-colors"
+                    className="flex items-center px-4 py-1 bg-space-800/80 border-b border-gray-800 cursor-pointer hover:bg-space-800 transition-colors backdrop-blur-md"
                     onClick={() => setBottomCollapsed(!bottomCollapsed)}
                 >
-                    <Terminal className="w-3.5 h-3.5 mr-2 text-gray-400" />
-                    <span className="text-xs font-medium text-gray-400 uppercase tracking-wider flex-1">System Diagnostics & Logs</span>
+                    <Terminal className="w-3.5 h-3.5 mr-2 text-neon-blue" />
+                    <span className="text-xs font-medium text-gray-300 uppercase tracking-wider flex-1">System Diagnostics & Logs</span>
                     {bottomCollapsed ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
                 </div>
                 {!bottomCollapsed && (
-                    <div className="flex-1 overflow-y-auto p-0">
+                    <div className="flex-1 overflow-y-auto p-0 bg-space-950/50">
                         {bottomPanel}
                     </div>
                 )}
