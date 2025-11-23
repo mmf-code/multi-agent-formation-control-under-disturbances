@@ -497,7 +497,7 @@ const ChartsSection: React.FC<{
     const [chartType, setChartType] = useState<'error' | 'metrics' | 'wind' | 'overshoot'>('error');
     const [timeWindow, setTimeWindow] = useState<number>(60);
     const [viewMode, setViewMode] = useState<'individual' | 'aggregated'>('individual');
-    const [selectedControllers, setSelectedControllers] = useState<Set<string>>(new Set(['pid', 'fuzzy', 'hybrid', 'pd']));
+    const [selectedControllers, setSelectedControllers] = useState<Set<string>>(new Set(['pid', 'pid_fuzzy', 'pd']));
 
     const toggleController = (controller: string) => {
         const newSet = new Set(selectedControllers);
@@ -533,7 +533,7 @@ const ChartsSection: React.FC<{
                     </div>
                     {viewMode === 'aggregated' && chartType !== 'wind' && (
                         <div className="flex space-x-2 overflow-x-auto">
-                            {(['pid', 'fuzzy', 'hybrid', 'pd'] as const).map((controller) => (
+                            {(['pid', 'pid_fuzzy', 'pd'] as const).map((controller) => (
                                 <button
                                     key={controller}
                                     onClick={() => toggleController(controller)}
@@ -543,7 +543,7 @@ const ChartsSection: React.FC<{
                                             : 'bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700'
                                     }`}
                                 >
-                                    {controller.toUpperCase()}
+                                    {controller === 'pid_fuzzy' ? 'Hybrid (PID+Fuzzy)' : controller.toUpperCase()}
                                 </button>
                             ))}
                         </div>

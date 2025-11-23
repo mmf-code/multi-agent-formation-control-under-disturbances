@@ -28,37 +28,38 @@ interface ZoomState {
   yaxis2?: { range: [number, number]; autorange?: boolean };
 }
 
-// Professional Color Palette (softer, more readable)
+// Professional Color Palette for Reports (white background)
 const COLORS = {
-  primary: '#3b82f6', // Blue 500 - softer blue
-  secondary: '#8b5cf6', // Violet 500 - softer purple
-  success: '#10b981', // Emerald 500 - softer green
-  warning: '#f59e0b', // Amber 500
-  danger: '#ef4444', // Red 500
-  text: '#e2e8f0', // Slate 200
-  grid: '#374151', // Gray 700 - slightly lighter grid
-  bg: 'transparent',
+  primary: '#2563eb',    // Blue 600 (darker for white bg)
+  secondary: '#7c3aed',  // Violet 600
+  success: '#059669',    // Emerald 600
+  warning: '#d97706',    // Amber 600
+  danger: '#dc2626',     // Red 600
+  text: '#1f2937',       // Gray 800 (dark for white bg)
+  grid: '#e5e7eb',       // Gray 200 (light grid)
+  bg: '#ffffff',         // White background for reports
 };
 
-// Controller type colors (distinct and professional)
+// Controller type colors (darker shades for white background)
 const CONTROLLER_COLORS: Record<string, string> = {
-  pid: '#3b82f6', // Blue 500
-  hybrid: '#10b981', // Emerald 500
-  fuzzy: '#a855f7', // Purple 500
-  pd: '#f97316', // Orange 500
-  unknown: '#6b7280', // Gray 500
+  pid: '#2563eb', // Blue 600
+  pid_fuzzy: '#059669', // Emerald 600 (Hybrid PID+Fuzzy)
+  hybrid: '#059669', // Emerald 600 (alias for pid_fuzzy)
+  fuzzy: '#9333ea', // Purple 600
+  pd: '#ea580c', // Orange 600
+  unknown: '#4b5563', // Gray 600
 };
 
-// Individual agent colors (for individual view mode)
+// Individual agent colors (darker shades for white background)
 const AGENT_COLORS = [
-  '#3b82f6', // Blue 500
-  '#10b981', // Emerald 500
-  '#a855f7', // Purple 500
-  '#f59e0b', // Amber 500
-  '#ef4444', // Red 500
-  '#06b6d4', // Cyan 500
-  '#ec4899', // Pink 500
-  '#84cc16', // Lime 500
+  '#2563eb', // Blue 600
+  '#059669', // Emerald 600
+  '#9333ea', // Purple 600
+  '#d97706', // Amber 600
+  '#dc2626', // Red 600
+  '#0891b2', // Cyan 600
+  '#db2777', // Pink 600
+  '#65a30d', // Lime 600
 ];
 
 export const TimeSeries: React.FC<TimeSeriesProps> = ({
@@ -66,12 +67,18 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
   windHistory,
   selectedAgent,
   chartType,
-  timeWindow: _timeWindow = 60,
+  timeWindow = 60,
   viewMode = 'individual',
   controllerParams = {},
-  selectedControllers = new Set(['pid', 'fuzzy', 'hybrid', 'pd']),
+  selectedControllers = new Set(['pid', 'pid_fuzzy', 'pd']),
 }) => {
-  // TODO: Use _timeWindow to filter data by time range
+  // Helper function to filter data by time window
+  const filterByTimeWindow = useCallback((data: any[], timeWindow: number) => {
+    if (timeWindow === 0) return data; // Full run
+    const now = Date.now() / 1000;
+    const cutoff = now - timeWindow;
+    return data.filter(d => d.timestamp >= cutoff);
+  }, []);
 
   // State to persist zoom across data updates
   const [zoomState, setZoomState] = useState<ZoomState>({});
@@ -211,9 +218,12 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
 
   const plotData = useMemo(() => {
     if (chartType === 'wind') {
-      const hasForce = windHistory.some((w) => w.force);
+      // Filter wind data by time window
+      const filteredWindHistory = filterByTimeWindow(windHistory, timeWindow);
+
+      const hasForce = filteredWindHistory.some((w) => w.force);
       const forceMagnitude = hasForce
-        ? windHistory.map((w) =>
+        ? filteredWindHistory.map((w) =>
           w.force
             ? Math.sqrt(
               (w.force.x || 0) ** 2 +
@@ -227,16 +237,16 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
       return {
         data: [
           {
-            x: windHistory.map((w) => new Date(w.timestamp * 1000)),
-            y: windHistory.map((w) => w.velocity.x),
+            x: filteredWindHistory.map((w) => new Date(w.timestamp * 1000)),
+            y: filteredWindHistory.map((w) => w.velocity.x),
             type: 'scatter' as const,
             mode: 'lines' as const,
             name: 'Wind X',
             line: { color: COLORS.primary, width: 2 },
           },
           {
-            x: windHistory.map((w) => new Date(w.timestamp * 1000)),
-            y: windHistory.map((w) => w.velocity.y),
+            x: filteredWindHistory.map((w) => new Date(w.timestamp * 1000)),
+            y: filteredWindHistory.map((w) => w.velocity.y),
             type: 'scatter' as const,
             mode: 'lines' as const,
             name: 'Wind Y',
@@ -245,23 +255,23 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
           ...(hasForce
             ? [
               {
-                x: windHistory.map((w) => new Date(w.timestamp * 1000)),
-                y: windHistory.map((w) => (w.force ? w.force.x : 0)),
+                x: filteredWindHistory.map((w) => new Date(w.timestamp * 1000)),
+                y: filteredWindHistory.map((w) => (w.force ? w.force.x : 0)),
                 type: 'scatter' as const,
                 mode: 'lines' as const,
                 name: 'Force X (N)',
                 line: { color: COLORS.warning, width: 1.5, dash: 'dot' as const },
               },
               {
-                x: windHistory.map((w) => new Date(w.timestamp * 1000)),
-                y: windHistory.map((w) => (w.force ? w.force.y : 0)),
+                x: filteredWindHistory.map((w) => new Date(w.timestamp * 1000)),
+                y: filteredWindHistory.map((w) => (w.force ? w.force.y : 0)),
                 type: 'scatter' as const,
                 mode: 'lines' as const,
                 name: 'Force Y (N)',
                 line: { color: COLORS.danger, width: 1.5, dash: 'dot' as const },
               },
               {
-                x: windHistory.map((w) => new Date(w.timestamp * 1000)),
+                x: filteredWindHistory.map((w) => new Date(w.timestamp * 1000)),
                 y: forceMagnitude,
                 type: 'scatter' as const,
                 mode: 'lines' as const,
@@ -273,9 +283,12 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
             : []),
         ],
         layout: {
-          title: hasForce ? 'Wind Velocity (m/s) + Force (N)' : 'Wind Velocity (m/s)',
+          title: {
+            text: hasForce ? 'Wind Disturbance Profile (Velocity & Force)' : 'Wind Disturbance Profile',
+            font: { size: 16, color: COLORS.text, family: 'Inter, sans-serif' }
+          },
           xaxis: {
-            title: 'Time',
+            title: { text: 'Time (s)', font: { size: 14, color: COLORS.text } },
             color: COLORS.text,
             gridcolor: COLORS.grid,
             ...(zoomState.xaxis?.autorange === false && zoomState.xaxis.range
@@ -283,7 +296,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
               : {}),
           },
           yaxis: {
-            title: 'Velocity (m/s)',
+            title: { text: 'Velocity (m/s)', font: { size: 14, color: COLORS.text } },
             color: COLORS.text,
             gridcolor: COLORS.grid,
             ...(zoomState.yaxis?.autorange === false && zoomState.yaxis.range
@@ -292,7 +305,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
           },
           yaxis2: hasForce
             ? {
-              title: 'Force (N)',
+              title: { text: 'Force (N)', font: { size: 14, color: COLORS.secondary } },
               color: COLORS.secondary,
               overlaying: 'y' as any,
               side: 'right' as const,
@@ -305,7 +318,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
           paper_bgcolor: COLORS.bg,
           plot_bgcolor: COLORS.bg,
           font: { color: COLORS.text, family: 'Inter, sans-serif' },
-          margin: { l: 60, r: 40, t: 40, b: 60 },
+          margin: { l: 60, r: 40, t: 80, b: 60 },
           uirevision: uirevision, // Keep zoom state on update
         },
       };
@@ -331,14 +344,15 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
 
     if (chartType === 'error') {
       const data = agents.flatMap((agent, idx) => {
-        const history = dataSource[agent] || [];
+        const rawHistory = dataSource[agent] || [];
+        const history = filterByTimeWindow(rawHistory, timeWindow);
         // Use controller-specific colors for aggregated view, or cycle through colors for individual view
         const baseColor = viewMode === 'aggregated'
           ? CONTROLLER_COLORS[agent] || COLORS.primary
           : AGENT_COLORS[idx % AGENT_COLORS.length];
 
         const agentLabel = viewMode === 'aggregated'
-          ? `${agent.toUpperCase()} Controller`
+          ? (agent === 'pid_fuzzy' ? 'Hybrid (PID+Fuzzy) Controller' : `${agent.toUpperCase()} Controller`)
           : agent;
 
         return [
@@ -364,9 +378,12 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
       return {
         data,
         layout: {
-          title: 'Position Error (m)',
+          title: {
+            text: 'Position Tracking Error Over Time',
+            font: { size: 16, color: COLORS.text, family: 'Inter, sans-serif' }
+          },
           xaxis: {
-            title: 'Time',
+            title: { text: 'Time (s)', font: { size: 14, color: COLORS.text } },
             color: COLORS.text,
             gridcolor: COLORS.grid,
             ...(zoomState.xaxis?.autorange === false && zoomState.xaxis.range
@@ -374,7 +391,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
               : {}),
           },
           yaxis: {
-            title: 'Error (m)',
+            title: { text: 'Error (m)', font: { size: 14, color: COLORS.text } },
             color: COLORS.text,
             gridcolor: COLORS.grid,
             ...(zoomState.yaxis?.autorange === false && zoomState.yaxis.range
@@ -384,7 +401,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
           paper_bgcolor: COLORS.bg,
           plot_bgcolor: COLORS.bg,
           font: { color: COLORS.text, family: 'Inter, sans-serif' },
-          margin: { l: 60, r: 40, t: 40, b: 60 },
+          margin: { l: 60, r: 40, t: 80, b: 60 },
           hovermode: 'closest' as const,
           uirevision: uirevision, // Keep zoom state on update
         },
@@ -393,12 +410,13 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
 
     if (chartType === 'metrics') {
       const data = agents.flatMap((agent, idx) => {
-        const history = dataSource[agent] || [];
+        const rawHistory = dataSource[agent] || [];
+        const history = filterByTimeWindow(rawHistory, timeWindow);
         const baseColor = viewMode === 'aggregated'
           ? CONTROLLER_COLORS[agent] || COLORS.primary
           : AGENT_COLORS[idx % AGENT_COLORS.length];
         const agentLabel = viewMode === 'aggregated'
-          ? `${agent.toUpperCase()} Controller`
+          ? (agent === 'pid_fuzzy' ? 'Hybrid (PID+Fuzzy) Controller' : `${agent.toUpperCase()} Controller`)
           : agent;
 
         return [
@@ -424,9 +442,12 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
       return {
         data,
         layout: {
-          title: 'Integral Absolute Error (IAE)',
+          title: {
+            text: 'Integral Absolute Error Comparison',
+            font: { size: 16, color: COLORS.text, family: 'Inter, sans-serif' }
+          },
           xaxis: {
-            title: 'Time',
+            title: { text: 'Time (s)', font: { size: 14, color: COLORS.text } },
             color: COLORS.text,
             gridcolor: COLORS.grid,
             ...(zoomState.xaxis?.autorange === false && zoomState.xaxis.range
@@ -434,7 +455,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
               : {}),
           },
           yaxis: {
-            title: 'IAE',
+            title: { text: 'IAE (m·s)', font: { size: 14, color: COLORS.text } },
             color: COLORS.text,
             gridcolor: COLORS.grid,
             ...(zoomState.yaxis?.autorange === false && zoomState.yaxis.range
@@ -444,7 +465,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
           paper_bgcolor: COLORS.bg,
           plot_bgcolor: COLORS.bg,
           font: { color: COLORS.text, family: 'Inter, sans-serif' },
-          margin: { l: 60, r: 40, t: 40, b: 60 },
+          margin: { l: 60, r: 40, t: 80, b: 60 },
           uirevision: uirevision, // Keep zoom state on update
         },
       };
@@ -452,12 +473,13 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
 
     if (chartType === 'overshoot') {
       const data = agents.flatMap((agent, idx) => {
-        const history = dataSource[agent] || [];
+        const rawHistory = dataSource[agent] || [];
+        const history = filterByTimeWindow(rawHistory, timeWindow);
         const baseColor = viewMode === 'aggregated'
           ? CONTROLLER_COLORS[agent] || COLORS.primary
           : AGENT_COLORS[idx % AGENT_COLORS.length];
         const agentLabel = viewMode === 'aggregated'
-          ? `${agent.toUpperCase()} Controller`
+          ? (agent === 'pid_fuzzy' ? 'Hybrid (PID+Fuzzy) Controller' : `${agent.toUpperCase()} Controller`)
           : agent;
 
         return [
@@ -483,9 +505,12 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
       return {
         data,
         layout: {
-          title: 'Overshoot & RMSE',
+          title: {
+            text: 'Maximum Overshoot and RMSE Analysis',
+            font: { size: 16, color: COLORS.text, family: 'Inter, sans-serif' }
+          },
           xaxis: {
-            title: 'Time',
+            title: { text: 'Time (s)', font: { size: 14, color: COLORS.text } },
             color: COLORS.text,
             gridcolor: COLORS.grid,
             ...(zoomState.xaxis?.autorange === false && zoomState.xaxis.range
@@ -493,7 +518,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
               : {}),
           },
           yaxis: {
-            title: 'Value (m)',
+            title: { text: 'Value (m)', font: { size: 14, color: COLORS.text } },
             color: COLORS.text,
             gridcolor: COLORS.grid,
             ...(zoomState.yaxis?.autorange === false && zoomState.yaxis.range
@@ -503,14 +528,14 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
           paper_bgcolor: COLORS.bg,
           plot_bgcolor: COLORS.bg,
           font: { color: COLORS.text, family: 'Inter, sans-serif' },
-          margin: { l: 60, r: 40, t: 40, b: 60 },
+          margin: { l: 60, r: 40, t: 80, b: 60 },
           uirevision: uirevision, // Keep zoom state on update
         },
       };
     }
 
     return { data: [], layout: {} };
-  }, [metricsHistory, windHistory, selectedAgent, chartType, zoomState, viewMode, controllerParams, selectedControllers, aggregateByControllerType]);
+  }, [metricsHistory, windHistory, selectedAgent, chartType, zoomState, viewMode, controllerParams, selectedControllers, timeWindow, filterByTimeWindow, aggregateByControllerType]);
 
   return (
     <div className="glass-panel rounded-lg p-4 transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,243,255,0.1)]">
@@ -526,6 +551,13 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
           displayModeBar: true,
           displaylogo: false,
           modeBarButtonsToRemove: ['lasso2d', 'select2d', 'autoScale2d'],
+          toImageButtonOptions: {
+            format: 'png',
+            filename: `formation_${chartType}_${Date.now()}`,
+            height: 800,
+            width: 1200,
+            scale: 2,
+          },
         }}
         style={{ width: '100%' }}
         onRelayout={handleRelayout}
