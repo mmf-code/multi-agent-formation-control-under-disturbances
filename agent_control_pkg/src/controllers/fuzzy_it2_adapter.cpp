@@ -1,6 +1,9 @@
-// Implementation of FuzzyGT2Adapter bridging loaded params to GT2FuzzyLogicSystem
+/**
+ * @file fuzzy_it2_adapter.cpp
+ * @brief Implementation of FuzzyIT2Adapter
+ */
 
-#include "agent_control_pkg/controllers/fuzzy_gt2_adapter.hpp"
+#include "agent_control_pkg/controllers/fuzzy_it2_adapter.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -8,20 +11,20 @@
 
 namespace agent_control_pkg::controllers {
 
-FuzzyGT2Adapter::FuzzyGT2Adapter(const Options &opt)
+FuzzyIT2Adapter::FuzzyIT2Adapter(const Options &opt)
   : opt_(opt)
 {
   reset();
 }
 
-void FuzzyGT2Adapter::configureFromParams(
-    const std::map<std::string, std::map<std::string, agent_control_pkg::GT2FuzzyLogicSystem::IT2TriangularFS_FOU>> &sets,
-    const std::vector<std::array<std::string,4>> &rules,
+void FuzzyIT2Adapter::configureFromParams(
+    const std::map<std::string,
+                   std::map<std::string, IT2FuzzyLogicSystem::IT2TriangularFS_FOU>> &sets,
+    const std::vector<std::array<std::string, 4>> &rules,
     bool include_wind)
 {
   // Reinitialize internal FLS state
-  fls_ = agent_control_pkg::GT2FuzzyLogicSystem{};
-
+  fls_ = IT2FuzzyLogicSystem{};
   include_wind_ = include_wind;
 
   // Detect output variable name from provided sets
@@ -40,7 +43,6 @@ void FuzzyGT2Adapter::configureFromParams(
       }
     }
     if (output_var.empty()) {
-      // Last-resort default
       output_var = "output";
     }
   }
@@ -53,7 +55,7 @@ void FuzzyGT2Adapter::configureFromParams(
   }
   fls_.addOutputVariable(output_var);
 
-  // Load fuzzy sets for all variables we know about
+  // Load fuzzy sets for all variables
   for (const auto &var_entry : sets) {
     const std::string &var_name = var_entry.first;
     for (const auto &set_entry : var_entry.second) {
@@ -64,9 +66,8 @@ void FuzzyGT2Adapter::configureFromParams(
   }
 
   // Add rules: [error_label, dError_label, wind_label, output_label]
-  // If wind is disabled, ignore provided wind labels (use only error,dError)
   for (const auto &r : rules) {
-    agent_control_pkg::GT2FuzzyLogicSystem::FuzzyRule rule;
+    IT2FuzzyLogicSystem::FuzzyRule rule;
     rule.antecedents.clear();
     rule.antecedents["error"] = r[0];
     rule.antecedents["dError"] = r[1];
@@ -80,17 +81,19 @@ void FuzzyGT2Adapter::configureFromParams(
   initialized_ = true;
 }
 
-void FuzzyGT2Adapter::configureFromFuzzyParams(const agent_control_pkg::FuzzyParams &fp,
+void FuzzyIT2Adapter::configureFromFuzzyParams(const FuzzyParams &fp,
                                                bool include_wind)
 {
-  // Convert FuzzyParams::FuzzySetFOU -> GT2FuzzyLogicSystem::IT2TriangularFS_FOU
-  std::map<std::string, std::map<std::string, agent_control_pkg::GT2FuzzyLogicSystem::IT2TriangularFS_FOU>> converted_sets;
+  // Convert FuzzyParams::FuzzySetFOU -> IT2FuzzyLogicSystem::IT2TriangularFS_FOU
+  std::map<std::string,
+           std::map<std::string, IT2FuzzyLogicSystem::IT2TriangularFS_FOU>> converted_sets;
+
   for (const auto &var_pair : fp.sets) {
     const std::string &var_name = var_pair.first;
     for (const auto &set_pair : var_pair.second) {
       const std::string &set_name = set_pair.first;
-      const auto &s = set_pair.second; // FuzzySetFOU {l1,l2,l3,u1,u2,u3}
-      agent_control_pkg::GT2FuzzyLogicSystem::IT2TriangularFS_FOU fou{
+      const auto &s = set_pair.second;  // FuzzySetFOU {l1,l2,l3,u1,u2,u3}
+      IT2FuzzyLogicSystem::IT2TriangularFS_FOU fou{
           s.l1, s.l2, s.l3,
           s.u1, s.u2, s.u3
       };
@@ -101,10 +104,9 @@ void FuzzyGT2Adapter::configureFromFuzzyParams(const agent_control_pkg::FuzzyPar
   configureFromParams(converted_sets, fp.rules, include_wind);
 }
 
-double FuzzyGT2Adapter::compute(double y, double yref, double dt)
+double FuzzyIT2Adapter::compute(double y, double yref, double dt)
 {
   if (!initialized_) {
-    // Not configured yet; return neutral command
     return 0.0;
   }
 
@@ -112,6 +114,7 @@ double FuzzyGT2Adapter::compute(double y, double yref, double dt)
   const double error = yref - y;
   double derr = 0.0;
   const double safe_dt = (dt > 1e-9 && std::isfinite(dt)) ? dt : 1e-3;
+
   if (first_) {
     derr = 0.0;
     first_ = false;
@@ -123,23 +126,24 @@ double FuzzyGT2Adapter::compute(double y, double yref, double dt)
   // Wind scalar is a simple magnitude proxy supplied via options
   const double wind_val = include_wind_ ? opt_.wind_scalar : 0.0;
 
-  // Evaluate FLS
+  // Evaluate IT2-FLS
   double u = fls_.calculateOutput(error, derr, wind_val);
+
+  // Handle NaN/Inf
   if (!std::isfinite(u)) {
     u = 0.0;
   }
 
   // Clamp to actuator limits
-  if (u < opt_.umin) u = opt_.umin;
-  if (u > opt_.umax) u = opt_.umax;
+  u = std::clamp(u, opt_.umin, opt_.umax);
+
   return u;
 }
 
-void FuzzyGT2Adapter::reset()
+void FuzzyIT2Adapter::reset()
 {
   first_ = true;
   prev_error_ = 0.0;
 }
 
 } // namespace agent_control_pkg::controllers
-

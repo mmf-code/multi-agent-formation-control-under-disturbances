@@ -15,6 +15,14 @@ public:
         double total_output;
     };
 
+    // Anti-windup mode selection
+    enum class AntiWindupMode {
+        NONE,               // No anti-windup (for testing/comparison)
+        CONDITIONAL,        // Stop integration when saturated
+        BACK_CALCULATION,   // Feed saturation error back to integrator
+        COMBINED            // Both conditional + back-calculation (default)
+    };
+
     // Constructor with enhanced parameters
     PIDController(double kp, double ki, double kd, double output_min, double output_max, 
                   double setpoint = 0.0, bool enable_derivative_filter = true, double derivative_filter_alpha = 0.1);
@@ -31,6 +39,12 @@ public:
     // Derivative filter control
     void enableDerivativeFilter(bool enable, double alpha = 0.1);
     void setDerivativeFilterAlpha(double alpha);
+
+    // Anti-windup configuration
+    // Tt = tracking time constant (typical: Tt = sqrt(Ti * Td) where Ti = Kp/Ki, Td = Kd/Kp)
+    void setAntiWindupMode(AntiWindupMode mode);
+    void setTrackingTimeConstant(double Tt);
+    AntiWindupMode getAntiWindupMode() const;
 
     // Access current PID settings
     double getKp() const;
@@ -85,6 +99,8 @@ private:
     // Enhanced anti-windup tracking
     bool output_saturated_;
     double last_output_before_clamp_;
+    AntiWindupMode anti_windup_mode_;
+    double tracking_time_constant_;  // Tt for back-calculation
     
     // Feed-forward control parameters
     bool feedforward_enabled_;

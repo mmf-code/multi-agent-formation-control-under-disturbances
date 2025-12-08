@@ -1,12 +1,23 @@
-#include "agent_control_pkg/gt2_fuzzy_logic_system.hpp"
-#include <algorithm> // For std::min, std::max, std::sort
-#include <cmath>     // For std::abs, etc.
-#include <map>       // For std::map
-#include <vector>    // For std::vector
-#include <iostream>  // For std::cout (if DEBUG_FLS) and std::cerr (for errors)
-#include <limits>    // For std::numeric_limits
+/**
+ * @file it2_fuzzy_logic_system.cpp
+ * @brief Implementation of Interval Type-2 Fuzzy Logic System (IT2-FLS)
+ *
+ * This implements the IT2-FLS pipeline:
+ * 1. Fuzzification using IT2 triangular MFs with FOU
+ * 2. Rule inference with min t-norm
+ * 3. Karnik-Mendel type reduction
+ * 4. Centroid defuzzification
+ */
 
-// Conditional cout for debugging
+#include "agent_control_pkg/it2_fuzzy_logic_system.hpp"
+#include <algorithm>
+#include <cmath>
+#include <map>
+#include <vector>
+#include <iostream>
+#include <limits>
+
+// Conditional debug logging
 #ifdef DEBUG_FLS
 #define FLS_LOG(x) std::cout << x
 #else
@@ -16,52 +27,51 @@
 namespace agent_control_pkg {
 
 // Constructor
-GT2FuzzyLogicSystem::GT2FuzzyLogicSystem() {
-  FLS_LOG("GT2FuzzyLogicSystem: Constructor." << std::endl);
+IT2FuzzyLogicSystem::IT2FuzzyLogicSystem() {
+  FLS_LOG("IT2FuzzyLogicSystem: Constructor." << std::endl);
 }
 
 // Destructor
-GT2FuzzyLogicSystem::~GT2FuzzyLogicSystem() {}
+IT2FuzzyLogicSystem::~IT2FuzzyLogicSystem() {}
 
 // --- Configuration Methods ---
-void GT2FuzzyLogicSystem::addInputVariable(const std::string &var_name) {
+
+void IT2FuzzyLogicSystem::addInputVariable(const std::string &var_name) {
   if (fuzzy_sets_.find(var_name) == fuzzy_sets_.end()) {
     fuzzy_sets_[var_name] = {};
-    FLS_LOG("GT2FLS: Added input variable: " << var_name << std::endl);
+    FLS_LOG("IT2-FLS: Added input variable: " << var_name << std::endl);
   }
 }
 
-void GT2FuzzyLogicSystem::addOutputVariable(const std::string &var_name) {
+void IT2FuzzyLogicSystem::addOutputVariable(const std::string &var_name) {
   if (fuzzy_sets_.find(var_name) == fuzzy_sets_.end()) {
     fuzzy_sets_[var_name] = {};
-    output_variable_name_ = var_name; // Store the output variable name
-    FLS_LOG("GT2FLS: Added output variable: " << var_name << std::endl);
+    output_variable_name_ = var_name;
+    FLS_LOG("IT2-FLS: Added output variable: " << var_name << std::endl);
   }
 }
 
-void GT2FuzzyLogicSystem::addFuzzySetToVariable(
+void IT2FuzzyLogicSystem::addFuzzySetToVariable(
     const std::string &var_name, const std::string &set_name,
     const IT2TriangularFS_FOU &fou) {
   if (fuzzy_sets_.count(var_name) > 0) {
     fuzzy_sets_[var_name][set_name] = fou;
-    FLS_LOG("GT2FLS: Added set '" << set_name << "' to variable '" << var_name
-                                  << "'" << std::endl);
+    FLS_LOG("IT2-FLS: Added set '" << set_name << "' to variable '" << var_name
+                                   << "'" << std::endl);
   } else {
-    // Use std::cerr for actual errors, or a proper logger
-    std::cerr << "GT2FLS: Error - Variable '" << var_name
+    std::cerr << "IT2-FLS: Error - Variable '" << var_name
               << "' not defined before adding set." << std::endl;
   }
 }
 
-void GT2FuzzyLogicSystem::addRule(const FuzzyRule &rule) {
+void IT2FuzzyLogicSystem::addRule(const FuzzyRule &rule) {
   rules_.push_back(rule);
-  // FLS_LOG("GT2FLS: Added a rule. Total rules: " << rules_.size() <<
-  // std::endl);
 }
 
-// Helper for getTriangularMembership (no changes needed here from your version)
-GT2FuzzyLogicSystem::MembershipInterval
-GT2FuzzyLogicSystem::getTriangularMembership(double crisp_input, double l_left,
+// --- Membership Calculation ---
+
+IT2FuzzyLogicSystem::MembershipInterval
+IT2FuzzyLogicSystem::getTriangularMembership(double crisp_input, double l_left,
                                              double l_peak, double l_right,
                                              double u_left, double u_peak,
                                              double u_right) {
@@ -102,7 +112,7 @@ GT2FuzzyLogicSystem::getTriangularMembership(double crisp_input, double l_left,
     upper_mu = std::max(upper_mu, 1.0);
   }
 
-  // Ensure lower <= upper membership
+  // Ensure lower <= upper membership and bounds [0, 1]
   lower_mu = std::min(lower_mu, upper_mu);
   lower_mu = std::max(0.0, std::min(lower_mu, 1.0));
   upper_mu = std::max(0.0, std::min(upper_mu, 1.0));
@@ -110,12 +120,13 @@ GT2FuzzyLogicSystem::getTriangularMembership(double crisp_input, double l_left,
   return {lower_mu, upper_mu};
 }
 
-// Fuzzify Inputs (use FLS_LOG)
+// --- Fuzzification ---
+
 std::map<std::string,
-         std::map<std::string, GT2FuzzyLogicSystem::MembershipInterval>>
-GT2FuzzyLogicSystem::fuzzifyInputs(double crisp_error, double crisp_dError,
+         std::map<std::string, IT2FuzzyLogicSystem::MembershipInterval>>
+IT2FuzzyLogicSystem::fuzzifyInputs(double crisp_error, double crisp_dError,
                                    double crisp_wind) {
-  FLS_LOG("GT2FLS: Fuzzifying Inputs - Error="
+  FLS_LOG("IT2-FLS: Fuzzifying Inputs - Error="
           << crisp_error << ", dError=" << crisp_dError
           << ", Wind=" << crisp_wind << std::endl);
 
@@ -128,7 +139,7 @@ GT2FuzzyLogicSystem::fuzzifyInputs(double crisp_error, double crisp_dError,
     for (const auto &pair : fuzzy_sets_.at("error")) {
       const std::string &set_name = pair.first;
       const IT2TriangularFS_FOU &fou = pair.second;
-      error_memberships[set_name] = GT2FuzzyLogicSystem::getTriangularMembership(
+      error_memberships[set_name] = getTriangularMembership(
           crisp_error, fou.lmf_left_base, fou.lmf_peak, fou.lmf_right_base,
           fou.umf_left_base, fou.umf_peak, fou.umf_right_base);
       FLS_LOG("    Error Set '"
@@ -136,12 +147,13 @@ GT2FuzzyLogicSystem::fuzzifyInputs(double crisp_error, double crisp_dError,
               << error_memberships[set_name].second << "]" << std::endl);
     }
   }
+
   if (fuzzy_sets_.count("dError") > 0) {
     FLS_LOG("  Fuzzifying dError input: " << crisp_dError << std::endl);
     for (const auto &pair : fuzzy_sets_.at("dError")) {
       const std::string &set_name = pair.first;
       const IT2TriangularFS_FOU &fou = pair.second;
-      dError_memberships[set_name] = GT2FuzzyLogicSystem::getTriangularMembership(
+      dError_memberships[set_name] = getTriangularMembership(
           crisp_dError, fou.lmf_left_base, fou.lmf_peak, fou.lmf_right_base,
           fou.umf_left_base, fou.umf_peak, fou.umf_right_base);
       FLS_LOG("    dError Set '" << set_name << "': ["
@@ -150,12 +162,13 @@ GT2FuzzyLogicSystem::fuzzifyInputs(double crisp_error, double crisp_dError,
                                  << std::endl);
     }
   }
+
   if (fuzzy_sets_.count("wind") > 0) {
     FLS_LOG("  Fuzzifying wind input: " << crisp_wind << std::endl);
     for (const auto &pair : fuzzy_sets_.at("wind")) {
       const std::string &set_name = pair.first;
       const IT2TriangularFS_FOU &fou = pair.second;
-      wind_memberships[set_name] = GT2FuzzyLogicSystem::getTriangularMembership(
+      wind_memberships[set_name] = getTriangularMembership(
           crisp_wind, fou.lmf_left_base, fou.lmf_peak, fou.lmf_right_base,
           fou.umf_left_base, fou.umf_peak, fou.umf_right_base);
       FLS_LOG("    Wind Set '"
@@ -176,24 +189,24 @@ GT2FuzzyLogicSystem::fuzzifyInputs(double crisp_error, double crisp_dError,
   return all_fuzzified_inputs;
 }
 
-// This function calculates the firing strength of each rule and identifies its
-// consequent centroid.
-std::vector<GT2FuzzyLogicSystem::RuleFiringInfo>
-GT2FuzzyLogicSystem::calculateRuleFirings(
+// --- Rule Inference ---
+
+std::vector<IT2FuzzyLogicSystem::RuleFiringInfo>
+IT2FuzzyLogicSystem::calculateRuleFirings(
     const std::map<std::string, std::map<std::string, MembershipInterval>>
         &fuzzified_inputs) {
-  FLS_LOG("GT2FLS: Calculating Rule Firings for " << rules_.size()
-                                                  << " rules..." << std::endl);
+  FLS_LOG("IT2-FLS: Calculating Rule Firings for " << rules_.size()
+                                                   << " rules..." << std::endl);
   std::vector<RuleFiringInfo> fired_rules_info;
 
   if (rules_.empty()) {
-    std::cerr << "GT2FLS Warning: No rules defined!" << std::endl;
+    std::cerr << "IT2-FLS Warning: No rules defined!" << std::endl;
     return fired_rules_info;
   }
   if (output_variable_name_.empty() ||
       fuzzy_sets_.count(output_variable_name_) == 0) {
     std::cerr
-        << "GT2FLS Error: Output variable or its sets not defined correctly."
+        << "IT2-FLS Error: Output variable or its sets not defined correctly."
         << std::endl;
     return fired_rules_info;
   }
@@ -201,11 +214,11 @@ GT2FuzzyLogicSystem::calculateRuleFirings(
   for (size_t rule_idx = 0; rule_idx < rules_.size(); ++rule_idx) {
     const FuzzyRule &rule = rules_[rule_idx];
 
-    MembershipInterval rule_firing_strength = {1.0,
-                                               1.0}; // Min t-norm starts at 1.0
+    // Min t-norm: start with 1.0
+    MembershipInterval rule_firing_strength = {1.0, 1.0};
     bool can_evaluate_this_rule = true;
 
-    // Calculate antecedent firing strength
+    // Calculate antecedent firing strength using min t-norm
     for (const auto &antecedent_pair : rule.antecedents) {
       const std::string &input_var_name = antecedent_pair.first;
       const std::string &fuzzy_set_name = antecedent_pair.second;
@@ -221,33 +234,25 @@ GT2FuzzyLogicSystem::calculateRuleFirings(
           rule_firing_strength.second =
               std::min(rule_firing_strength.second, term_membership.second);
         } else {
-          // std::cerr << "GT2FLS Warning: Fuzzy set '" << fuzzy_set_name << "'
-          // not found for variable '" << input_var_name << "' in rule " <<
-          // rule_idx << std::endl;
           rule_firing_strength = {0.0, 0.0};
           can_evaluate_this_rule = false;
           break;
         }
       } else {
-        // std::cerr << "GT2FLS Warning: Input variable '" << input_var_name <<
-        // "' not found in fuzzified inputs for rule " << rule_idx << std::endl;
         rule_firing_strength = {0.0, 0.0};
         can_evaluate_this_rule = false;
         break;
       }
     }
 
-    // If rule has any firing strength (upper bound > 0), get consequent
-    // centroid
+    // If rule fires (upper bound > 0), get consequent centroid
     if (can_evaluate_this_rule && rule_firing_strength.second > 1e-9) {
       const std::string &output_set_name = rule.consequent.second;
 
       if (fuzzy_sets_.at(output_variable_name_).count(output_set_name) > 0) {
         const IT2TriangularFS_FOU &consequent_fou =
             fuzzy_sets_.at(output_variable_name_).at(output_set_name);
-        double consequent_centroid =
-            consequent_fou
-                .getLMFCentroid(); // Using lmf_peak as centroid for simplicity
+        double consequent_centroid = consequent_fou.getLMFCentroid();
 
         fired_rules_info.push_back(
             {rule_firing_strength, consequent_centroid, rule_idx});
@@ -257,25 +262,24 @@ GT2FuzzyLogicSystem::calculateRuleFirings(
                           << output_set_name << "' (centroid="
                           << consequent_centroid << ")" << std::endl);
       } else {
-        std::cerr << "GT2FLS Error: Consequent fuzzy set '" << output_set_name
+        std::cerr << "IT2-FLS Error: Consequent fuzzy set '" << output_set_name
                   << "' not found for output variable '"
                   << output_variable_name_ << "' in rule " << rule_idx
                   << std::endl;
       }
     } else {
-      FLS_LOG(
-          "  Rule " << rule_idx
-                    << " did not fire significantly (or error in evaluation)."
-                    << std::endl);
+      FLS_LOG("  Rule " << rule_idx << " did not fire significantly."
+                        << std::endl);
     }
   }
   return fired_rules_info;
 }
 
-// Karnik-Mendel Type Reduction (or similar iterative method)
-std::pair<double, double> GT2FuzzyLogicSystem::typeReduce_KarnikMendel(
+// --- Karnik-Mendel Type Reduction ---
+
+std::pair<double, double> IT2FuzzyLogicSystem::typeReduce_KarnikMendel(
     std::vector<RuleFiringInfo> &rule_firings_info) {
-  FLS_LOG("GT2FLS: Type Reducing using Karnik-Mendel for "
+  FLS_LOG("IT2-FLS: Type Reducing using Karnik-Mendel for "
           << rule_firings_info.size() << " fired rules." << std::endl);
 
   if (rule_firings_info.empty()) {
@@ -283,8 +287,7 @@ std::pair<double, double> GT2FuzzyLogicSystem::typeReduce_KarnikMendel(
     return {0.0, 0.0};
   }
 
-  // Sort rule_firings_info by consequent_centroid (y_i values)
-  // This is crucial for KM algorithm's iterative search for switching point k
+  // Sort by consequent centroid (required for KM algorithm)
   std::sort(rule_firings_info.begin(), rule_firings_info.end(),
             [](const RuleFiringInfo &a, const RuleFiringInfo &b) {
               return a.consequent_centroid < b.consequent_centroid;
@@ -294,19 +297,17 @@ std::pair<double, double> GT2FuzzyLogicSystem::typeReduce_KarnikMendel(
   FLS_LOG("  Sorted rule firings by consequent centroid:" << std::endl);
   for (const auto &info : rule_firings_info) {
     FLS_LOG("    y_i=" << info.consequent_centroid
-                       << ", w_bar=" << info.firing_strength.first
-                       << ", w_tilde=" << info.firing_strength.second
+                       << ", f_lower=" << info.firing_strength.first
+                       << ", f_upper=" << info.firing_strength.second
                        << std::endl);
   }
 #endif
 
   double y_l = 0.0;
   double y_r = 0.0;
-  int N = rule_firings_info.size();
+  int N = static_cast<int>(rule_firings_info.size());
 
-  // --- Calculate y_l (left endpoint of centroid interval) ---
-  // Iterative procedure to find k for y_l
-  // Initial guess uses lower firing strengths
+  // --- Calculate y_l (left endpoint) ---
   double y_l_prime_num = 0.0;
   double y_l_prime_den = 0.0;
   for (const auto &info : rule_firings_info) {
@@ -317,7 +318,7 @@ std::pair<double, double> GT2FuzzyLogicSystem::typeReduce_KarnikMendel(
       (y_l_prime_den == 0.0) ? 0.0 : y_l_prime_num / y_l_prime_den;
 
   double y_l_prev_prime = std::numeric_limits<double>::lowest();
-  int max_iterations = 20; // KM usually converges quickly
+  int max_iterations = 20;
   int iter_count = 0;
 
   while (std::abs(y_l_prime - y_l_prev_prime) > 1e-6 &&
@@ -344,15 +345,13 @@ std::pair<double, double> GT2FuzzyLogicSystem::typeReduce_KarnikMendel(
     }
 
     y_l_prime = (den == 0.0) ? 0.0 : num / den;
-
     iter_count++;
   }
   y_l = y_l_prime;
   FLS_LOG("  KM y_l converged to " << y_l << " in " << iter_count
                                    << " iterations." << std::endl);
 
-  // --- Calculate y_r (right endpoint of centroid interval) ---
-  // Similar iterative procedure for y_r
+  // --- Calculate y_r (right endpoint) ---
   double y_r_prime_num = 0.0;
   double y_r_prime_den = 0.0;
   for (const auto &info : rule_firings_info) {
@@ -388,7 +387,6 @@ std::pair<double, double> GT2FuzzyLogicSystem::typeReduce_KarnikMendel(
     }
 
     y_r_prime = (den == 0.0) ? 0.0 : num / den;
-
     iter_count++;
   }
   y_r = y_r_prime;
@@ -397,46 +395,49 @@ std::pair<double, double> GT2FuzzyLogicSystem::typeReduce_KarnikMendel(
 
   // Ensure y_l <= y_r
   if (y_l > y_r) {
-    FLS_LOG("  Warning: KM y_l > y_r. Swapping. y_l=" << y_l << ", y_r=" << y_r
-                                                      << std::endl);
+    FLS_LOG("  Warning: KM y_l > y_r. Swapping." << std::endl);
     std::swap(y_l, y_r);
   }
 
-  FLS_LOG("GT2FLS: KM Type Reduced Interval: [" << y_l << ", " << y_r << "]"
-                                                << std::endl);
+  FLS_LOG("IT2-FLS: KM Type Reduced Interval: [" << y_l << ", " << y_r << "]"
+                                                 << std::endl);
   return {y_l, y_r};
 }
 
-double GT2FuzzyLogicSystem::defuzzify(
+// --- Defuzzification ---
+
+double IT2FuzzyLogicSystem::defuzzify(
     const std::pair<double, double> &type_reduced_interval) {
-  FLS_LOG("GT2FLS: Defuzzify (Averaging interval)" << std::endl);
+  FLS_LOG("IT2-FLS: Defuzzify (Averaging interval)" << std::endl);
   double crisp_output =
       (type_reduced_interval.first + type_reduced_interval.second) / 2.0;
   FLS_LOG("  Defuzzified output: " << crisp_output << std::endl);
   return crisp_output;
 }
 
-// Main Calculation Method
-double GT2FuzzyLogicSystem::calculateOutput(double crisp_error,
+// --- Main Calculation Method ---
+
+double IT2FuzzyLogicSystem::calculateOutput(double crisp_error,
                                             double crisp_dError,
                                             double crisp_wind) {
-  FLS_LOG("\n--- GT2FLS Calculation Start ---" << std::endl);
+  FLS_LOG("\n--- IT2-FLS Calculation Start ---" << std::endl);
+
   // 1. Fuzzify inputs
   auto fuzzified_inputs = fuzzifyInputs(crisp_error, crisp_dError, crisp_wind);
 
-  // 2. Calculate rule firings (strengths and consequent centroids)
+  // 2. Calculate rule firings
   std::vector<RuleFiringInfo> fired_rules =
       calculateRuleFirings(fuzzified_inputs);
 
   // 3. Type Reduction (Karnik-Mendel)
   std::pair<double, double> type_reduced_interval =
-      GT2FuzzyLogicSystem::typeReduce_KarnikMendel(fired_rules);
+      typeReduce_KarnikMendel(fired_rules);
 
-  // 4. Defuzzification (Average of interval)
-  double crisp_output = GT2FuzzyLogicSystem::defuzzify(type_reduced_interval);
+  // 4. Defuzzification
+  double crisp_output = defuzzify(type_reduced_interval);
 
-  FLS_LOG("GT2FLS Final Crisp Output: " << crisp_output << std::endl);
-  FLS_LOG("--- GT2FLS Calculation End ---\n" << std::endl);
+  FLS_LOG("IT2-FLS Final Crisp Output: " << crisp_output << std::endl);
+  FLS_LOG("--- IT2-FLS Calculation End ---\n" << std::endl);
   return crisp_output;
 }
 

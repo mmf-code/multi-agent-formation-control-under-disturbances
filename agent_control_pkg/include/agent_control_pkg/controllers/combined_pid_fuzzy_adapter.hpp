@@ -3,7 +3,7 @@
 
 #include "agent_control_pkg/controllers/controller_base.hpp"
 #include "agent_control_pkg/controllers/pid_adapter.hpp"
-#include "agent_control_pkg/controllers/fuzzy_gt2_adapter.hpp"
+#include "agent_control_pkg/controllers/fuzzy_it2_adapter.hpp"
 #include <memory>
 
 namespace agent_control_pkg::controllers {
@@ -11,7 +11,7 @@ namespace agent_control_pkg::controllers {
 class CombinedPidFuzzyAdapter : public IController1D {
 public:
   CombinedPidFuzzyAdapter(std::unique_ptr<PIDAdapter> pid,
-                          std::unique_ptr<FuzzyGT2Adapter> fuzzy,
+                          std::unique_ptr<FuzzyIT2Adapter> fuzzy,
                           double k_pid,
                           double k_fuzzy,
                           double umin,
@@ -43,7 +43,7 @@ public:
 
 private:
   std::unique_ptr<PIDAdapter> pid_;
-  std::unique_ptr<FuzzyGT2Adapter> fuzzy_;
+  std::unique_ptr<FuzzyIT2Adapter> fuzzy_;
   double k_pid_{1.0};
   double k_fuzzy_{1.0};
   double umin_{};

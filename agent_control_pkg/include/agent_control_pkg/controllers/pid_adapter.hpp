@@ -15,6 +15,10 @@ public:
   void setLimits(double umin, double umax) { pid_.setOutputLimits(umin, umax); }
   void enableDerivativeFilter(bool enable, double alpha) { pid_.enableDerivativeFilter(enable, alpha); }
 
+  // Anti-windup configuration
+  void setAntiWindupMode(PIDController::AntiWindupMode mode) { pid_.setAntiWindupMode(mode); }
+  void setTrackingTimeConstant(double Tt) { pid_.setTrackingTimeConstant(Tt); }
+
   double compute(double y, double yref, double dt) override {
     pid_.setSetpoint(yref);
     return pid_.calculate(y, dt);

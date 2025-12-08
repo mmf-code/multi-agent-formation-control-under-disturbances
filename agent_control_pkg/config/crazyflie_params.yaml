@@ -1,6 +1,29 @@
 # Crazyflie-specific controller parameters
-# Mass ratio: m_cf / m_custom = 0.027 / 1.5 = 0.018
-# These gains are adapted for Crazyflie dynamics
+#
+# GAIN DESIGN (Control Theory Based):
+# =====================================
+# Target: 10% overshoot, 8s settling time (faster than custom drone)
+#
+# Step 1: Damping ratio from overshoot
+#   zeta = sqrt(ln(0.1)^2 / (pi^2 + ln(0.1)^2)) = 0.591
+#
+# Step 2: Natural frequency from settling time (5% criterion)
+#   omega_n = 3 / (zeta * ts) = 3 / (0.591 * 8) = 0.634 rad/s
+#
+# Step 3: Integral pole (alpha = 2.5)
+#   p_i = 2.5 * omega_n = 1.585 rad/s
+#
+# Step 4: PID gains (pole placement)
+#   Kd = 2*zeta*omega_n + p_i = 2*0.591*0.634 + 1.585 = 2.334
+#   Kp = omega_n^2 + 2*zeta*omega_n*p_i = 0.402 + 1.187 = 1.589
+#   Ki = omega_n^2 * p_i = 0.402 * 1.585 = 0.637
+#
+# NOTE: These are theoretical values. Start conservative (scale down by 0.2-0.5)
+#       and tune experimentally on real hardware.
+#
+# Conservative starting gains (0.2x theoretical):
+#   Kp = 0.32, Ki = 0.13, Kd = 0.47
+#
 
 cf0:
   agent_controller:
@@ -13,19 +36,27 @@ cf0:
       crazyflie:
         enable: true
         cmd_topic: "cmd_full_state"
+        # AccelToAttitude converter parameters
+        mass: 0.027          # [kg] Crazyflie mass (~27g)
+        max_thrust: 0.6      # [N] Maximum thrust (~60g)
+        max_roll_rad: 0.5236   # [rad] Max roll angle (30 degrees)
+        max_pitch_rad: 0.5236  # [rad] Max pitch angle (30 degrees)
 
-      # Adapted PID gains for Crazyflie dynamics
-      # Initial estimate: Kp_cf ≈ Kp_custom × ratio × correction
+      # PID gains (conservative start - tune on hardware)
+      # Design: zeta=0.591, omega_n=0.634, p_i=1.585
       pid:
-        kp: 0.315    # 0.538 * 0.018 * 33 (tuning factor)
-        ki: 0.05
-        kd: 0.194    # 1.368 * 0.018 * 8
+        kp: 0.32             # Conservative: 0.2 * 1.589
+        ki: 0.13             # Conservative: 0.2 * 0.637
+        kd: 0.47             # Conservative: 0.2 * 2.334
         enable_derivative_filter: true
         derivative_filter_alpha: 0.1
+        anti_windup_mode: "combined"
+        tracking_time_constant: 0.0
 
+      # Acceleration output limits (conservative for indoor flight)
       output_limits:
         x:
-          min: -2.0
+          min: -2.0          # [m/s^2] Safe indoor limit
           max: 2.0
         y:
           min: -2.0
@@ -39,6 +70,8 @@ cf0:
         enable: true
 
 # Multi-agent formation with 3 Crazyflies
+# All agents use same conservative gains (tune on hardware)
+
 cf1:
   agent_controller:
     ros__parameters:
@@ -49,13 +82,19 @@ cf1:
       crazyflie:
         enable: true
         cmd_topic: "cmd_full_state"
+        mass: 0.027
+        max_thrust: 0.6
+        max_roll_rad: 0.5236
+        max_pitch_rad: 0.5236
 
       pid:
-        kp: 0.315
-        ki: 0.05
-        kd: 0.194
+        kp: 0.32
+        ki: 0.13
+        kd: 0.47
         enable_derivative_filter: true
         derivative_filter_alpha: 0.1
+        anti_windup_mode: "combined"
+        tracking_time_constant: 0.0
 
       output_limits:
         x:
@@ -82,13 +121,19 @@ cf2:
       crazyflie:
         enable: true
         cmd_topic: "cmd_full_state"
+        mass: 0.027
+        max_thrust: 0.6
+        max_roll_rad: 0.5236
+        max_pitch_rad: 0.5236
 
       pid:
-        kp: 0.315
-        ki: 0.05
-        kd: 0.194
+        kp: 0.32
+        ki: 0.13
+        kd: 0.47
         enable_derivative_filter: true
         derivative_filter_alpha: 0.1
+        anti_windup_mode: "combined"
+        tracking_time_constant: 0.0
 
       output_limits:
         x:

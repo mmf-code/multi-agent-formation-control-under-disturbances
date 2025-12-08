@@ -63,7 +63,7 @@
  */
 
 #include "../include/agent_control_pkg/config_reader.hpp"
-#include "../include/agent_control_pkg/gt2_fuzzy_logic_system.hpp"
+#include "../include/agent_control_pkg/it2_fuzzy_logic_system.hpp"
 #include "../include/agent_control_pkg/pid_controller.hpp"
 #include <algorithm>
 #include <array>
@@ -204,9 +204,9 @@ static bool loadFuzzyParamsLocal(const std::string &file,
   return true;
 }
 
-static void applyFuzzyParamsLocal(agent_control_pkg::GT2FuzzyLogicSystem &fls,
+static void applyFuzzyParamsLocal(agent_control_pkg::IT2FuzzyLogicSystem &fls,
                                   const FuzzyParams_Local &fp) {
-  using FOU_Ctrl = agent_control_pkg::GT2FuzzyLogicSystem::IT2TriangularFS_FOU;
+  using FOU_Ctrl = agent_control_pkg::IT2FuzzyLogicSystem::IT2TriangularFS_FOU;
   for (const auto &varPair : fp.sets) {
     const std::string &var = varPair.first;
     if (var == "correction")
@@ -918,9 +918,9 @@ int main() {
 
   std::vector<agent_control_pkg::PIDController> pid_x_controllers;
   std::vector<agent_control_pkg::PIDController> pid_y_controllers;
-  std::vector<agent_control_pkg::GT2FuzzyLogicSystem> fls_x_controllers_vec(
+  std::vector<agent_control_pkg::IT2FuzzyLogicSystem> fls_x_controllers_vec(
       NUM_DRONES);
-  std::vector<agent_control_pkg::GT2FuzzyLogicSystem> fls_y_controllers_vec(
+  std::vector<agent_control_pkg::IT2FuzzyLogicSystem> fls_y_controllers_vec(
       NUM_DRONES);
 
   for (int i = 0; i < NUM_DRONES; ++i) {

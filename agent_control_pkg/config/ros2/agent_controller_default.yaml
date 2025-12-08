@@ -1,6 +1,6 @@
 # ROS2 Agent Controller Configuration
 # This file configures the PID/Fuzzy/Hybrid controller for a single agent
-# Used by: agent_controller_node in gazebo_single_agent.launch.py
+# Used by: agent_controller_node
 
 agent_0:
   agent_controller:
@@ -24,8 +24,10 @@ agent_0:
       pid.kd: 1.368
       pid.enable_derivative_filter: true
       pid.derivative_filter_alpha: 0.1
+      pid.anti_windup_mode: "combined"  # none, conditional, back_calculation, combined
+      pid.tracking_time_constant: 0.0   # 0 = auto-compute from Tt = sqrt(Ti*Td)
 
-      # Fuzzy logic controller configuration
+      # Fuzzy logic controller configuration (IT2 - Interval Type-2)
       fuzzy.enable: false
       fuzzy.include_wind: false
       fuzzy.wind_scalar: 0.0
@@ -34,6 +36,16 @@ agent_0:
       # Hybrid controller mixing (only used if controller_type = pid_fuzzy)
       mix.k_pid: 1.0
       mix.k_fuzzy: 1.0
+
+      # Wind input source configuration
+      wind_source_topic: "/wind/velocity"
+      wind_source_type: "velocity"  # "velocity" or "force"
+      debug_wind_input: false
+
+      # Data freshness / stale data protection
+      stale_data.enable: true
+      stale_data.odom_threshold_sec: 0.5    # Max age for odometry data
+      stale_data.target_threshold_sec: 2.0  # Max age for target pose
 
       # Feed-forward control (drag and wind disturbance cancellation)
       feedforward.enable_drag: false

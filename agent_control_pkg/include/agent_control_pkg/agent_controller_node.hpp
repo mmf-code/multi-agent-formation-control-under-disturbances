@@ -19,10 +19,11 @@
 
 #include "agent_control_pkg/config_reader.hpp"
 #include "agent_control_pkg/controllers/combined_pid_fuzzy_adapter.hpp"
-#include "agent_control_pkg/controllers/fuzzy_gt2_adapter.hpp"
+#include "agent_control_pkg/controllers/fuzzy_it2_adapter.hpp"
 #include "agent_control_pkg/controllers/pid_adapter.hpp"
 #include "agent_control_pkg/core/physics_types.hpp"
 #include "agent_control_pkg/core/drone_physics_core.hpp"
+#include "agent_control_pkg/core/accel_to_attitude.hpp"
 
 namespace agent_control_pkg
 {
@@ -37,7 +38,7 @@ private:
   {
     std::unique_ptr<controllers::IController1D> controller;
     controllers::PIDAdapter * pid{nullptr};
-    controllers::FuzzyGT2Adapter * fuzzy{nullptr};
+    controllers::FuzzyIT2Adapter * fuzzy{nullptr};
     controllers::CombinedPidFuzzyAdapter * combined{nullptr};
     double last_total_output{0.0};
     double last_pid_contribution{0.0};
@@ -88,6 +89,13 @@ private:
   double pid_kd_{0.0};
   bool pid_enable_derivative_filter_{true};
   double pid_derivative_filter_alpha_{0.1};
+  std::string pid_anti_windup_mode_{"combined"};
+  double pid_tracking_time_constant_{0.0};
+
+  // Data freshness (stale data protection)
+  bool enable_stale_data_check_{true};
+  double odom_stale_threshold_sec_{0.5};   // Odometry data older than this is stale
+  double target_stale_threshold_sec_{2.0}; // Target pose older than this is stale
 
   std::optional<agent_control_pkg::FuzzyParams> fuzzy_params_;
 
@@ -113,6 +121,10 @@ private:
   bool crazyflie_enable_{false};
   std::string crazyflie_cmd_topic_{"cmd_full_state"};
   rclcpp::Publisher<crazyflie_interfaces::msg::FullState>::SharedPtr cf_cmd_pub_;
+
+  // Acceleration to attitude converter for Crazyflie
+  core::AccelToAttitudeConfig cf_attitude_config_;
+  std::unique_ptr<core::AccelToAttitude> accel_to_attitude_;
 #endif
 
   geometry_msgs::msg::PoseStamped::SharedPtr latest_target_;
@@ -123,6 +135,12 @@ private:
   bool first_control_cycle_{true};
   std::atomic<bool> has_target_{false};
   std::atomic<bool> has_odom_{false};
+
+  // Timestamps for data freshness checking
+  rclcpp::Time last_odom_time_;
+  rclcpp::Time last_target_time_;
+  bool odom_time_initialized_{false};
+  bool target_time_initialized_{false};
 };
 
 }  // namespace agent_control_pkg

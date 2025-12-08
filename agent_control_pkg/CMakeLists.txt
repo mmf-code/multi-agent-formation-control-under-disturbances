@@ -95,7 +95,7 @@ target_include_directories(pid_logic_lib PUBLIC
 )
 
 add_library(fuzzy_logic_lib
-  src/gt2_fuzzy_logic_system.cpp
+  src/it2_fuzzy_logic_system.cpp
 )
 target_include_directories(fuzzy_logic_lib PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -103,7 +103,7 @@ target_include_directories(fuzzy_logic_lib PUBLIC
 )
 
 add_library(controller_adapters_lib
-  src/controllers/fuzzy_gt2_adapter.cpp
+  src/controllers/fuzzy_it2_adapter.cpp
 )
 target_include_directories(controller_adapters_lib PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -206,16 +206,26 @@ if(BUILD_TESTS)
     )
   endif()
 
-  ament_add_gtest(test_gt2_fls
-    test/test_gt2_fls.cpp
+  ament_add_gtest(test_it2_fls
+    test/test_it2_fls.cpp
   )
-  if(TARGET test_gt2_fls)
-    target_include_directories(test_gt2_fls PRIVATE
+  if(TARGET test_it2_fls)
+    target_include_directories(test_it2_fls PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
-    target_link_libraries(test_gt2_fls
+    target_link_libraries(test_it2_fls
       fuzzy_logic_lib
     )
+  endif()
+
+  ament_add_gtest(test_accel_to_attitude
+    test/test_accel_to_attitude.cpp
+  )
+  if(TARGET test_accel_to_attitude)
+    target_include_directories(test_accel_to_attitude PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
+    # Header-only, no library link needed
   endif()
 endif()
 

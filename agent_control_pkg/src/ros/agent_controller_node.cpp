@@ -125,6 +125,8 @@ void AgentControllerNode::declareParameters()
   declare_parameter<double>("pid.kd", 0.0);
   declare_parameter<bool>("pid.enable_derivative_filter", true);
   declare_parameter<double>("pid.derivative_filter_alpha", 0.1);
+  declare_parameter<std::string>("pid.anti_windup_mode", "combined");
+  declare_parameter<double>("pid.tracking_time_constant", 0.0);
 
   declare_parameter<bool>("fuzzy.enable", false);
   declare_parameter<bool>("fuzzy.include_wind", false);
@@ -135,6 +137,11 @@ void AgentControllerNode::declareParameters()
   declare_parameter<double>("mix.k_fuzzy", 1.0);
 
   declare_parameter<bool>("diagnostics.enable", publish_diagnostics_);
+
+  // Data freshness (stale data protection) parameters
+  declare_parameter<bool>("stale_data.enable", true);
+  declare_parameter<double>("stale_data.odom_threshold_sec", 0.5);
+  declare_parameter<double>("stale_data.target_threshold_sec", 2.0);
 
   // Feed-forward parameters
   declare_parameter<bool>("feedforward.enable_drag", false);
@@ -150,6 +157,12 @@ void AgentControllerNode::declareParameters()
   // Crazyflie dual-output parameters
   declare_parameter<bool>("crazyflie.enable", false);
   declare_parameter<std::string>("crazyflie.cmd_topic", "cmd_full_state");
+
+  // Crazyflie attitude converter parameters
+  declare_parameter<double>("crazyflie.mass", 0.027);
+  declare_parameter<double>("crazyflie.max_thrust", 0.6);
+  declare_parameter<double>("crazyflie.max_roll_rad", 0.5236);
+  declare_parameter<double>("crazyflie.max_pitch_rad", 0.5236);
 #endif
 }
 
@@ -189,6 +202,8 @@ void AgentControllerNode::loadParameters()
   pid_kd_ = get_parameter("pid.kd").as_double();
   pid_enable_derivative_filter_ = get_parameter("pid.enable_derivative_filter").as_bool();
   pid_derivative_filter_alpha_ = get_parameter("pid.derivative_filter_alpha").as_double();
+  pid_anti_windup_mode_ = get_parameter("pid.anti_windup_mode").as_string();
+  pid_tracking_time_constant_ = get_parameter("pid.tracking_time_constant").as_double();
 
   fuzzy_enable_ = get_parameter("fuzzy.enable").as_bool();
   fuzzy_include_wind_ = get_parameter("fuzzy.include_wind").as_bool();
@@ -199,6 +214,11 @@ void AgentControllerNode::loadParameters()
   mix_k_fuzzy_ = get_parameter("mix.k_fuzzy").as_double();
 
   publish_diagnostics_ = get_parameter("diagnostics.enable").as_bool();
+
+  // Load stale data protection parameters
+  enable_stale_data_check_ = get_parameter("stale_data.enable").as_bool();
+  odom_stale_threshold_sec_ = get_parameter("stale_data.odom_threshold_sec").as_double();
+  target_stale_threshold_sec_ = get_parameter("stale_data.target_threshold_sec").as_double();
 
   // Load feed-forward parameters
   ff_params_.enable_drag_ff = get_parameter("feedforward.enable_drag").as_bool();
@@ -214,6 +234,16 @@ void AgentControllerNode::loadParameters()
   // Load Crazyflie dual-output parameters
   crazyflie_enable_ = get_parameter("crazyflie.enable").as_bool();
   crazyflie_cmd_topic_ = get_parameter("crazyflie.cmd_topic").as_string();
+
+  // Load attitude converter parameters
+  cf_attitude_config_.mass = get_parameter("crazyflie.mass").as_double();
+  cf_attitude_config_.max_thrust = get_parameter("crazyflie.max_thrust").as_double();
+  cf_attitude_config_.max_roll_rad = get_parameter("crazyflie.max_roll_rad").as_double();
+  cf_attitude_config_.max_pitch_rad = get_parameter("crazyflie.max_pitch_rad").as_double();
+  cf_attitude_config_.hover_thrust = cf_attitude_config_.mass * cf_attitude_config_.gravity;
+
+  // Initialize the converter
+  accel_to_attitude_ = std::make_unique<core::AccelToAttitude>(cf_attitude_config_);
 #endif
 }
 
@@ -283,19 +313,31 @@ AgentControllerNode::AxisController AgentControllerNode::createAxisController(
 {
   AxisController result;
 
+  // Helper to parse anti-windup mode string
+  auto parse_anti_windup_mode = [](const std::string& mode_str) {
+      if (mode_str == "none") return PIDController::AntiWindupMode::NONE;
+      if (mode_str == "conditional") return PIDController::AntiWindupMode::CONDITIONAL;
+      if (mode_str == "back_calculation") return PIDController::AntiWindupMode::BACK_CALCULATION;
+      return PIDController::AntiWindupMode::COMBINED;  // default
+    };
+
   auto make_pid = [&](double kp, double ki, double kd) {
       auto pid = std::make_unique<controllers::PIDAdapter>(kp, ki, kd, limits.umin, limits.umax);
       pid->enableDerivativeFilter(pid_enable_derivative_filter_, pid_derivative_filter_alpha_);
+      pid->setAntiWindupMode(parse_anti_windup_mode(pid_anti_windup_mode_));
+      if (pid_tracking_time_constant_ > 0.0) {
+        pid->setTrackingTimeConstant(pid_tracking_time_constant_);
+      }
       result.pid = pid.get();
       result.controller = std::move(pid);
     };
 
-  auto make_fuzzy = [&]() -> std::unique_ptr<controllers::FuzzyGT2Adapter> {
-      controllers::FuzzyGT2Adapter::Options opt;
+  auto make_fuzzy = [&]() -> std::unique_ptr<controllers::FuzzyIT2Adapter> {
+      controllers::FuzzyIT2Adapter::Options opt;
       opt.umin = limits.umin;
       opt.umax = limits.umax;
       opt.wind_scalar = fuzzy_wind_scalar_;
-      auto fuzzy = std::make_unique<controllers::FuzzyGT2Adapter>(opt);
+      auto fuzzy = std::make_unique<controllers::FuzzyIT2Adapter>(opt);
       if (fuzzy_params_) {
         fuzzy->configureFromFuzzyParams(*fuzzy_params_, fuzzy_include_wind_);
       }
@@ -348,6 +390,10 @@ AgentControllerNode::AxisController AgentControllerNode::createAxisController(
 
     auto pid = std::make_unique<controllers::PIDAdapter>(pid_kp_, pid_ki_, pid_kd_, limits.umin, limits.umax);
     pid->enableDerivativeFilter(pid_enable_derivative_filter_, pid_derivative_filter_alpha_);
+    pid->setAntiWindupMode(parse_anti_windup_mode(pid_anti_windup_mode_));
+    if (pid_tracking_time_constant_ > 0.0) {
+      pid->setTrackingTimeConstant(pid_tracking_time_constant_);
+    }
     auto raw_pid = pid.get();
 
     auto fuzzy = make_fuzzy();
@@ -373,6 +419,8 @@ void AgentControllerNode::targetCallback(const geometry_msgs::msg::PoseStamped::
 {
   std::lock_guard<std::mutex> lock(data_mutex_);
   *latest_target_ = *msg;
+  last_target_time_ = this->now();
+  target_time_initialized_ = true;
   has_target_.store(true, std::memory_order_release);
 }
 
@@ -380,6 +428,8 @@ void AgentControllerNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr 
 {
   std::lock_guard<std::mutex> lock(data_mutex_);
   *latest_odom_ = *msg;
+  last_odom_time_ = this->now();
+  odom_time_initialized_ = true;
   has_odom_.store(true, std::memory_order_release);
 }
 
@@ -481,13 +531,54 @@ void AgentControllerNode::controlLoop()
 
   geometry_msgs::msg::PoseStamped target;
   nav_msgs::msg::Odometry odom;
+  rclcpp::Time odom_timestamp;
+  rclcpp::Time target_timestamp;
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     target = *latest_target_;
     odom = *latest_odom_;
+    odom_timestamp = last_odom_time_;
+    target_timestamp = last_target_time_;
   }
 
+  // Data freshness check (stale data protection)
   rclcpp::Time now = this->now();
+  if (enable_stale_data_check_) {
+    if (odom_time_initialized_) {
+      const double odom_age = (now - odom_timestamp).seconds();
+      if (odom_age > odom_stale_threshold_sec_) {
+        RCLCPP_WARN_THROTTLE(
+          get_logger(), *get_clock(), 1000,
+          "Stale odometry data (age=%.3f s > threshold=%.3f s). Skipping control.",
+          odom_age, odom_stale_threshold_sec_);
+        // Publish zero command to stop the drone
+        geometry_msgs::msg::Vector3 zero_cmd;
+        zero_cmd.x = 0.0;
+        zero_cmd.y = 0.0;
+        zero_cmd.z = 0.0;
+        cmd_pub_->publish(zero_cmd);
+        return;
+      }
+    }
+
+    if (target_time_initialized_) {
+      const double target_age = (now - target_timestamp).seconds();
+      if (target_age > target_stale_threshold_sec_) {
+        RCLCPP_WARN_THROTTLE(
+          get_logger(), *get_clock(), 1000,
+          "Stale target data (age=%.3f s > threshold=%.3f s). Skipping control.",
+          target_age, target_stale_threshold_sec_);
+        // Publish zero command to stop the drone
+        geometry_msgs::msg::Vector3 zero_cmd;
+        zero_cmd.x = 0.0;
+        zero_cmd.y = 0.0;
+        zero_cmd.z = 0.0;
+        cmd_pub_->publish(zero_cmd);
+        return;
+      }
+    }
+  }
+
   double dt = configured_dt_;
 
   if (!first_control_cycle_) {
@@ -563,28 +654,51 @@ void AgentControllerNode::controlLoop()
 
 #ifdef CRAZYFLIE_SUPPORT
   // Dual-output: Also publish to Crazyflie if enabled
-  if (crazyflie_enable_ && cf_cmd_pub_) {
+  if (crazyflie_enable_ && cf_cmd_pub_ && accel_to_attitude_) {
+    // Convert acceleration to attitude commands
+    // This follows the thesis approach: our controller outputs acceleration,
+    // which is converted to roll/pitch/thrust for the Crazyflie's attitude controller
+    auto att_cmd = accel_to_attitude_->convert(ax, ay, 0.0);  // az = 0 for hover
+
     crazyflie_interfaces::msg::FullState cf_msg;
     cf_msg.header.stamp = this->now();
     cf_msg.header.frame_id = "world";
 
-    // Current position from odometry
-    cf_msg.pose.position.x = current_x;
-    cf_msg.pose.position.y = current_y;
+    // Target position (where we want to be)
+    cf_msg.pose.position.x = target_x;
+    cf_msg.pose.position.y = target_y;
     cf_msg.pose.position.z = odom.pose.pose.position.z;
-    cf_msg.pose.orientation = odom.pose.pose.orientation;
 
-    // Current velocity
-    cf_msg.twist.linear.x = vx;
-    cf_msg.twist.linear.y = vy;
-    cf_msg.twist.linear.z = odom.twist.twist.linear.z;
+    // Convert roll/pitch to quaternion for desired orientation
+    // Note: Using simplified Euler to quaternion (yaw = current yaw)
+    double current_yaw = 0.0;  // Could extract from odom quaternion
+    double cy = std::cos(current_yaw * 0.5);
+    double sy = std::sin(current_yaw * 0.5);
+    double cp = std::cos(att_cmd.pitch * 0.5);
+    double sp = std::sin(att_cmd.pitch * 0.5);
+    double cr = std::cos(att_cmd.roll * 0.5);
+    double sr = std::sin(att_cmd.roll * 0.5);
 
-    // Acceleration command (control output)
+    cf_msg.pose.orientation.w = cr * cp * cy + sr * sp * sy;
+    cf_msg.pose.orientation.x = sr * cp * cy - cr * sp * sy;
+    cf_msg.pose.orientation.y = cr * sp * cy + sr * cp * sy;
+    cf_msg.pose.orientation.z = cr * cp * sy - sr * sp * cy;
+
+    // Target velocity (could be computed from trajectory)
+    cf_msg.twist.linear.x = 0.0;
+    cf_msg.twist.linear.y = 0.0;
+    cf_msg.twist.linear.z = 0.0;
+
+    // Acceleration command (from our controller)
     cf_msg.acc.x = ax;
     cf_msg.acc.y = ay;
     cf_msg.acc.z = 0.0;
 
     cf_cmd_pub_->publish(cf_msg);
+
+    RCLCPP_DEBUG(get_logger(),
+      "CF cmd: roll=%.3f, pitch=%.3f, thrust=%.3f (ax=%.3f, ay=%.3f)",
+      att_cmd.roll, att_cmd.pitch, att_cmd.thrust, ax, ay);
   }
 #endif
 
