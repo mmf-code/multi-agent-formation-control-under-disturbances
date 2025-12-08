@@ -1,0 +1,106 @@
+# Crazyflie-specific controller parameters
+# Mass ratio: m_cf / m_custom = 0.027 / 1.5 = 0.018
+# These gains are adapted for Crazyflie dynamics
+
+cf0:
+  agent_controller:
+    ros__parameters:
+      controller_type: pid
+      dt: 0.005
+      control_frequency_hz: 200.0
+
+      # Crazyflie publisher settings
+      crazyflie:
+        enable: true
+        cmd_topic: "cmd_full_state"
+
+      # Adapted PID gains for Crazyflie dynamics
+      # Initial estimate: Kp_cf ≈ Kp_custom × ratio × correction
+      pid:
+        kp: 0.315    # 0.538 * 0.018 * 33 (tuning factor)
+        ki: 0.05
+        kd: 0.194    # 1.368 * 0.018 * 8
+        enable_derivative_filter: true
+        derivative_filter_alpha: 0.1
+
+      output_limits:
+        x:
+          min: -2.0
+          max: 2.0
+        y:
+          min: -2.0
+          max: 2.0
+
+      feedforward:
+        enable_drag: false
+        enable_wind: false
+
+      diagnostics:
+        enable: true
+
+# Multi-agent formation with 3 Crazyflies
+cf1:
+  agent_controller:
+    ros__parameters:
+      controller_type: pid
+      dt: 0.005
+      control_frequency_hz: 200.0
+
+      crazyflie:
+        enable: true
+        cmd_topic: "cmd_full_state"
+
+      pid:
+        kp: 0.315
+        ki: 0.05
+        kd: 0.194
+        enable_derivative_filter: true
+        derivative_filter_alpha: 0.1
+
+      output_limits:
+        x:
+          min: -2.0
+          max: 2.0
+        y:
+          min: -2.0
+          max: 2.0
+
+      feedforward:
+        enable_drag: false
+        enable_wind: false
+
+      diagnostics:
+        enable: true
+
+cf2:
+  agent_controller:
+    ros__parameters:
+      controller_type: pid
+      dt: 0.005
+      control_frequency_hz: 200.0
+
+      crazyflie:
+        enable: true
+        cmd_topic: "cmd_full_state"
+
+      pid:
+        kp: 0.315
+        ki: 0.05
+        kd: 0.194
+        enable_derivative_filter: true
+        derivative_filter_alpha: 0.1
+
+      output_limits:
+        x:
+          min: -2.0
+          max: 2.0
+        y:
+          min: -2.0
+          max: 2.0
+
+      feedforward:
+        enable_drag: false
+        enable_wind: false
+
+      diagnostics:
+        enable: true

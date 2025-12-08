@@ -18,6 +18,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
 option(BUILD_STANDALONE_TOOLS "Build legacy standalone executables" ON)
 option(BUILD_TESTS "Build unit tests" ON)
+option(ENABLE_CRAZYFLIE "Enable Crazyflie/Crazyswarm2 support (adds dual-output publisher)" OFF)
 
 # Core ROS 2 dependencies (nodes will use these targets)
 set(ROS2_REQUIRED_PACKAGES
@@ -31,6 +32,12 @@ set(ROS2_REQUIRED_PACKAGES
 foreach(pkg IN LISTS ROS2_REQUIRED_PACKAGES)
   find_package(${pkg} REQUIRED)
 endforeach()
+
+# Crazyflie/Crazyswarm2 support (optional)
+if(ENABLE_CRAZYFLIE)
+  find_package(crazyflie_interfaces REQUIRED)
+  message(STATUS "Crazyflie support ENABLED - dual-output publisher will be built")
+endif()
 
 # Find yaml-cpp with fallbacks to keep cross-platform compatibility
 set(YAML_CPP_REQUIRED_VERSION "0.6.0")
@@ -148,6 +155,12 @@ target_link_libraries(agent_controller_node
   pid_logic_lib
   fuzzy_logic_lib
 )
+
+# Crazyflie dual-output support
+if(ENABLE_CRAZYFLIE)
+  target_compile_definitions(agent_controller_node PRIVATE CRAZYFLIE_SUPPORT)
+  ament_target_dependencies(agent_controller_node crazyflie_interfaces)
+endif()
 
 add_executable(path_visualizer_node
   src/ros/path_visualizer_node.cpp

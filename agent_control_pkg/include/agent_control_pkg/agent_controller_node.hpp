@@ -13,6 +13,10 @@
 #include "std_msgs/msg/float64_multi_array.hpp"
 #include <my_custom_interfaces_pkg/msg/controller_params.hpp>
 
+#ifdef CRAZYFLIE_SUPPORT
+#include <crazyflie_interfaces/msg/full_state.hpp>
+#endif
+
 #include "agent_control_pkg/config_reader.hpp"
 #include "agent_control_pkg/controllers/combined_pid_fuzzy_adapter.hpp"
 #include "agent_control_pkg/controllers/fuzzy_gt2_adapter.hpp"
@@ -103,6 +107,13 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::TimerBase::SharedPtr params_timer_;
   rclcpp::TimerBase::SharedPtr wind_debug_timer_;
+
+#ifdef CRAZYFLIE_SUPPORT
+  // Crazyflie dual-output support
+  bool crazyflie_enable_{false};
+  std::string crazyflie_cmd_topic_{"cmd_full_state"};
+  rclcpp::Publisher<crazyflie_interfaces::msg::FullState>::SharedPtr cf_cmd_pub_;
+#endif
 
   geometry_msgs::msg::PoseStamped::SharedPtr latest_target_;
   nav_msgs::msg::Odometry::SharedPtr latest_odom_;

@@ -63,6 +63,14 @@ AgentControllerNode::AgentControllerNode(const rclcpp::NodeOptions & options)
   // Controller parameters publisher (for dashboard monitoring)
   params_pub_ = create_publisher<my_custom_interfaces_pkg::msg::ControllerParams>("controller_params", 10);
 
+#ifdef CRAZYFLIE_SUPPORT
+  // Crazyflie dual-output publisher (when enabled)
+  if (crazyflie_enable_) {
+    cf_cmd_pub_ = create_publisher<crazyflie_interfaces::msg::FullState>(crazyflie_cmd_topic_, 10);
+    RCLCPP_INFO(get_logger(), "Crazyflie dual-output enabled: topic='%s'", crazyflie_cmd_topic_.c_str());
+  }
+#endif
+
   if (loop_period_ <= 0.0) {
     loop_period_ = 0.005;
   }
@@ -137,6 +145,12 @@ void AgentControllerNode::declareParameters()
   declare_parameter<double>("feedforward.drag_coeff_lin_estimate", 0.12);
   declare_parameter<double>("feedforward.drag_coeff_quad_estimate", 0.05);
   declare_parameter<double>("feedforward.drag_speed_threshold_estimate", 1.0);
+
+#ifdef CRAZYFLIE_SUPPORT
+  // Crazyflie dual-output parameters
+  declare_parameter<bool>("crazyflie.enable", false);
+  declare_parameter<std::string>("crazyflie.cmd_topic", "cmd_full_state");
+#endif
 }
 
 void AgentControllerNode::loadParameters()
@@ -195,6 +209,12 @@ void AgentControllerNode::loadParameters()
   ff_params_.drag_coeff_lin_estimate = get_parameter("feedforward.drag_coeff_lin_estimate").as_double();
   ff_params_.drag_coeff_quad_estimate = get_parameter("feedforward.drag_coeff_quad_estimate").as_double();
   ff_params_.drag_speed_threshold_estimate = get_parameter("feedforward.drag_speed_threshold_estimate").as_double();
+
+#ifdef CRAZYFLIE_SUPPORT
+  // Load Crazyflie dual-output parameters
+  crazyflie_enable_ = get_parameter("crazyflie.enable").as_bool();
+  crazyflie_cmd_topic_ = get_parameter("crazyflie.cmd_topic").as_string();
+#endif
 }
 
 void AgentControllerNode::ensureFuzzyParamsLoaded()
@@ -540,6 +560,33 @@ void AgentControllerNode::controlLoop()
   cmd_msg.y = ay;
   cmd_msg.z = 0.0;
   cmd_pub_->publish(cmd_msg);
+
+#ifdef CRAZYFLIE_SUPPORT
+  // Dual-output: Also publish to Crazyflie if enabled
+  if (crazyflie_enable_ && cf_cmd_pub_) {
+    crazyflie_interfaces::msg::FullState cf_msg;
+    cf_msg.header.stamp = this->now();
+    cf_msg.header.frame_id = "world";
+
+    // Current position from odometry
+    cf_msg.pose.position.x = current_x;
+    cf_msg.pose.position.y = current_y;
+    cf_msg.pose.position.z = odom.pose.pose.position.z;
+    cf_msg.pose.orientation = odom.pose.pose.orientation;
+
+    // Current velocity
+    cf_msg.twist.linear.x = vx;
+    cf_msg.twist.linear.y = vy;
+    cf_msg.twist.linear.z = odom.twist.twist.linear.z;
+
+    // Acceleration command (control output)
+    cf_msg.acc.x = ax;
+    cf_msg.acc.y = ay;
+    cf_msg.acc.z = 0.0;
+
+    cf_cmd_pub_->publish(cf_msg);
+  }
+#endif
 
   publishDiagnostics();
 }

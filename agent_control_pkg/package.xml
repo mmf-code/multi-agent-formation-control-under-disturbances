@@ -18,6 +18,9 @@
   <depend>yaml-cpp</depend>
   <depend>my_custom_interfaces_pkg</depend>
 
+  <!-- Crazyflie/Crazyswarm2 support - always available, activated with -DENABLE_CRAZYFLIE=ON -->
+  <exec_depend>crazyflie_interfaces</exec_depend>
+
   <test_depend>ament_cmake_gtest</test_depend>
 
   <test_depend>ament_lint_auto</test_depend>
