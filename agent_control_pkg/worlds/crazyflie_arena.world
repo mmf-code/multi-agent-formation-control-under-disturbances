@@ -1,0 +1,426 @@
+<?xml version="1.0" ?>
+<!--
+  Crazyflie Professional Arena World
+
+  9 Crazyflie 2.1 drones with realistic motor physics (from sim_cf2)
+  Professional visualization with grid floor, coordinate axes, waypoint markers
+
+  Groups:
+  - Group 0 (agent_0,1,2): PID+IT2-Fuzzy - Y=-15m lane (Magenta markers)
+  - Group 1 (agent_3,4,5): PD - Y=0m lane (Cyan markers)
+  - Group 2 (agent_6,7,8): PID - Y=+15m lane (Yellow markers)
+
+  Motor Physics (sim_cf2 calibrated):
+  - motor_constant: 1.2819184e-8 kg.m/s²
+  - time_constant_up: 12.5ms, time_constant_down: 25ms
+  - max_rot_velocity: 3052 rad/s
+-->
+<sdf version="1.6">
+  <world name="crazyflie_arena">
+
+    <!-- Physics Configuration for micro quadrotors -->
+    <physics type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>50</iters>
+          <sor>1.3</sor>
+        </solver>
+        <constraints>
+          <cfm>0.0</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>100</contact_max_correcting_vel>
+          <contact_surface_layer>0.001</contact_surface_layer>
+        </constraints>
+      </ode>
+    </physics>
+
+    <!-- Gazebo-ROS2 Integration -->
+    <plugin name="gazebo_ros_init" filename="libgazebo_ros_init.so">
+      <ros>
+        <namespace>/</namespace>
+      </ros>
+    </plugin>
+
+    <plugin name="gazebo_ros_properties" filename="libgazebo_ros_properties.so">
+      <ros>
+        <namespace>/</namespace>
+      </ros>
+    </plugin>
+
+    <!-- ========================================= -->
+    <!-- ENVIRONMENT -->
+    <!-- ========================================= -->
+
+    <!-- Professional Lighting -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 50 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.3 0.3 0.3 1</specular>
+      <direction>0.3 0.3 -0.9</direction>
+    </light>
+
+    <light type="directional" name="fill_light">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 30 0 0 0</pose>
+      <diffuse>0.4 0.4 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>-0.5 -0.5 -0.7</direction>
+    </light>
+
+    <!-- Grid Floor -->
+    <include>
+      <uri>model://grid_floor</uri>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Coordinate Axes at Origin -->
+    <include>
+      <uri>model://coordinate_axes</uri>
+      <pose>-28 -28 0 0 0 0</pose>
+    </include>
+
+    <!-- ========================================= -->
+    <!-- GROUP 0: PID+IT2-Fuzzy Controllers -->
+    <!-- Lane Y = -15m (Magenta) -->
+    <!-- ========================================= -->
+
+    <model name="agent_0">
+      <pose>-15 -15 0.5 0 0 0</pose>
+      <include>
+        <uri>model://crazyflie_realistic</uri>
+      </include>
+      <plugin name="crazyflie_motor_plugin" filename="libcrazyflie_motor_plugin.so">
+        <namespace>agent_0</namespace>
+        <target_altitude>0.5</target_altitude>
+        <!-- Realistic Crazyflie motor parameters -->
+        <motor_constant>1.2819184e-8</motor_constant>
+        <moment_constant>0.005964552</moment_constant>
+        <time_constant_up>0.0125</time_constant_up>
+        <time_constant_down>0.025</time_constant_down>
+        <max_rot_velocity>3052.0</max_rot_velocity>
+        <arm_length>0.0325</arm_length>
+        <!-- Sensor noise -->
+        <position_noise_std>0.05</position_noise_std>
+        <velocity_noise_std>0.08</velocity_noise_std>
+      </plugin>
+    </model>
+
+    <model name="agent_1">
+      <pose>-12 -15 0.5 0 0 0</pose>
+      <include>
+        <uri>model://crazyflie_realistic</uri>
+      </include>
+      <plugin name="crazyflie_motor_plugin" filename="libcrazyflie_motor_plugin.so">
+        <namespace>agent_1</namespace>
+        <target_altitude>0.5</target_altitude>
+        <motor_constant>1.2819184e-8</motor_constant>
+        <moment_constant>0.005964552</moment_constant>
+        <time_constant_up>0.0125</time_constant_up>
+        <time_constant_down>0.025</time_constant_down>
+        <max_rot_velocity>3052.0</max_rot_velocity>
+        <arm_length>0.0325</arm_length>
+        <position_noise_std>0.05</position_noise_std>
+        <velocity_noise_std>0.08</velocity_noise_std>
+      </plugin>
+    </model>
+
+    <model name="agent_2">
+      <pose>-9 -15 0.5 0 0 0</pose>
+      <include>
+        <uri>model://crazyflie_realistic</uri>
+      </include>
+      <plugin name="crazyflie_motor_plugin" filename="libcrazyflie_motor_plugin.so">
+        <namespace>agent_2</namespace>
+        <target_altitude>0.5</target_altitude>
+        <motor_constant>1.2819184e-8</motor_constant>
+        <moment_constant>0.005964552</moment_constant>
+        <time_constant_up>0.0125</time_constant_up>
+        <time_constant_down>0.025</time_constant_down>
+        <max_rot_velocity>3052.0</max_rot_velocity>
+        <arm_length>0.0325</arm_length>
+        <position_noise_std>0.05</position_noise_std>
+        <velocity_noise_std>0.08</velocity_noise_std>
+      </plugin>
+    </model>
+
+    <!-- Group 0 Waypoint Markers (Magenta) -->
+    <model name="wp_g0_start">
+      <pose>-15 -15 0 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <visual name="ring">
+          <pose>0 0 0.02 0 0 0</pose>
+          <geometry><cylinder><radius>0.4</radius><length>0.04</length></cylinder></geometry>
+          <material><ambient>0.8 0.2 0.8 1</ambient><diffuse>0.8 0.2 0.8 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wp_g0_target">
+      <pose>0 -15 0 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <visual name="zone">
+          <pose>0 0 0.5 0 0 0</pose>
+          <geometry><cylinder><radius>0.5</radius><length>1.0</length></cylinder></geometry>
+          <material><ambient>0.8 0.2 0.8 0.3</ambient><diffuse>0.8 0.2 0.8 0.3</diffuse></material>
+          <transparency>0.7</transparency>
+        </visual>
+        <visual name="ring">
+          <pose>0 0 0.02 0 0 0</pose>
+          <geometry><cylinder><radius>0.6</radius><length>0.04</length></cylinder></geometry>
+          <material><ambient>0.8 0.2 0.8 1</ambient><diffuse>0.8 0.2 0.8 1</diffuse></material>
+        </visual>
+        <visual name="pole">
+          <pose>0 0 1.25 0 0 0</pose>
+          <geometry><cylinder><radius>0.02</radius><length>2.5</length></cylinder></geometry>
+          <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ========================================= -->
+    <!-- GROUP 1: PD Controllers -->
+    <!-- Lane Y = 0m (Cyan) -->
+    <!-- ========================================= -->
+
+    <model name="agent_3">
+      <pose>-15 0 0.5 0 0 0</pose>
+      <include>
+        <uri>model://crazyflie_realistic</uri>
+      </include>
+      <plugin name="crazyflie_motor_plugin" filename="libcrazyflie_motor_plugin.so">
+        <namespace>agent_3</namespace>
+        <target_altitude>0.5</target_altitude>
+        <motor_constant>1.2819184e-8</motor_constant>
+        <moment_constant>0.005964552</moment_constant>
+        <time_constant_up>0.0125</time_constant_up>
+        <time_constant_down>0.025</time_constant_down>
+        <max_rot_velocity>3052.0</max_rot_velocity>
+        <arm_length>0.0325</arm_length>
+        <position_noise_std>0.05</position_noise_std>
+        <velocity_noise_std>0.08</velocity_noise_std>
+      </plugin>
+    </model>
+
+    <model name="agent_4">
+      <pose>-12 0 0.5 0 0 0</pose>
+      <include>
+        <uri>model://crazyflie_realistic</uri>
+      </include>
+      <plugin name="crazyflie_motor_plugin" filename="libcrazyflie_motor_plugin.so">
+        <namespace>agent_4</namespace>
+        <target_altitude>0.5</target_altitude>
+        <motor_constant>1.2819184e-8</motor_constant>
+        <moment_constant>0.005964552</moment_constant>
+        <time_constant_up>0.0125</time_constant_up>
+        <time_constant_down>0.025</time_constant_down>
+        <max_rot_velocity>3052.0</max_rot_velocity>
+        <arm_length>0.0325</arm_length>
+        <position_noise_std>0.05</position_noise_std>
+        <velocity_noise_std>0.08</velocity_noise_std>
+      </plugin>
+    </model>
+
+    <model name="agent_5">
+      <pose>-9 0 0.5 0 0 0</pose>
+      <include>
+        <uri>model://crazyflie_realistic</uri>
+      </include>
+      <plugin name="crazyflie_motor_plugin" filename="libcrazyflie_motor_plugin.so">
+        <namespace>agent_5</namespace>
+        <target_altitude>0.5</target_altitude>
+        <motor_constant>1.2819184e-8</motor_constant>
+        <moment_constant>0.005964552</moment_constant>
+        <time_constant_up>0.0125</time_constant_up>
+        <time_constant_down>0.025</time_constant_down>
+        <max_rot_velocity>3052.0</max_rot_velocity>
+        <arm_length>0.0325</arm_length>
+        <position_noise_std>0.05</position_noise_std>
+        <velocity_noise_std>0.08</velocity_noise_std>
+      </plugin>
+    </model>
+
+    <!-- Group 1 Waypoint Markers (Cyan) -->
+    <model name="wp_g1_start">
+      <pose>-15 0 0 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <visual name="ring">
+          <pose>0 0 0.02 0 0 0</pose>
+          <geometry><cylinder><radius>0.4</radius><length>0.04</length></cylinder></geometry>
+          <material><ambient>0.2 0.8 0.8 1</ambient><diffuse>0.2 0.8 0.8 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wp_g1_target">
+      <pose>0 0 0 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <visual name="zone">
+          <pose>0 0 0.5 0 0 0</pose>
+          <geometry><cylinder><radius>0.5</radius><length>1.0</length></cylinder></geometry>
+          <material><ambient>0.2 0.8 0.8 0.3</ambient><diffuse>0.2 0.8 0.8 0.3</diffuse></material>
+          <transparency>0.7</transparency>
+        </visual>
+        <visual name="ring">
+          <pose>0 0 0.02 0 0 0</pose>
+          <geometry><cylinder><radius>0.6</radius><length>0.04</length></cylinder></geometry>
+          <material><ambient>0.2 0.8 0.8 1</ambient><diffuse>0.2 0.8 0.8 1</diffuse></material>
+        </visual>
+        <visual name="pole">
+          <pose>0 0 1.25 0 0 0</pose>
+          <geometry><cylinder><radius>0.02</radius><length>2.5</length></cylinder></geometry>
+          <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ========================================= -->
+    <!-- GROUP 2: PID Controllers -->
+    <!-- Lane Y = +15m (Yellow) -->
+    <!-- ========================================= -->
+
+    <model name="agent_6">
+      <pose>-15 15 0.5 0 0 0</pose>
+      <include>
+        <uri>model://crazyflie_realistic</uri>
+      </include>
+      <plugin name="crazyflie_motor_plugin" filename="libcrazyflie_motor_plugin.so">
+        <namespace>agent_6</namespace>
+        <target_altitude>0.5</target_altitude>
+        <motor_constant>1.2819184e-8</motor_constant>
+        <moment_constant>0.005964552</moment_constant>
+        <time_constant_up>0.0125</time_constant_up>
+        <time_constant_down>0.025</time_constant_down>
+        <max_rot_velocity>3052.0</max_rot_velocity>
+        <arm_length>0.0325</arm_length>
+        <position_noise_std>0.05</position_noise_std>
+        <velocity_noise_std>0.08</velocity_noise_std>
+      </plugin>
+    </model>
+
+    <model name="agent_7">
+      <pose>-12 15 0.5 0 0 0</pose>
+      <include>
+        <uri>model://crazyflie_realistic</uri>
+      </include>
+      <plugin name="crazyflie_motor_plugin" filename="libcrazyflie_motor_plugin.so">
+        <namespace>agent_7</namespace>
+        <target_altitude>0.5</target_altitude>
+        <motor_constant>1.2819184e-8</motor_constant>
+        <moment_constant>0.005964552</moment_constant>
+        <time_constant_up>0.0125</time_constant_up>
+        <time_constant_down>0.025</time_constant_down>
+        <max_rot_velocity>3052.0</max_rot_velocity>
+        <arm_length>0.0325</arm_length>
+        <position_noise_std>0.05</position_noise_std>
+        <velocity_noise_std>0.08</velocity_noise_std>
+      </plugin>
+    </model>
+
+    <model name="agent_8">
+      <pose>-9 15 0.5 0 0 0</pose>
+      <include>
+        <uri>model://crazyflie_realistic</uri>
+      </include>
+      <plugin name="crazyflie_motor_plugin" filename="libcrazyflie_motor_plugin.so">
+        <namespace>agent_8</namespace>
+        <target_altitude>0.5</target_altitude>
+        <motor_constant>1.2819184e-8</motor_constant>
+        <moment_constant>0.005964552</moment_constant>
+        <time_constant_up>0.0125</time_constant_up>
+        <time_constant_down>0.025</time_constant_down>
+        <max_rot_velocity>3052.0</max_rot_velocity>
+        <arm_length>0.0325</arm_length>
+        <position_noise_std>0.05</position_noise_std>
+        <velocity_noise_std>0.08</velocity_noise_std>
+      </plugin>
+    </model>
+
+    <!-- Group 2 Waypoint Markers (Yellow) -->
+    <model name="wp_g2_start">
+      <pose>-15 15 0 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <visual name="ring">
+          <pose>0 0 0.02 0 0 0</pose>
+          <geometry><cylinder><radius>0.4</radius><length>0.04</length></cylinder></geometry>
+          <material><ambient>0.9 0.8 0.2 1</ambient><diffuse>0.9 0.8 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wp_g2_target">
+      <pose>0 15 0 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <visual name="zone">
+          <pose>0 0 0.5 0 0 0</pose>
+          <geometry><cylinder><radius>0.5</radius><length>1.0</length></cylinder></geometry>
+          <material><ambient>0.9 0.8 0.2 0.3</ambient><diffuse>0.9 0.8 0.2 0.3</diffuse></material>
+          <transparency>0.7</transparency>
+        </visual>
+        <visual name="ring">
+          <pose>0 0 0.02 0 0 0</pose>
+          <geometry><cylinder><radius>0.6</radius><length>0.04</length></cylinder></geometry>
+          <material><ambient>0.9 0.8 0.2 1</ambient><diffuse>0.9 0.8 0.2 1</diffuse></material>
+        </visual>
+        <visual name="pole">
+          <pose>0 0 1.25 0 0 0</pose>
+          <geometry><cylinder><radius>0.02</radius><length>2.5</length></cylinder></geometry>
+          <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ========================================= -->
+    <!-- SCALE REFERENCE -->
+    <!-- ========================================= -->
+
+    <!-- 5m Scale Bar -->
+    <model name="scale_bar">
+      <pose>-25 -25 0.01 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <visual name="bar">
+          <geometry><box><size>5 0.1 0.02</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+        <visual name="tick_left">
+          <pose>-2.5 0 0.1 0 0 0</pose>
+          <geometry><box><size>0.05 0.3 0.2</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+        <visual name="tick_right">
+          <pose>2.5 0 0.1 0 0 0</pose>
+          <geometry><box><size>0.05 0.3 0.2</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Scene Settings -->
+    <scene>
+      <ambient>0.6 0.6 0.6 1</ambient>
+      <background>0.2 0.2 0.25 1</background>
+      <shadows>true</shadows>
+      <grid>false</grid>
+    </scene>
+
+    <!-- GUI Camera Preset -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>-30 -30 20 0 0.5 0.8</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>
+
+  </world>
+</sdf>

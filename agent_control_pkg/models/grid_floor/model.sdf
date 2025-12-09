@@ -1,0 +1,167 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <!--
+    Grid Floor for Formation Control Arena
+    50m x 50m area with visual grid pattern
+  -->
+  <model name="grid_floor">
+    <static>true</static>
+
+    <link name="floor_link">
+      <!-- Ground plane collision -->
+      <collision name="collision">
+        <geometry>
+          <plane>
+            <normal>0 0 1</normal>
+            <size>60 60</size>
+          </plane>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>100</mu>
+              <mu2>50</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+
+      <!-- Main floor visual (dark gray) -->
+      <visual name="floor_visual">
+        <geometry>
+          <plane>
+            <normal>0 0 1</normal>
+            <size>60 60</size>
+          </plane>
+        </geometry>
+        <material>
+          <ambient>0.15 0.15 0.18 1</ambient>
+          <diffuse>0.15 0.15 0.18 1</diffuse>
+          <specular>0.1 0.1 0.1 1</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Grid lines (every 5m - major, every 1m - minor) -->
+    <!-- X-axis lines (horizontal) -->
+    <link name="grid_x_major">
+      <pose>0 0 0.001 0 0 0</pose>
+      <visual name="line_x_n25">
+        <pose>0 -25 0 0 0 0</pose>
+        <geometry><box><size>60 0.05 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_x_n20">
+        <pose>0 -20 0 0 0 0</pose>
+        <geometry><box><size>60 0.05 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_x_n15">
+        <pose>0 -15 0 0 0 0</pose>
+        <geometry><box><size>60 0.05 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_x_n10">
+        <pose>0 -10 0 0 0 0</pose>
+        <geometry><box><size>60 0.05 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_x_n5">
+        <pose>0 -5 0 0 0 0</pose>
+        <geometry><box><size>60 0.05 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_x_0">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry><box><size>60 0.08 0.001</size></box></geometry>
+        <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+      </visual>
+      <visual name="line_x_5">
+        <pose>0 5 0 0 0 0</pose>
+        <geometry><box><size>60 0.05 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_x_10">
+        <pose>0 10 0 0 0 0</pose>
+        <geometry><box><size>60 0.05 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_x_15">
+        <pose>0 15 0 0 0 0</pose>
+        <geometry><box><size>60 0.05 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_x_20">
+        <pose>0 20 0 0 0 0</pose>
+        <geometry><box><size>60 0.05 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_x_25">
+        <pose>0 25 0 0 0 0</pose>
+        <geometry><box><size>60 0.05 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+    </link>
+
+    <!-- Y-axis lines (vertical) -->
+    <link name="grid_y_major">
+      <pose>0 0 0.001 0 0 0</pose>
+      <visual name="line_y_n25">
+        <pose>-25 0 0 0 0 0</pose>
+        <geometry><box><size>0.05 60 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_y_n20">
+        <pose>-20 0 0 0 0 0</pose>
+        <geometry><box><size>0.05 60 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_y_n15">
+        <pose>-15 0 0 0 0 0</pose>
+        <geometry><box><size>0.05 60 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_y_n10">
+        <pose>-10 0 0 0 0 0</pose>
+        <geometry><box><size>0.05 60 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_y_n5">
+        <pose>-5 0 0 0 0 0</pose>
+        <geometry><box><size>0.05 60 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_y_0">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry><box><size>0.08 60 0.001</size></box></geometry>
+        <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+      </visual>
+      <visual name="line_y_5">
+        <pose>5 0 0 0 0 0</pose>
+        <geometry><box><size>0.05 60 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_y_10">
+        <pose>10 0 0 0 0 0</pose>
+        <geometry><box><size>0.05 60 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_y_15">
+        <pose>15 0 0 0 0 0</pose>
+        <geometry><box><size>0.05 60 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_y_20">
+        <pose>20 0 0 0 0 0</pose>
+        <geometry><box><size>0.05 60 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="line_y_25">
+        <pose>25 0 0 0 0 0</pose>
+        <geometry><box><size>0.05 60 0.001</size></box></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+    </link>
+
+  </model>
+</sdf>

@@ -16,8 +16,11 @@ Formation Targets:
   - Group 2 (PID):       (5,  4, 0) - Top lane
 
 Usage:
-    # Full demo with visualizations
+    # Full demo with realistic physics (default - sim_cf2 calibrated)
     ros2 launch agent_control_pkg formation_comparison_demo.launch.py
+
+    # With simple physics (original model)
+    ros2 launch agent_control_pkg formation_comparison_demo.launch.py physics_model:=simple world_file:=crazyflie_formation.world
 
     # Headless mode (maximum FPS)
     ros2 launch agent_control_pkg formation_comparison_demo.launch.py gazebo_gui:=false rviz:=false
@@ -44,8 +47,13 @@ def generate_launch_description():
     pkg_agent_control = get_package_share_directory('agent_control_pkg')
     pkg_formation_coordinator = get_package_share_directory('formation_coordinator_pkg')
 
-    # World file - 9 Crazyflie drones in 3 groups (can be overridden via world_file:=<name>)
-    world_file_arg = LaunchConfiguration('world_file', default='crazyflie_formation.world')
+    # Physics model selection: 'realistic' (sim_cf2 calibrated) or 'simple' (original)
+    physics_model = LaunchConfiguration('physics_model', default='realistic')
+
+    # World file - auto-select based on physics_model, or override with world_file:=<name>
+    # realistic -> crazyflie_arena.world (new professional arena with realistic physics)
+    # simple -> crazyflie_formation.world (original simple physics)
+    world_file_arg = LaunchConfiguration('world_file', default='crazyflie_arena.world')
     world_file = PathJoinSubstitution([
         FindPackageShare('agent_control_pkg'),
         'worlds',
@@ -111,10 +119,16 @@ def generate_launch_description():
         description='Launch RViz for visualization'
     )
 
+    declare_physics_model = DeclareLaunchArgument(
+        'physics_model',
+        default_value='realistic',
+        description='Physics model: realistic (sim_cf2 calibrated motors) or simple (original)'
+    )
+
     declare_world_file = DeclareLaunchArgument(
         'world_file',
-        default_value='crazyflie_formation.world',
-        description='Gazebo world file name (default: Crazyflie 27g drones)'
+        default_value='crazyflie_arena.world',
+        description='Gazebo world file: crazyflie_arena.world (realistic) or crazyflie_formation.world (simple)'
     )
 
     # Wind profile argument - allows switching between deterministic and stochastic wind
@@ -476,6 +490,7 @@ def generate_launch_description():
         declare_use_sim_time,
         declare_gazebo_gui,
         declare_rviz,
+        declare_physics_model,
         declare_world_file,
         declare_wind_profile,
         declare_pid_group_kp,

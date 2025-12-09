@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <!--
+    Coordinate Axes for Formation Control Arena
+    X=Red, Y=Green, Z=Blue (RGB convention)
+    5m long arrows with labels
+  -->
+  <model name="coordinate_axes">
+    <static>true</static>
+
+    <link name="axes_link">
+      <!-- X Axis (Red) -->
+      <visual name="x_axis_shaft">
+        <pose>2.5 0 0.02 0 1.5708 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.03</radius>
+            <length>5.0</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.9 0.1 0.1 1</ambient>
+          <diffuse>0.9 0.1 0.1 1</diffuse>
+        </material>
+      </visual>
+      <visual name="x_axis_tip">
+        <pose>5.0 0 0.02 0 1.5708 0</pose>
+        <geometry>
+          <cone>
+            <radius>0.08</radius>
+            <length>0.2</length>
+          </cone>
+        </geometry>
+        <material>
+          <ambient>0.9 0.1 0.1 1</ambient>
+          <diffuse>0.9 0.1 0.1 1</diffuse>
+        </material>
+      </visual>
+      <visual name="x_label">
+        <pose>5.5 0 0.02 0 0 0</pose>
+        <geometry>
+          <box><size>0.4 0.08 0.4</size></box>
+        </geometry>
+        <material>
+          <ambient>0.9 0.1 0.1 1</ambient>
+          <diffuse>0.9 0.1 0.1 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Y Axis (Green) -->
+      <visual name="y_axis_shaft">
+        <pose>0 2.5 0.02 1.5708 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.03</radius>
+            <length>5.0</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.1 0.9 0.1 1</ambient>
+          <diffuse>0.1 0.9 0.1 1</diffuse>
+        </material>
+      </visual>
+      <visual name="y_axis_tip">
+        <pose>0 5.0 0.02 -1.5708 0 0</pose>
+        <geometry>
+          <cone>
+            <radius>0.08</radius>
+            <length>0.2</length>
+          </cone>
+        </geometry>
+        <material>
+          <ambient>0.1 0.9 0.1 1</ambient>
+          <diffuse>0.1 0.9 0.1 1</diffuse>
+        </material>
+      </visual>
+      <visual name="y_label">
+        <pose>0 5.5 0.02 0 0 0</pose>
+        <geometry>
+          <box><size>0.08 0.4 0.4</size></box>
+        </geometry>
+        <material>
+          <ambient>0.1 0.9 0.1 1</ambient>
+          <diffuse>0.1 0.9 0.1 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Z Axis (Blue) -->
+      <visual name="z_axis_shaft">
+        <pose>0 0 2.5 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.03</radius>
+            <length>5.0</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.1 0.1 0.9 1</ambient>
+          <diffuse>0.1 0.1 0.9 1</diffuse>
+        </material>
+      </visual>
+      <visual name="z_axis_tip">
+        <pose>0 0 5.0 0 0 0</pose>
+        <geometry>
+          <cone>
+            <radius>0.08</radius>
+            <length>0.2</length>
+          </cone>
+        </geometry>
+        <material>
+          <ambient>0.1 0.1 0.9 1</ambient>
+          <diffuse>0.1 0.1 0.9 1</diffuse>
+        </material>
+      </visual>
+      <visual name="z_label">
+        <pose>0 0 5.5 0 0 0</pose>
+        <geometry>
+          <box><size>0.4 0.4 0.08</size></box>
+        </geometry>
+        <material>
+          <ambient>0.1 0.1 0.9 1</ambient>
+          <diffuse>0.1 0.1 0.9 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Origin sphere -->
+      <visual name="origin">
+        <pose>0 0 0.02 0 0 0</pose>
+        <geometry>
+          <sphere><radius>0.1</radius></sphere>
+        </geometry>
+        <material>
+          <ambient>0.9 0.9 0.9 1</ambient>
+          <diffuse>0.9 0.9 0.9 1</diffuse>
+        </material>
+      </visual>
+    </link>
+
+  </model>
+</sdf>

@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <!--
+    Waypoint Marker for Formation Control
+    Visual target indicator with:
+    - Semi-transparent vertical cylinder (target zone)
+    - Colored base ring
+    - Height indicator pole
+    Default color: cyan (can be overridden)
+  -->
+  <model name="waypoint_marker">
+    <static>true</static>
+
+    <link name="marker_link">
+      <!-- Target zone cylinder (semi-transparent) -->
+      <visual name="target_zone">
+        <pose>0 0 0.5 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.5</radius>
+            <length>1.0</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.2 0.8 0.8 0.3</ambient>
+          <diffuse>0.2 0.8 0.8 0.3</diffuse>
+        </material>
+        <transparency>0.7</transparency>
+      </visual>
+
+      <!-- Base ring -->
+      <visual name="base_ring">
+        <pose>0 0 0.02 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.6</radius>
+            <length>0.04</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.2 0.8 0.8 1</ambient>
+          <diffuse>0.2 0.8 0.8 1</diffuse>
+          <specular>0.5 0.5 0.5 1</specular>
+        </material>
+      </visual>
+
+      <!-- Inner marker -->
+      <visual name="inner_ring">
+        <pose>0 0 0.03 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.15</radius>
+            <length>0.06</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.9 0.9 0.9 1</ambient>
+          <diffuse>0.9 0.9 0.9 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Height indicator pole -->
+      <visual name="height_pole">
+        <pose>0 0 1.25 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.02</radius>
+            <length>2.5</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.5 0.5 0.5 1</ambient>
+          <diffuse>0.5 0.5 0.5 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Top sphere -->
+      <visual name="top_sphere">
+        <pose>0 0 2.5 0 0 0</pose>
+        <geometry>
+          <sphere><radius>0.08</radius></sphere>
+        </geometry>
+        <material>
+          <ambient>0.2 0.8 0.8 1</ambient>
+          <diffuse>0.2 0.8 0.8 1</diffuse>
+        </material>
+      </visual>
+    </link>
+
+  </model>
+</sdf>

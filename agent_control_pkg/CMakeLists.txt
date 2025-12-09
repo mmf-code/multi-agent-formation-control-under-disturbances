@@ -330,6 +330,39 @@ install(TARGETS simple_drone_plugin
   RUNTIME DESTINATION bin
 )
 
+# Crazyflie Motor Plugin - Realistic physics from sim_cf2
+add_library(crazyflie_motor_plugin SHARED
+  plugins/crazyflie_motor_plugin.cpp
+)
+
+target_include_directories(crazyflie_motor_plugin PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(crazyflie_motor_plugin
+  ${GAZEBO_LIBRARIES}
+  ${gazebo_ros_LIBRARIES}
+)
+
+ament_target_dependencies(crazyflie_motor_plugin
+  rclcpp
+  geometry_msgs
+  nav_msgs
+  gazebo_ros
+)
+
+set_target_properties(crazyflie_motor_plugin PROPERTIES
+  INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:$ORIGIN"
+  BUILD_RPATH "${CMAKE_BINARY_DIR}/lib"
+  INSTALL_RPATH_USE_LINK_PATH TRUE
+)
+
+install(TARGETS crazyflie_motor_plugin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
 # Install Gazebo assets
 install(DIRECTORY
   models/
