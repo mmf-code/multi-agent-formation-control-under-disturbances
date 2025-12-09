@@ -1,13 +1,12 @@
 <?xml version="1.0"?>
 <sdf version="1.6">
   <!--
-    Crazyflie 2.1 Quadrotor Model
-    Using sim_cf2 mesh files (Gazebo 11 compatible)
+    Crazyflie 2.1 Quadrotor Model with Spinning Propellers
 
     Physical Specifications (from Bitcraze):
     - Mass: 27g (0.027 kg)
-    - Dimensions: 92mm x 92mm x 29mm (motor-to-motor diagonal)
-    - Motor-to-motor distance: 92mm diagonal = 65mm arm length
+    - Dimensions: 92mm x 92mm x 29mm
+    - Motor-to-motor distance: 92mm diagonal
     - Propeller diameter: 45mm
 
     Reference: https://github.com/CrazyflieTHI/sim_cf2
@@ -15,16 +14,17 @@
   <model name="crazyflie">
     <pose>0 0 0.015 0 0 0</pose>
 
+    <!-- Main Body -->
     <link name="base_link">
       <inertial>
-        <mass>0.027</mass>
+        <mass>0.025</mass>
         <inertia>
           <ixx>1.657e-5</ixx>
           <iyy>1.666e-5</iyy>
           <izz>2.926e-5</izz>
-          <ixy>0.831e-6</ixy>
-          <ixz>0.718e-6</ixz>
-          <iyz>1.800e-6</iyz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
         </inertia>
       </inertial>
 
@@ -39,66 +39,6 @@
         </geometry>
       </visual>
 
-      <!-- Front Right Propeller -->
-      <visual name="prop_fr">
-        <pose>0.0325 -0.0325 0.0125 0 0 0</pose>
-        <geometry>
-          <mesh>
-            <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
-            <scale>1 1 1</scale>
-          </mesh>
-        </geometry>
-        <material>
-          <ambient>0.9 0.3 0.3 1</ambient>
-          <diffuse>0.9 0.3 0.3 1</diffuse>
-        </material>
-      </visual>
-
-      <!-- Front Left Propeller -->
-      <visual name="prop_fl">
-        <pose>0.0325 0.0325 0.0125 0 0 0</pose>
-        <geometry>
-          <mesh>
-            <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
-            <scale>1 1 1</scale>
-          </mesh>
-        </geometry>
-        <material>
-          <ambient>0.9 0.3 0.3 1</ambient>
-          <diffuse>0.9 0.3 0.3 1</diffuse>
-        </material>
-      </visual>
-
-      <!-- Back Left Propeller -->
-      <visual name="prop_bl">
-        <pose>-0.0325 0.0325 0.0125 0 0 0</pose>
-        <geometry>
-          <mesh>
-            <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
-            <scale>1 1 1</scale>
-          </mesh>
-        </geometry>
-        <material>
-          <ambient>0.3 0.3 0.9 1</ambient>
-          <diffuse>0.3 0.3 0.9 1</diffuse>
-        </material>
-      </visual>
-
-      <!-- Back Right Propeller -->
-      <visual name="prop_br">
-        <pose>-0.0325 -0.0325 0.0125 0 0 0</pose>
-        <geometry>
-          <mesh>
-            <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
-            <scale>1 1 1</scale>
-          </mesh>
-        </geometry>
-        <material>
-          <ambient>0.3 0.3 0.9 1</ambient>
-          <diffuse>0.3 0.3 0.9 1</diffuse>
-        </material>
-      </visual>
-
       <!-- Collision box -->
       <collision name="collision">
         <geometry>
@@ -106,5 +46,174 @@
         </geometry>
       </collision>
     </link>
+
+    <!-- ============================================ -->
+    <!-- SPINNING PROPELLERS (separate links + joints) -->
+    <!-- ============================================ -->
+
+    <!-- Front Right Propeller (CW) - Red -->
+    <link name="prop_fr_link">
+      <pose>0.0325 -0.0325 0.0125 0 0 0</pose>
+      <inertial>
+        <mass>0.0005</mass>
+        <inertia>
+          <ixx>1e-9</ixx>
+          <iyy>1e-9</iyy>
+          <izz>1e-9</izz>
+          <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+        </inertia>
+      </inertial>
+      <visual name="prop_fr_visual">
+        <geometry>
+          <mesh>
+            <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>0.9 0.2 0.2 1</ambient>
+          <diffuse>0.9 0.2 0.2 1</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <joint name="prop_fr_joint" type="revolute">
+      <parent>base_link</parent>
+      <child>prop_fr_link</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-1e16</lower>
+          <upper>1e16</upper>
+        </limit>
+        <dynamics>
+          <damping>0.0001</damping>
+        </dynamics>
+      </axis>
+    </joint>
+
+    <!-- Front Left Propeller (CCW) - Red -->
+    <link name="prop_fl_link">
+      <pose>0.0325 0.0325 0.0125 0 0 0</pose>
+      <inertial>
+        <mass>0.0005</mass>
+        <inertia>
+          <ixx>1e-9</ixx>
+          <iyy>1e-9</iyy>
+          <izz>1e-9</izz>
+          <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+        </inertia>
+      </inertial>
+      <visual name="prop_fl_visual">
+        <geometry>
+          <mesh>
+            <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>0.9 0.2 0.2 1</ambient>
+          <diffuse>0.9 0.2 0.2 1</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <joint name="prop_fl_joint" type="revolute">
+      <parent>base_link</parent>
+      <child>prop_fl_link</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-1e16</lower>
+          <upper>1e16</upper>
+        </limit>
+        <dynamics>
+          <damping>0.0001</damping>
+        </dynamics>
+      </axis>
+    </joint>
+
+    <!-- Back Left Propeller (CW) - Blue -->
+    <link name="prop_bl_link">
+      <pose>-0.0325 0.0325 0.0125 0 0 0</pose>
+      <inertial>
+        <mass>0.0005</mass>
+        <inertia>
+          <ixx>1e-9</ixx>
+          <iyy>1e-9</iyy>
+          <izz>1e-9</izz>
+          <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+        </inertia>
+      </inertial>
+      <visual name="prop_bl_visual">
+        <geometry>
+          <mesh>
+            <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>0.2 0.2 0.9 1</ambient>
+          <diffuse>0.2 0.2 0.9 1</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <joint name="prop_bl_joint" type="revolute">
+      <parent>base_link</parent>
+      <child>prop_bl_link</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-1e16</lower>
+          <upper>1e16</upper>
+        </limit>
+        <dynamics>
+          <damping>0.0001</damping>
+        </dynamics>
+      </axis>
+    </joint>
+
+    <!-- Back Right Propeller (CCW) - Blue -->
+    <link name="prop_br_link">
+      <pose>-0.0325 -0.0325 0.0125 0 0 0</pose>
+      <inertial>
+        <mass>0.0005</mass>
+        <inertia>
+          <ixx>1e-9</ixx>
+          <iyy>1e-9</iyy>
+          <izz>1e-9</izz>
+          <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+        </inertia>
+      </inertial>
+      <visual name="prop_br_visual">
+        <geometry>
+          <mesh>
+            <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>0.2 0.2 0.9 1</ambient>
+          <diffuse>0.2 0.2 0.9 1</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <joint name="prop_br_joint" type="revolute">
+      <parent>base_link</parent>
+      <child>prop_br_link</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-1e16</lower>
+          <upper>1e16</upper>
+        </limit>
+        <dynamics>
+          <damping>0.0001</damping>
+        </dynamics>
+      </axis>
+    </joint>
+
   </model>
 </sdf>
