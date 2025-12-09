@@ -51,7 +51,15 @@ qtcreator-*
 
 # Catkin custom files
 CATKIN_IGNORE
+
+# Simulation outputs (large files)
 outputs/
+
+# External dependencies (Crazyflie firmware, sim_cf2)
+external/
+
+# Thesis data (large experiment outputs)
+thesis_data/
 
 # Environment scripts (user-specific)
 refresh_cursor_env.ps1
@@ -105,10 +113,6 @@ final_project_results/
 !*.yml
 # Keep thesis metrics summary
 !docs/THESIS_*.txt
-# Keep thesis data files
-!thesis_data/**/*.csv
-!thesis_data/**/*.txt
-!thesis_data/**/*.log
 # Generated plots and images (keep only final thesis figures and docs)
 *.png
 *.jpg
@@ -168,9 +172,6 @@ ehthumbs.db
 
 # Testing and analysis artifacts (keep all analysis scripts)
 testing/
-# Keep all analysis Python scripts
-!analysis/*.py
-
 # PowerShell execution policy and temporary files
 *.ps1.backup*
 *.ps1.orig
@@ -179,8 +180,6 @@ testing/
 latex_output/
 pdf_output/
 html_output/
-# Centralized runtime outputs (untracked)
-outputs/**
 # Build directories (CMake/VS/colcon)
 build/
 build-ninja/

@@ -89,8 +89,8 @@ class ControlTheoryAnalyzer:
     }
 
     def __init__(self):
-        self.output_dir = Path('analysis_output')
-        self.output_dir.mkdir(exist_ok=True)
+        self.output_dir = Path('thesis_data/control_theory_figures')
+        self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def theoretical_closed_loop_tf(self, ctrl: ControllerParams) -> signal.TransferFunction:
         """

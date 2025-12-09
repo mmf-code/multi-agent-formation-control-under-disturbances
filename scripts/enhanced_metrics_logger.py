@@ -335,9 +335,9 @@ class EnhancedMetricsLogger(Node):
 
             f.write("NEXT STEPS:\n")
             f.write("-" * 70 + "\n")
-            f.write(f"  1. Analysis: python3 analysis/analyze_checkpoint_data.py {self.output_dir}\n")
-            f.write(f"  2. Plotting: python3 analysis/plot_long_scenario.py {self.output_dir}\n")
-            f.write(f"  3. Report:   python3 analysis/generate_thesis_report.py {self.output_dir}\n")
+            f.write(f"  1. Analysis: python3 scripts/analyze_checkpoint_data.py {self.output_dir}\n")
+            f.write(f"  2. Plotting: python3 scripts/analyze_step_response.py {self.output_dir}\n")
+            f.write(f"  3. Compare:  python3 scripts/compare_controllers.py {self.output_dir}\n")
 
 
 def main():

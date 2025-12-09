@@ -180,6 +180,6 @@ done
 
 echo ""
 echo -e "${CYAN}Next steps:${NC}"
-echo -e "  1. Analyze with: ${YELLOW}python3 analysis/analyze_thesis_data.py $OUTPUT_DIR${NC}"
-echo -e "  2. Plot results: ${YELLOW}python3 analysis/plot_comparison.py $OUTPUT_DIR${NC}"
+echo -e "  1. Analyze with: ${YELLOW}python3 scripts/analyze_step_response.py $OUTPUT_DIR${NC}"
+echo -e "  2. Plot results: ${YELLOW}python3 scripts/compare_controllers.py $OUTPUT_DIR${NC}"
 echo ""

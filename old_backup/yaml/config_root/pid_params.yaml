@@ -1,6 +1,0 @@
-kp: 2.10
-ki: 1.261
-kd: 0.87
-output_limits:
-  min: -10.0
-  max: 10.0

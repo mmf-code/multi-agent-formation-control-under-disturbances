@@ -28,46 +28,82 @@ namespace core {
  * @brief Complete set of 2D drone physics parameters
  *
  * These parameters define the physical characteristics and dynamics model
- * of the quadrotor. All parameters match the standalone simulation for consistency.
+ * of the quadrotor. Default values are for Crazyflie 2.1 nano quadrotor.
+ *
+ * IMPORTANT: When using with Gazebo, mass is read from SDF model inertial.
+ * Other parameters can be overridden via SDF plugin elements.
  */
 struct PhysicsParams {
   // ===== Inertial Properties =====
-  double mass = 1.5;  ///< Drone mass [kg]
+  /// Drone mass [kg] - Crazyflie 2.1 default: 27g
+  double mass = 0.027;
 
   // ===== Actuator Dynamics (First-Order Lag) =====
   /// Symmetric time constant [s] (used if asymmetric not set)
-  double actuator_tau = 0.1;
+  /// Crazyflie motors are fast (~50ms response)
+  double actuator_tau = 0.05;
 
   /// Rising edge time constant [s] (acceleration increase)
   /// If <= 0, falls back to actuator_tau
-  double actuator_tau_up = 0.1;
+  double actuator_tau_up = 0.04;
 
   /// Falling edge time constant [s] (acceleration decrease)
   /// If <= 0, falls back to actuator_tau
   /// Typically slower than tau_up due to motor/ESC physics
-  double actuator_tau_down = 0.15;
+  double actuator_tau_down = 0.06;
 
   /// Maximum acceleration command [m/s²] (saturation limit)
-  double max_accel = 10.0;
+  /// Crazyflie: max thrust ~0.6N, mass 0.027kg → ~22 m/s² theoretical
+  /// Conservative limit for control stability
+  double max_accel = 15.0;
 
   // ===== Drag Model (Linear → Quadratic Blend) =====
   /// Linear drag coefficient [N/(m/s)] or equivalently [kg/s]
   /// Force = -cd_lin * v_rel
-  double drag_coeff_lin = 0.12;
+  /// Crazyflie: small frontal area, low drag
+  double drag_coeff_lin = 0.005;
 
   /// Quadratic drag coefficient [N/(m/s)²] or [kg/m]
   /// Force = -cd_quad * |v_rel| * v_rel
-  double drag_coeff_quad = 0.05;
+  /// Crazyflie: Cd*A ≈ 1.2 * 0.0015 = 0.0018, so 0.5*rho*Cd*A ≈ 0.001
+  double drag_coeff_quad = 0.001;
 
   /// Speed threshold [m/s] for drag model transition
   /// Below threshold: linear drag dominates
   /// Above threshold: quadratic drag dominates
   /// Smooth blend in between using sigmoid-like function
-  double drag_speed_threshold = 1.0;
+  double drag_speed_threshold = 0.5;
 
   // ===== Diagnostic Flags =====
   /// Enable detailed physics logging (for debugging)
   bool enable_diagnostics = false;
+
+  // ===== Factory Methods for Common Drone Types =====
+  static PhysicsParams crazyflie() {
+    PhysicsParams p;
+    p.mass = 0.027;
+    p.actuator_tau = 0.05;
+    p.actuator_tau_up = 0.04;
+    p.actuator_tau_down = 0.06;
+    p.max_accel = 15.0;
+    p.drag_coeff_lin = 0.005;
+    p.drag_coeff_quad = 0.001;
+    p.drag_speed_threshold = 0.5;
+    return p;
+  }
+
+  static PhysicsParams generic_1_5kg() {
+    PhysicsParams p;
+    p.mass = 1.5;
+    p.actuator_tau = 0.1;
+    p.actuator_tau_up = 0.1;
+    p.actuator_tau_down = 0.15;
+    p.max_accel = 10.0;
+    p.drag_coeff_lin = 0.12;
+    p.drag_coeff_quad = 0.05;
+    p.drag_speed_threshold = 1.0;
+    return p;
+  }
 };
 
 /**
@@ -140,6 +176,8 @@ struct PhysicsDiagnostics {
  * Feed-forward control predicts and cancels disturbances before they
  * affect tracking error. This improves performance without increasing
  * feedback gains (which can cause oscillations).
+ *
+ * Default values are for Crazyflie 2.1 nano quadrotor.
  */
 struct FeedForwardParams {
   // ===== Enable/Disable Flags =====
@@ -158,16 +196,38 @@ struct FeedForwardParams {
   // ===== Model Parameters (Must Match Physics!) =====
   /// Estimated mass for drag prediction [kg]
   /// Should match PhysicsParams::mass for accurate FF
-  double mass_estimate = 1.5;
+  /// Default: Crazyflie 2.1 mass (27g)
+  double mass_estimate = 0.027;
 
   /// Estimated linear drag coefficient [kg/s]
-  double drag_coeff_lin_estimate = 0.12;
+  /// Default: Crazyflie value
+  double drag_coeff_lin_estimate = 0.005;
 
   /// Estimated quadratic drag coefficient [kg/m]
-  double drag_coeff_quad_estimate = 0.05;
+  /// Default: Crazyflie value
+  double drag_coeff_quad_estimate = 0.001;
 
   /// Drag speed threshold estimate [m/s]
-  double drag_speed_threshold_estimate = 1.0;
+  double drag_speed_threshold_estimate = 0.5;
+
+  // ===== Factory Methods =====
+  static FeedForwardParams crazyflie() {
+    FeedForwardParams p;
+    p.mass_estimate = 0.027;
+    p.drag_coeff_lin_estimate = 0.005;
+    p.drag_coeff_quad_estimate = 0.001;
+    p.drag_speed_threshold_estimate = 0.5;
+    return p;
+  }
+
+  static FeedForwardParams generic_1_5kg() {
+    FeedForwardParams p;
+    p.mass_estimate = 1.5;
+    p.drag_coeff_lin_estimate = 0.12;
+    p.drag_coeff_quad_estimate = 0.05;
+    p.drag_speed_threshold_estimate = 1.0;
+    return p;
+  }
 };
 
 }  // namespace core
