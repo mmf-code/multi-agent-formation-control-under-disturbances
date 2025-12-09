@@ -43,11 +43,11 @@ def generate_launch_description():
     pkg_agent_control = get_package_share_directory('agent_control_pkg')
     pkg_formation_coordinator = get_package_share_directory('formation_coordinator_pkg')
 
-    # World file - 9 drones in 3 groups
+    # World file - 9 Crazyflie drones in 3 groups
     world_file = PathJoinSubstitution([
         FindPackageShare('agent_control_pkg'),
         'worlds',
-        'formation_comparison.world'
+        'crazyflie_formation.world'
     ])
 
     # RViz config (reuse from existing demo)

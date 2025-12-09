@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <!--
+    Crazyflie 2.1 Quadrotor Model
+    Using sim_cf2 mesh files (Gazebo 11 compatible)
+
+    Physical Specifications (from Bitcraze):
+    - Mass: 27g (0.027 kg)
+    - Dimensions: 92mm x 92mm x 29mm (motor-to-motor diagonal)
+    - Motor-to-motor distance: 92mm diagonal = 65mm arm length
+    - Propeller diameter: 45mm
+
+    Reference: https://github.com/CrazyflieTHI/sim_cf2
+  -->
+  <model name="crazyflie">
+    <pose>0 0 0.015 0 0 0</pose>
+
+    <link name="base_link">
+      <inertial>
+        <mass>0.027</mass>
+        <inertia>
+          <ixx>1.657e-5</ixx>
+          <iyy>1.666e-5</iyy>
+          <izz>2.926e-5</izz>
+          <ixy>0.831e-6</ixy>
+          <ixz>0.718e-6</ixz>
+          <iyz>1.800e-6</iyz>
+        </inertia>
+      </inertial>
+
+      <!-- Main body mesh -->
+      <visual name="body_visual">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://crazyflie/meshes/crazyflie.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+
+      <!-- Front Right Propeller -->
+      <visual name="prop_fr">
+        <pose>0.0325 -0.0325 0.0125 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>0.9 0.3 0.3 1</ambient>
+          <diffuse>0.9 0.3 0.3 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Front Left Propeller -->
+      <visual name="prop_fl">
+        <pose>0.0325 0.0325 0.0125 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>0.9 0.3 0.3 1</ambient>
+          <diffuse>0.9 0.3 0.3 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Back Left Propeller -->
+      <visual name="prop_bl">
+        <pose>-0.0325 0.0325 0.0125 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>0.3 0.3 0.9 1</ambient>
+          <diffuse>0.3 0.3 0.9 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Back Right Propeller -->
+      <visual name="prop_br">
+        <pose>-0.0325 -0.0325 0.0125 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>0.3 0.3 0.9 1</ambient>
+          <diffuse>0.3 0.3 0.9 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Collision box -->
+      <collision name="collision">
+        <geometry>
+          <box><size>0.092 0.092 0.029</size></box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

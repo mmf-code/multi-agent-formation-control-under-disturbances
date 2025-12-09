@@ -51,6 +51,8 @@ class SimpleMetricsLogger(Node):
             writer = csv.writer(f)
             writer.writerow([
                 'timestamp', 'elapsed_time',
+                'current_x', 'current_y', 'current_z',
+                'target_x', 'target_y', 'target_z',
                 'error_x', 'error_y', 'error_z', 'error_magnitude',
                 'rmse_x', 'rmse_y', 'rmse_z', 'rmse_total',
                 'iae_x', 'iae_y', 'settling_time', 'is_settled'
@@ -87,6 +89,8 @@ class SimpleMetricsLogger(Node):
 
         row = [
             timestamp, elapsed,
+            msg.current_x, msg.current_y, msg.current_z,
+            msg.target_x, msg.target_y, msg.target_z,
             msg.error_x, msg.error_y, msg.error_z, msg.error_magnitude,
             msg.rmse_x, msg.rmse_y, msg.rmse_z, msg.rmse_total,
             msg.iae_x, msg.iae_y, msg.settling_time,

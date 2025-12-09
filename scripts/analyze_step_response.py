@@ -67,9 +67,9 @@ class MultiCheckpointStepAnalyzer:
             'PID': '#D32F2F'          # Red
         }
 
-        # Expected waypoint times (from config)
-        self.waypoint_times = [0.0, 15.0, 30.0, 45.0]
-        self.waypoint_positions = [-15.0, -10.0, -5.0, 0.0, 5.0]
+        # Waypoints will be auto-detected from data
+        self.waypoint_times = []
+        self.waypoint_positions = []
 
     def load_data(self):
         """Load CSV data for all agents"""
@@ -81,9 +81,17 @@ class MultiCheckpointStepAnalyzer:
         self.data = {}
 
         for agent_id, controller_name in self.controllers.items():
-            # Find CSV file
-            csv_pattern = f"{agent_id}_*_full.csv"
-            csv_files = list(self.data_dir.glob(f"**/{csv_pattern}"))
+            # Try multiple CSV naming patterns
+            csv_patterns = [
+                f"{agent_id}_*.csv",          # Current format: agent_0_pidfuzzy.csv
+                f"{agent_id}_*_full.csv",     # Old format: agent_0_pidfuzzy_full.csv
+            ]
+
+            csv_files = []
+            for pattern in csv_patterns:
+                csv_files = list(self.data_dir.glob(f"**/{pattern}"))
+                if csv_files:
+                    break
 
             if not csv_files:
                 print(f"⚠ WARNING: No data found for {agent_id} ({controller_name})")
@@ -94,14 +102,21 @@ class MultiCheckpointStepAnalyzer:
 
             df = pd.read_csv(csv_path)
 
-            # Validate required columns
-            required_cols = ['elapsed_time', 'current_x', 'target_x']
-            if not all(col in df.columns for col in required_cols):
+            # Check if we have position data or only error data
+            has_position = 'current_x' in df.columns and 'target_x' in df.columns
+            has_error = 'error_x' in df.columns
+
+            if has_position:
+                print(f"   → Position data available (current_x, target_x)")
+            elif has_error:
+                print(f"   → Error data only (will use error-based analysis)")
+            else:
                 print(f"⚠ WARNING: Missing required columns in {csv_path.name}")
-                print(f"   Required: {required_cols}")
                 print(f"   Found: {list(df.columns)}")
                 continue
 
+            # Store the data with a flag indicating format
+            df.attrs['has_position'] = has_position
             self.data[controller_name] = df
 
         print(f"\n✓ Loaded {len(self.data)} controllers\n")
@@ -117,35 +132,86 @@ class MultiCheckpointStepAnalyzer:
         For interpolated waypoints, we look for changes in velocity (acceleration)
         Returns: List of step transition indices and values
         """
-        # Option 1: Look for velocity changes (better for smooth trajectories)
-        velocity = np.diff(target_signal) / np.diff(time)
-        accel = np.diff(velocity)
-
-        # Find where target direction/speed changes significantly
-        change_indices = []
-        for i in range(len(accel)):
-            if abs(accel[i]) > 0.01:  # Acceleration threshold
-                # Check if this is start of new segment
-                if i == 0 or (i - change_indices[-1] if change_indices else 999) > 200:  # 10s apart
-                    change_indices.append(i + 1)
-
-        # If no changes detected, fall back to simple diff
-        if len(change_indices) == 0:
-            target_diff = np.diff(target_signal)
-            step_indices = np.where(np.abs(target_diff) > min_step_size)[0]
-        else:
-            step_indices = change_indices
-
         steps = []
-        for idx in step_indices:
-            if idx + 1 < len(target_signal):
-                steps.append({
-                    'index': idx,
-                    'time': time[idx],
-                    'initial': target_signal[idx],
-                    'final': target_signal[idx + 1],
-                    'magnitude': abs(target_signal[idx + 1] - target_signal[idx])
-                })
+
+        # Look for significant velocity changes in target
+        if len(target_signal) < 3:
+            return steps
+
+        velocity = np.diff(target_signal) / np.diff(time)
+
+        # Smooth velocity to reduce noise
+        smooth_window = min(5, len(velocity))
+        if smooth_window >= 3:
+            velocity_smooth = np.convolve(velocity, np.ones(smooth_window)/smooth_window, mode='same')
+        else:
+            velocity_smooth = velocity
+
+        # Find velocity direction changes (start of new segment)
+        prev_idx = 0
+        prev_target = target_signal[0]
+
+        for i in range(1, len(velocity_smooth) - 1):
+            # Look for velocity sign changes or large magnitude changes
+            if len(steps) == 0:
+                # First step: significant velocity increase from rest
+                if abs(velocity_smooth[i]) > 0.05 and abs(velocity_smooth[i-1]) < 0.02:
+                    continue  # Skip first rise phase
+
+            # Velocity changes sign or drops to near zero (waypoint reached)
+            vel_sign_change = velocity_smooth[i] * velocity_smooth[i-1] < -0.01
+            vel_drops = abs(velocity_smooth[i]) < 0.02 and abs(velocity_smooth[i-1]) > 0.1
+
+            # Target has moved significantly since last step
+            target_diff = abs(target_signal[i+1] - prev_target)
+
+            if (vel_sign_change or vel_drops) and target_diff > min_step_size:
+                # Ensure minimum time between steps (5s at 10Hz = 50 samples)
+                if i - prev_idx > 50:
+                    steps.append({
+                        'index': i + 1,
+                        'time': time[i + 1],
+                        'initial': prev_target,
+                        'final': target_signal[i + 1],
+                        'magnitude': target_diff
+                    })
+                    prev_idx = i
+                    prev_target = target_signal[i + 1]
+
+        return steps
+
+    def detect_steps_from_error(self, time, error_x, min_step_size=2.0):
+        """
+        Detect step transitions from error data alone.
+
+        When a new waypoint is set, error suddenly increases (or changes direction).
+        We look for sudden jumps in error magnitude.
+        """
+        steps = []
+
+        if len(error_x) < 10:
+            return steps
+
+        # Look for sudden increases in |error|
+        error_mag = np.abs(error_x)
+
+        for i in range(10, len(error_mag) - 1):
+            # Check for sudden error jump (new waypoint)
+            prev_avg = np.mean(error_mag[i-10:i])
+            curr = error_mag[i]
+
+            # Error suddenly increases by at least min_step_size
+            if curr - prev_avg > min_step_size:
+                # Ensure minimum time between steps
+                if len(steps) == 0 or (time[i] - steps[-1]['time']) > 5.0:
+                    # Estimate step magnitude from error jump
+                    steps.append({
+                        'index': i,
+                        'time': time[i],
+                        'initial': 0.0,  # Previous target (unknown)
+                        'final': error_x[i],  # New error indicates new target offset
+                        'magnitude': abs(error_x[i])
+                    })
 
         return steps
 
@@ -293,36 +359,165 @@ class MultiCheckpointStepAnalyzer:
     def analyze_controller(self, controller_name):
         """Analyze all steps for one controller"""
         df = self.data[controller_name]
+        has_position = df.attrs.get('has_position', False)
 
         time = df['elapsed_time'].values
-        current_x = df['current_x'].values
-        target_x = df['target_x'].values
 
-        # Detect step transitions
-        steps = self.detect_step_transitions(time, target_x, min_step_size=2.0)
+        if has_position:
+            # Use position data for step detection and analysis
+            current_x = df['current_x'].values
+            target_x = df['target_x'].values
 
-        if len(steps) == 0:
-            print(f"⚠ WARNING: No steps detected for {controller_name}")
-            return []
+            # Detect step transitions from target changes
+            steps = self.detect_step_transitions(time, target_x, min_step_size=2.0)
 
-        print(f"\n{controller_name}:")
-        print(f"  Detected {len(steps)} step transitions")
+            if len(steps) == 0:
+                print(f"⚠ WARNING: No steps detected for {controller_name}")
+                return []
 
-        # Analyze each step
-        all_metrics = []
-        for i, step_info in enumerate(steps):
-            metrics = self.analyze_single_step(
-                time, current_x, target_x, step_info, settling_threshold=0.02
-            )
+            print(f"\n{controller_name}:")
+            print(f"  Detected {len(steps)} step transitions (from target_x)")
 
-            if metrics:
-                metrics.step_number = i + 1
-                all_metrics.append(metrics)
+            # Analyze each step
+            all_metrics = []
+            for i, step_info in enumerate(steps):
+                metrics = self.analyze_single_step(
+                    time, current_x, target_x, step_info, settling_threshold=0.02
+                )
 
-                print(f"  Step {i+1} (t={step_info['time']:.1f}s): "
-                      f"X={step_info['initial']:.1f}→{step_info['final']:.1f}m")
+                if metrics:
+                    metrics.step_number = i + 1
+                    all_metrics.append(metrics)
 
-        return all_metrics
+                    print(f"  Step {i+1} (t={step_info['time']:.1f}s): "
+                          f"X={step_info['initial']:.1f}→{step_info['final']:.1f}m")
+
+            return all_metrics
+        else:
+            # Use error data for analysis (error → 0 is the response)
+            error_x = df['error_x'].values
+
+            # Detect steps from error jumps
+            steps = self.detect_steps_from_error(time, error_x, min_step_size=2.0)
+
+            if len(steps) == 0:
+                print(f"⚠ WARNING: No steps detected for {controller_name}")
+                return []
+
+            print(f"\n{controller_name}:")
+            print(f"  Detected {len(steps)} step transitions (from error jumps)")
+
+            # For error-based analysis, we measure how quickly error decays to 0
+            all_metrics = []
+            for i, step_info in enumerate(steps):
+                metrics = self.analyze_error_decay(
+                    time, error_x, step_info, settling_threshold=0.1
+                )
+
+                if metrics:
+                    metrics.step_number = i + 1
+                    all_metrics.append(metrics)
+
+                    print(f"  Step {i+1} (t={step_info['time']:.1f}s): "
+                          f"error_x={step_info['magnitude']:.1f}m")
+
+            return all_metrics
+
+    def analyze_error_decay(self, time, error_x, step_info, settling_threshold=0.1):
+        """
+        Analyze error decay after a step (for error-only data).
+
+        Metrics:
+        - Rise time: N/A (we start at max error)
+        - Settling time: time for |error| to stay below threshold
+        - Overshoot: if error crosses zero and goes opposite direction
+        """
+        step_idx = step_info['index']
+        step_time = step_info['time']
+        initial_error = error_x[step_idx]
+        step_magnitude = abs(initial_error)
+
+        # Define analysis window (15 seconds after step)
+        window_end_idx = min(len(time) - 1, step_idx + 150)  # 15s at 10Hz
+
+        if window_end_idx - step_idx < 10:
+            return None
+
+        # Extract segment
+        seg_time = time[step_idx:window_end_idx]
+        seg_error = error_x[step_idx:window_end_idx]
+
+        if len(seg_time) < 10:
+            return None
+
+        # Normalize time
+        seg_time_norm = seg_time - step_time
+
+        # === SETTLING TIME ===
+        settling_time = None
+        settling_band = settling_threshold  # absolute threshold in meters
+        abs_error = np.abs(seg_error)
+
+        # Find last time error exceeded threshold
+        exceeded_indices = np.where(abs_error > settling_band)[0]
+        if len(exceeded_indices) > 0:
+            settling_time = seg_time_norm[exceeded_indices[-1]]
+        else:
+            settling_time = 0.0
+
+        # === OVERSHOOT (error crosses zero and goes opposite) ===
+        overshoot_percent = 0.0
+        peak_value = initial_error
+        peak_time = 0.0
+
+        # Check if error changes sign (overshoot)
+        if initial_error > 0:
+            opposite = np.where(seg_error < -0.05)[0]
+        else:
+            opposite = np.where(seg_error > 0.05)[0]
+
+        if len(opposite) > 0:
+            # Find max overshoot
+            if initial_error > 0:
+                min_val = np.min(seg_error[opposite])
+                overshoot = abs(min_val)
+                peak_idx = np.argmin(seg_error)
+            else:
+                max_val = np.max(seg_error[opposite])
+                overshoot = abs(max_val)
+                peak_idx = np.argmax(seg_error)
+
+            peak_value = seg_error[peak_idx]
+            peak_time = seg_time_norm[peak_idx]
+            overshoot_percent = (overshoot / step_magnitude) * 100.0
+
+        # === STEADY-STATE ERROR ===
+        # Average of last 2 seconds
+        if len(seg_error) > 20:
+            steady_state_error = np.mean(np.abs(seg_error[-20:]))
+        else:
+            steady_state_error = abs(seg_error[-1])
+
+        # === RISE TIME (time for error to decrease to 10% of initial) ===
+        rise_time = None
+        target_10pct = 0.1 * step_magnitude
+        reached_10pct = np.where(abs_error <= target_10pct)[0]
+        if len(reached_10pct) > 0:
+            rise_time = seg_time_norm[reached_10pct[0]]
+
+        return StepMetrics(
+            step_number=0,
+            step_time=step_time,
+            rise_time=rise_time if rise_time is not None else np.nan,
+            overshoot_percent=overshoot_percent,
+            peak_time=peak_time,
+            settling_time=settling_time if settling_time is not None else np.nan,
+            steady_state_error=steady_state_error,
+            initial_value=initial_error,
+            final_value=0.0,  # Target is 0 error
+            peak_value=peak_value,
+            step_magnitude=step_magnitude
+        )
 
     def print_results(self):
         """Print formatted results table"""

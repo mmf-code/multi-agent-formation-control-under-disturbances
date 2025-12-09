@@ -44,11 +44,12 @@ def generate_launch_description():
     pkg_agent_control = get_package_share_directory('agent_control_pkg')
     pkg_formation_coordinator = get_package_share_directory('formation_coordinator_pkg')
 
-    # World file - 9 drones in 3 groups
+    # World file - 9 Crazyflie drones in 3 groups (can be overridden via world_file:=<name>)
+    world_file_arg = LaunchConfiguration('world_file', default='crazyflie_formation.world')
     world_file = PathJoinSubstitution([
         FindPackageShare('agent_control_pkg'),
         'worlds',
-        'formation_comparison.world'
+        world_file_arg
     ])
 
     # RViz config (reuse from existing demo)
@@ -110,6 +111,20 @@ def generate_launch_description():
         description='Launch RViz for visualization'
     )
 
+    declare_world_file = DeclareLaunchArgument(
+        'world_file',
+        default_value='crazyflie_formation.world',
+        description='Gazebo world file name (default: Crazyflie 27g drones)'
+    )
+
+    # Wind profile argument - allows switching between deterministic and stochastic wind
+    wind_profile = LaunchConfiguration('wind_profile', default='gust')
+    declare_wind_profile = DeclareLaunchArgument(
+        'wind_profile',
+        default_value='gust',
+        description='Wind profile: gust (deterministic), stochastic (random/uncertain)'
+    )
+
     # Controller tuning launch arguments
     declare_pid_group_kp = DeclareLaunchArgument(
         'pid_group_kp',
@@ -144,8 +159,8 @@ def generate_launch_description():
     )
     declare_fuzzy_group_k_fuzzy = DeclareLaunchArgument(
         'fuzzy_group_k_fuzzy',
-        default_value='0.7',
-        description='Mixing gain k_fuzzy for PID+Fuzzy group (Group 0). Reduced from 0.7 to reduce oscillations.'
+        default_value='0.6',
+        description='Mixing gain k_fuzzy for PID+Fuzzy group (Group 0). Tuned for Crazyflie scaled MFs.'
     )
 
     # Wind + metrics launch arguments
@@ -200,6 +215,30 @@ def generate_launch_description():
         condition=conditions.IfCondition(gazebo_gui)
     )
 
+    # Wind publisher node (provides /wind/velocity for disturbance testing)
+    # THESIS CONFIG: Aggressive wind to differentiate controller performance
+    # Real-world outdoor conditions for nano quadrotors: 2-5 m/s gusts
+    # Use wind_profile:=stochastic for uncertainty/robustness testing
+    wind_publisher = Node(
+        package='agent_control_pkg',
+        executable='wind_publisher.py',
+        name='wind_publisher',
+        output='screen',
+        parameters=[{
+            'profile': wind_profile,  # gust (deterministic) or stochastic (random)
+            'magnitude': 3.5,         # m/s - base wind magnitude
+            'direction': 90.0,        # degrees - CROSS-WIND (perpendicular to +X motion)
+            'gust_duration': 1.5,     # seconds - for gust profile
+            'gust_interval': 8.0,     # seconds - for gust profile
+            # Stochastic profile params (active when profile:=stochastic)
+            'stochastic_mag_std': 1.5,       # magnitude std dev (m/s)
+            'stochastic_dir_rate': 15.0,     # direction change rate (deg/s)
+            'stochastic_gust_prob': 0.15,    # random gust probability per second
+            'stochastic_gust_mag': 2.5,      # max gust multiplier
+            'stochastic_turbulence': 0.5,    # high-freq turbulence intensity
+        }]
+    )
+
     # ===== Controller Configurations =====
     # Define controller parameters for each group
 
@@ -216,7 +255,7 @@ def generate_launch_description():
         'fuzzy.include_wind': True,
         # Wind scalar for fuzzy controller. Reverted to 1.5 (was 1.0)
         'fuzzy.wind_scalar': 1.5,
-        'fuzzy.params_file': 'fuzzy_params.yaml',
+        'fuzzy.params_file': 'fuzzy_params_crazyflie.yaml',  # Crazyflie-scaled MFs
         'mix.k_pid': 1.0,
         'mix.k_fuzzy': fuzzy_group_k_fuzzy,  # Fuzzy mix factor
         # Wind handling (can be overridden per launch)
@@ -437,6 +476,8 @@ def generate_launch_description():
         declare_use_sim_time,
         declare_gazebo_gui,
         declare_rviz,
+        declare_world_file,
+        declare_wind_profile,
         declare_pid_group_kp,
         declare_pid_group_ki,
         declare_pid_group_kd,
@@ -453,6 +494,9 @@ def generate_launch_description():
         # Gazebo
         gzserver,
         gzclient,
+
+        # Wind disturbance
+        wind_publisher,
 
         # Agent controllers (9 agents)
         *agent_nodes,

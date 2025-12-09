@@ -1,6 +1,15 @@
 # ROS2 Agent Controller Configuration
-# This file configures the PID/Fuzzy/Hybrid controller for a single agent
+# Default configuration for Crazyflie 2.1 nano quadrotor
 # Used by: agent_controller_node
+
+# =============================================================================
+# PHYSICAL MODEL: Crazyflie 2.1
+# =============================================================================
+# Mass: 27g (0.027 kg)
+# Size: 92mm x 92mm motor-to-motor
+# Max thrust: ~60g (0.6N)
+# Reference: https://www.bitcraze.io/products/crazyflie-2-1/
+# =============================================================================
 
 agent_0:
   agent_controller:
@@ -13,12 +22,16 @@ agent_0:
       control_frequency_hz: 200.0
 
       # Output limits for acceleration commands (m/s²)
+      # Crazyflie max: ~22 m/s² (0.6N / 0.027kg), conservative limits used
       output_limits.x.min: -10.0
       output_limits.x.max: 10.0
-      output_limits.y.min: -8.0
-      output_limits.y.max: 12.0
+      output_limits.y.min: -10.0
+      output_limits.y.max: 10.0
 
-      # PID controller gains (tuned for ~10% overshoot, 4s settling time)
+      # PID controller gains
+      # Design: G(s) = 1/s² (double integrator)
+      # Target: ~15% overshoot, ~5s settling time
+      # zeta = 0.933, omega_n = 0.733 rad/s
       pid.kp: 0.538
       pid.ki: 0.145
       pid.kd: 1.368
@@ -48,14 +61,16 @@ agent_0:
       stale_data.target_threshold_sec: 2.0  # Max age for target pose
 
       # Feed-forward control (drag and wind disturbance cancellation)
+      # Parameters MUST match Gazebo model for accurate compensation
       feedforward.enable_drag: false
       feedforward.enable_wind: false
       feedforward.k_drag: 0.8         # Drag compensation gain (0.0 to 1.0+)
       feedforward.k_wind: 1.0         # Wind bias compensation gain
-      feedforward.mass_estimate: 1.5  # Must match Gazebo model mass
-      feedforward.drag_coeff_lin_estimate: 0.12
-      feedforward.drag_coeff_quad_estimate: 0.05
-      feedforward.drag_speed_threshold_estimate: 1.0
+      # Crazyflie 2.1 physical parameters
+      feedforward.mass_estimate: 0.027           # [kg] Crazyflie mass (27g)
+      feedforward.drag_coeff_lin_estimate: 0.005 # [kg/s] Linear drag coefficient
+      feedforward.drag_coeff_quad_estimate: 0.001 # [kg/m] Quadratic drag coefficient
+      feedforward.drag_speed_threshold_estimate: 0.5 # [m/s] Drag model transition speed
 
       # Diagnostics
       diagnostics.enable: true

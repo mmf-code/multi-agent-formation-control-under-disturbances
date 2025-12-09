@@ -28,6 +28,8 @@
 #include <geometry_msgs/msg/vector3.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
+#include <random>
+
 #include "agent_control_pkg/core/physics_types.hpp"
 #include "agent_control_pkg/core/drone_physics_core.hpp"
 
@@ -59,12 +61,35 @@ namespace gazebo
     {
       // Store model pointer and get base_link (main body of drone)
       this->model_ = _model;
+
+      // Try direct link first, then nested model link (for <include> usage)
       this->link_ = this->model_->GetLink("base_link");
+      if (!this->link_)
+      {
+        // When using <include>, link names get prefixed with nested model name
+        // Try common nested patterns: crazyflie::base_link, etc.
+        auto links = this->model_->GetLinks();
+        for (const auto& link : links)
+        {
+          std::string linkName = link->GetName();
+          if (linkName.find("base_link") != std::string::npos)
+          {
+            this->link_ = link;
+            break;
+          }
+        }
+      }
 
       if (!this->link_)
       {
         RCLCPP_ERROR(rclcpp::get_logger("SimpleDronePlugin"),
-                     "base_link not found in model!");
+                     "base_link not found in model! Available links:");
+        auto links = this->model_->GetLinks();
+        for (const auto& link : links)
+        {
+          RCLCPP_ERROR(rclcpp::get_logger("SimpleDronePlugin"),
+                       "  - %s", link->GetName().c_str());
+        }
         return;
       }
 
@@ -115,6 +140,22 @@ namespace gazebo
       {
         this->target_altitude_ = _sdf->Get<double>("target_altitude");
       }
+
+      // Get sensor noise parameters from SDF
+      // Position noise: Typical values 0.01-0.05m for optical flow, 0.1-1.0m for GPS
+      if (_sdf->HasElement("position_noise_std")) {
+        this->position_noise_std_ = _sdf->Get<double>("position_noise_std");
+      }
+      // Velocity noise: Typical values 0.02-0.1 m/s for IMU-based estimation
+      if (_sdf->HasElement("velocity_noise_std")) {
+        this->velocity_noise_std_ = _sdf->Get<double>("velocity_noise_std");
+      }
+
+      // Initialize random number generator
+      std::random_device rd;
+      this->rng_ = std::mt19937(rd());
+      this->position_noise_dist_ = std::normal_distribution<double>(0.0, this->position_noise_std_);
+      this->velocity_noise_dist_ = std::normal_distribution<double>(0.0, this->velocity_noise_std_);
 
       // Get namespace from SDF (e.g., "agent_0" for multi-agent support)
       if (_sdf->HasElement("namespace"))
@@ -339,29 +380,41 @@ namespace gazebo
       auto linear_vel = this->link_->WorldLinearVel();
       auto angular_vel = this->link_->WorldAngularVel();
 
+      // Generate sensor noise (if enabled)
+      double pos_noise_x = 0.0, pos_noise_y = 0.0;
+      double vel_noise_x = 0.0, vel_noise_y = 0.0;
+      if (this->position_noise_std_ > 0.0) {
+        pos_noise_x = this->position_noise_dist_(this->rng_);
+        pos_noise_y = this->position_noise_dist_(this->rng_);
+      }
+      if (this->velocity_noise_std_ > 0.0) {
+        vel_noise_x = this->velocity_noise_dist_(this->rng_);
+        vel_noise_y = this->velocity_noise_dist_(this->rng_);
+      }
+
       // Construct odometry message
       nav_msgs::msg::Odometry odom;
       odom.header.stamp = this->ros_node_->get_clock()->now();
       odom.header.frame_id = "odom";
       odom.child_frame_id = "base_link";
 
-      // Position (meters)
-      odom.pose.pose.position.x = pose.Pos().X();
-      odom.pose.pose.position.y = pose.Pos().Y();
-      odom.pose.pose.position.z = pose.Pos().Z();
+      // Position with noise (meters)
+      odom.pose.pose.position.x = pose.Pos().X() + pos_noise_x;
+      odom.pose.pose.position.y = pose.Pos().Y() + pos_noise_y;
+      odom.pose.pose.position.z = pose.Pos().Z();  // No noise on Z (altitude lock)
 
-      // Orientation (quaternion)
+      // Orientation (quaternion) - no noise
       odom.pose.pose.orientation.x = pose.Rot().X();
       odom.pose.pose.orientation.y = pose.Rot().Y();
       odom.pose.pose.orientation.z = pose.Rot().Z();
       odom.pose.pose.orientation.w = pose.Rot().W();
 
-      // Linear velocity (m/s)
-      odom.twist.twist.linear.x = linear_vel.X();
-      odom.twist.twist.linear.y = linear_vel.Y();
-      odom.twist.twist.linear.z = linear_vel.Z();
+      // Linear velocity with noise (m/s)
+      odom.twist.twist.linear.x = linear_vel.X() + vel_noise_x;
+      odom.twist.twist.linear.y = linear_vel.Y() + vel_noise_y;
+      odom.twist.twist.linear.z = linear_vel.Z();  // No noise on Z
 
-      // Angular velocity (rad/s)
+      // Angular velocity (rad/s) - no noise
       odom.twist.twist.angular.x = angular_vel.X();
       odom.twist.twist.angular.y = angular_vel.Y();
       odom.twist.twist.angular.z = angular_vel.Z();
@@ -419,6 +472,14 @@ namespace gazebo
 
     // ===== Target Altitude (from SDF) =====
     double target_altitude_ = 0.5;  ///< Target altitude for this drone (meters), configurable from world file
+
+    // ===== Sensor Noise Parameters (for realistic simulation) =====
+    // These enable testing Type-2 Fuzzy's uncertainty handling capability
+    double position_noise_std_ = 0.0;  ///< Position noise std dev [m] (0 = no noise)
+    double velocity_noise_std_ = 0.0;  ///< Velocity noise std dev [m/s] (0 = no noise)
+    mutable std::mt19937 rng_;  ///< Random number generator
+    mutable std::normal_distribution<double> position_noise_dist_;  ///< Position noise distribution
+    mutable std::normal_distribution<double> velocity_noise_dist_;  ///< Velocity noise distribution
   };
 
   // Register this plugin with Gazebo

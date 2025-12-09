@@ -275,6 +275,7 @@ install(DIRECTORY rviz/
 # Install Python scripts
 install(PROGRAMS
   scripts/metrics_summary.py
+  scripts/wind_publisher.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
