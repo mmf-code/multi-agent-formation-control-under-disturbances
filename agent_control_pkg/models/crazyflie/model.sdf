@@ -10,12 +10,18 @@
     - Motor-to-motor distance: 92mm diagonal = 65mm arm length
     - Propeller diameter: 45mm
 
+    Visual Enhancement:
+    - Visual scale: 5x for better visibility in Gazebo (92mm → 46cm visual)
+    - Physics (collision, inertia) remain at real scale
+    - Propeller positions scaled to match visual body
+
     Reference: https://github.com/CrazyflieTHI/sim_cf2
   -->
   <model name="crazyflie">
     <pose>0 0 0.015 0 0 0</pose>
 
     <link name="base_link">
+      <!-- Physics remain at real Crazyflie scale -->
       <inertial>
         <mass>0.027</mass>
         <inertia>
@@ -28,24 +34,24 @@
         </inertia>
       </inertial>
 
-      <!-- Main body mesh -->
+      <!-- Main body mesh - 5x visual scale -->
       <visual name="body_visual">
         <pose>0 0 0 0 0 0</pose>
         <geometry>
           <mesh>
             <uri>model://crazyflie/meshes/crazyflie.dae</uri>
-            <scale>1 1 1</scale>
+            <scale>5 5 5</scale>
           </mesh>
         </geometry>
       </visual>
 
-      <!-- Front Right Propeller -->
+      <!-- Front Right Propeller - scaled position (0.0325*5=0.1625) -->
       <visual name="prop_fr">
-        <pose>0.0325 -0.0325 0.0125 0 0 0</pose>
+        <pose>0.1625 -0.1625 0.0625 0 0 0</pose>
         <geometry>
           <mesh>
             <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
-            <scale>1 1 1</scale>
+            <scale>5 5 5</scale>
           </mesh>
         </geometry>
         <material>
@@ -56,11 +62,11 @@
 
       <!-- Front Left Propeller -->
       <visual name="prop_fl">
-        <pose>0.0325 0.0325 0.0125 0 0 0</pose>
+        <pose>0.1625 0.1625 0.0625 0 0 0</pose>
         <geometry>
           <mesh>
             <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
-            <scale>1 1 1</scale>
+            <scale>5 5 5</scale>
           </mesh>
         </geometry>
         <material>
@@ -71,11 +77,11 @@
 
       <!-- Back Left Propeller -->
       <visual name="prop_bl">
-        <pose>-0.0325 0.0325 0.0125 0 0 0</pose>
+        <pose>-0.1625 0.1625 0.0625 0 0 0</pose>
         <geometry>
           <mesh>
             <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
-            <scale>1 1 1</scale>
+            <scale>5 5 5</scale>
           </mesh>
         </geometry>
         <material>
@@ -86,11 +92,11 @@
 
       <!-- Back Right Propeller -->
       <visual name="prop_br">
-        <pose>-0.0325 -0.0325 0.0125 0 0 0</pose>
+        <pose>-0.1625 -0.1625 0.0625 0 0 0</pose>
         <geometry>
           <mesh>
             <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
-            <scale>1 1 1</scale>
+            <scale>5 5 5</scale>
           </mesh>
         </geometry>
         <material>
@@ -99,7 +105,7 @@
         </material>
       </visual>
 
-      <!-- Collision box -->
+      <!-- Collision box - real physics scale -->
       <collision name="collision">
         <geometry>
           <box><size>0.092 0.092 0.029</size></box>
