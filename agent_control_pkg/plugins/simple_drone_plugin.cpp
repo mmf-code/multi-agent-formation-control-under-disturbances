@@ -29,9 +29,13 @@
 #include <nav_msgs/msg/odometry.hpp>
 
 #include <random>
+#include <memory>
+#include <array>
 
 #include "agent_control_pkg/core/physics_types.hpp"
 #include "agent_control_pkg/core/drone_physics_core.hpp"
+#include "agent_control_pkg/core/motor_model.hpp"
+#include "agent_control_pkg/core/motor_mixer.hpp"
 
 namespace gazebo
 {
@@ -157,6 +161,12 @@ namespace gazebo
       this->position_noise_dist_ = std::normal_distribution<double>(0.0, this->position_noise_std_);
       this->velocity_noise_dist_ = std::normal_distribution<double>(0.0, this->velocity_noise_std_);
 
+      // ===== Motor Model Feature Flag =====
+      // Load use_motor_model flag from SDF (default: false for backward compatibility)
+      if (_sdf->HasElement("use_motor_model")) {
+        this->use_motor_model_ = _sdf->Get<bool>("use_motor_model");
+      }
+
       // Get namespace from SDF (e.g., "agent_0" for multi-agent support)
       if (_sdf->HasElement("namespace"))
       {
@@ -207,8 +217,58 @@ namespace gazebo
       this->update_connection_ = event::Events::ConnectWorldUpdateBegin(
         std::bind(&SimpleDronePlugin::OnUpdate, this));
 
+      // ===== Initialize Motor Model (if enabled) =====
+      if (this->use_motor_model_) {
+        // Create motor model with sim_cf2 parameters
+        auto motor_params = agent_control_pkg::core::MotorParams::sim_cf2();
+        this->motor_model_ = std::make_unique<agent_control_pkg::core::CrazyflieMotorModel>(motor_params);
+
+        // Create mixer
+        auto mixer_config = agent_control_pkg::core::MixerConfig::fromMotorParams(motor_params);
+        this->mixer_ = std::make_unique<agent_control_pkg::core::XConfigMixer>(mixer_config);
+
+        // Create accel-to-thrust converter
+        this->accel_to_thrust_ = std::make_unique<agent_control_pkg::core::AccelToThrustSimple>(
+          this->mass_, 9.81);
+
+        // Initialize motors to hover state
+        this->motor_model_->setHover(this->mass_, 9.81);
+
+        // Get rotor joint references for visual spinning
+        const std::array<std::string, 4> joint_names = {
+          "rotor_fr_joint", "rotor_fl_joint", "rotor_bl_joint", "rotor_br_joint"
+        };
+
+        for (int i = 0; i < 4; ++i) {
+          // Try direct joint lookup first
+          this->rotor_joints_[i] = this->model_->GetJoint(joint_names[i]);
+
+          // If not found, try with nested model prefix (for <include> usage)
+          if (!this->rotor_joints_[i]) {
+            auto joints = this->model_->GetJoints();
+            for (const auto& joint : joints) {
+              if (joint->GetName().find(joint_names[i]) != std::string::npos) {
+                this->rotor_joints_[i] = joint;
+                break;
+              }
+            }
+          }
+
+          if (this->rotor_joints_[i]) {
+            RCLCPP_DEBUG(this->ros_node_->get_logger(),
+                         "Found rotor joint: %s", joint_names[i].c_str());
+          }
+        }
+
+        RCLCPP_INFO(this->ros_node_->get_logger(),
+          "Motor model ENABLED: omega_max=%.0f rad/s, k_thrust=%.2e, k_moment=%.4f, hover_omega=%.0f rad/s",
+          motor_params.omega_max, motor_params.k_thrust, motor_params.k_moment,
+          motor_params.hoverOmega(this->mass_));
+      }
+
       RCLCPP_INFO(this->ros_node_->get_logger(),
-                  "SimpleDronePlugin loaded successfully!");
+                  "SimpleDronePlugin loaded successfully! (motor_model=%s)",
+                  this->use_motor_model_ ? "true" : "false");
     }
 
   private:
@@ -299,6 +359,23 @@ namespace gazebo
       }
       this->last_physics_update_time_ = now;
 
+      // ===== Branch: Motor Model vs Legacy F=ma =====
+      if (this->use_motor_model_ && this->motor_model_) {
+        applyMotorPhysics(dt);
+      } else {
+        applyLegacyPhysics(dt);
+      }
+
+      // Publish current state to ROS2 (odometry feedback)
+      this->PublishOdometry();
+    }
+
+    /**
+     * @brief Apply legacy F=ma physics (original implementation)
+     * @param dt Time step [s]
+     */
+    void applyLegacyPhysics(double dt)
+    {
       // Get current velocity from Gazebo
       auto linear_vel = this->link_->WorldLinearVel();
       const double vx = linear_vel.X();
@@ -333,7 +410,8 @@ namespace gazebo
       double current_z = pose.Pos().Z();
       double target_z = this->target_altitude_;  // Target altitude from SDF (meters)
       double z_error = target_z - current_z;
-      double vel_z = linear_vel.Z();
+      auto linear_vel_z = this->link_->WorldLinearVel();
+      double vel_z = linear_vel_z.Z();
 
       // Total Z force: gravity compensation + P-controller
       // Fz = m * (g + Kp * error - Kd * vel_z)
@@ -355,9 +433,116 @@ namespace gazebo
 
       stabilization_torque -= angular_vel * this->angular_damping_;
       this->link_->AddTorque(stabilization_torque);
+    }
 
-      // Publish current state to ROS2 (odometry feedback)
-      this->PublishOdometry();
+    /**
+     * @brief Apply motor-based physics (sim_cf2 motor model)
+     * @param dt Time step [s]
+     *
+     * Phase 3 implementation: Collective thrust only, no attitude mixing.
+     * Full cascade control will be added in Phase 5.
+     */
+    void applyMotorPhysics(double dt)
+    {
+      auto pose = this->link_->WorldPose();
+      auto linear_vel = this->link_->WorldLinearVel();
+
+      // Altitude PD control to compute required Z acceleration
+      double current_z = pose.Pos().Z();
+      double z_error = this->target_altitude_ - current_z;
+      double vel_z = linear_vel.Z();
+      double az_cmd = this->altitude_kp_ * z_error - this->altitude_kd_ * vel_z;
+
+      // Convert Z acceleration to collective thrust: T = m*(g + az_cmd)
+      double thrust_total = this->accel_to_thrust_->accelToThrust(az_cmd);
+
+      // Use collective-only mixing (equal distribution to all motors)
+      // Full attitude mixing will be added in Phase 5
+      auto omega_cmds = this->mixer_->mixCollectiveOnly(thrust_total);
+      this->motor_model_->setAllOmegaCmd(omega_cmds);
+
+      // Update motor dynamics (first-order lag with asymmetric tau)
+      this->motor_model_->update(dt);
+
+      // Apply thrust forces at each rotor position
+      auto world_rot = pose.Rot();
+      for (int i = 0; i < 4; ++i) {
+        const auto& motor = this->motor_model_->getMotor(i);
+        const auto& pos = this->motor_model_->getRotorPosition(i);
+
+        // Thrust force (upward in body frame)
+        ignition::math::Vector3d thrust_body(0, 0, motor.thrust);
+
+        // Transform to world frame
+        ignition::math::Vector3d thrust_world = world_rot.RotateVector(thrust_body);
+
+        // Apply force at rotor position (relative to body CoM)
+        ignition::math::Vector3d rotor_pos(pos[0], pos[1], pos[2]);
+        this->link_->AddForceAtRelativePosition(thrust_world, rotor_pos);
+      }
+
+      // Apply yaw torque from motor differential (CCW motors vs CW motors)
+      double yaw_torque = this->motor_model_->getTotalYawTorque();
+      ignition::math::Vector3d yaw_torque_body(0, 0, yaw_torque);
+      ignition::math::Vector3d yaw_torque_world = world_rot.RotateVector(yaw_torque_body);
+      this->link_->AddTorque(yaw_torque_world);
+
+      // Attitude stabilization (same as legacy for XY control)
+      // This provides roll/pitch stability until cascade control is implemented
+      auto angular_vel = this->link_->WorldAngularVel();
+      ignition::math::Vector3d attitude_error(pose.Rot().Roll(), pose.Rot().Pitch(), 0.0);
+      ignition::math::Vector3d stabilization_torque(
+        -this->attitude_stiffness_ * attitude_error.X(),
+        -this->attitude_stiffness_ * attitude_error.Y(),
+        -this->yaw_damping_ * angular_vel.Z());
+      stabilization_torque -= angular_vel * this->angular_damping_;
+      this->link_->AddTorque(stabilization_torque);
+
+      // Apply XY forces from legacy physics (for 2D control)
+      // This allows existing PID/Fuzzy controllers to work unchanged
+      double vx = linear_vel.X();
+      double vy = linear_vel.Y();
+      double ax_total, ay_total;
+      agent_control_pkg::core::DronePhysicsCore::computePhysicsStep(
+        this->cmd_accel_x_, this->cmd_accel_y_,
+        vx, vy,
+        this->actuator_state_,
+        this->wind_env_,
+        this->physics_params_,
+        dt,
+        ax_total, ay_total,
+        &this->physics_diag_
+      );
+
+      ignition::math::Vector3d xy_force(
+        this->mass_ * ax_total,
+        this->mass_ * ay_total,
+        0.0
+      );
+      this->link_->AddForce(xy_force);
+
+      // Update rotor visual spinning
+      updateRotorVisuals();
+    }
+
+    /**
+     * @brief Update rotor joint velocities for visual spinning
+     */
+    void updateRotorVisuals()
+    {
+      if (!this->use_motor_model_ || !this->motor_model_) return;
+
+      for (int i = 0; i < 4; ++i) {
+        if (!this->rotor_joints_[i]) continue;
+
+        const auto& motor = this->motor_model_->getMotor(i);
+        // Get rotor direction: CW motors spin negative, CCW positive
+        int dir = this->motor_model_->getRotorDirection(i);
+        double visual_vel = dir * motor.omega;
+
+        // Set joint velocity for visual rotation
+        this->rotor_joints_[i]->SetVelocity(0, visual_vel);
+      }
     }
 
     /**
@@ -480,6 +665,13 @@ namespace gazebo
     mutable std::mt19937 rng_;  ///< Random number generator
     mutable std::normal_distribution<double> position_noise_dist_;  ///< Position noise distribution
     mutable std::normal_distribution<double> velocity_noise_dist_;  ///< Velocity noise distribution
+
+    // ===== Motor Model (sim_cf2 parameters) =====
+    bool use_motor_model_ = false;  ///< Feature flag: true = motor model, false = legacy F=ma
+    std::unique_ptr<agent_control_pkg::core::CrazyflieMotorModel> motor_model_;  ///< Motor dynamics
+    std::unique_ptr<agent_control_pkg::core::XConfigMixer> mixer_;  ///< Thrust allocation mixer
+    std::unique_ptr<agent_control_pkg::core::AccelToThrustSimple> accel_to_thrust_;  ///< Accel-to-thrust converter
+    std::array<physics::JointPtr, 4> rotor_joints_;  ///< Rotor joint pointers for visual spinning
   };
 
   // Register this plugin with Gazebo
