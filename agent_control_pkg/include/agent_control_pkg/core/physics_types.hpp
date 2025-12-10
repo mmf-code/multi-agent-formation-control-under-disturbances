@@ -39,34 +39,38 @@ struct PhysicsParams {
   double mass = 0.027;
 
   // ===== Actuator Dynamics (First-Order Lag) =====
+  // Values derived from sim_cf2 Crazyflie motor model (CrazyflieTHI/sim_cf2)
+  // Motor time constants from crazyflie.xacro: time_constant_up=0.0125, time_constant_down=0.025
+
   /// Symmetric time constant [s] (used if asymmetric not set)
-  /// Crazyflie motors are fast (~50ms response)
-  double actuator_tau = 0.05;
+  /// Average of up/down for simplified models
+  double actuator_tau = 0.02;
 
-  /// Rising edge time constant [s] (acceleration increase)
-  /// If <= 0, falls back to actuator_tau
-  double actuator_tau_up = 0.04;
+  /// Rising edge time constant [s] (motor spin-up)
+  /// sim_cf2 value: 12.5ms - motors spin up fast
+  double actuator_tau_up = 0.0125;
 
-  /// Falling edge time constant [s] (acceleration decrease)
-  /// If <= 0, falls back to actuator_tau
-  /// Typically slower than tau_up due to motor/ESC physics
-  double actuator_tau_down = 0.06;
+  /// Falling edge time constant [s] (motor spin-down)
+  /// sim_cf2 value: 25ms - motors spin down slower due to inertia
+  double actuator_tau_down = 0.025;
 
   /// Maximum acceleration command [m/s²] (saturation limit)
-  /// Crazyflie: max thrust ~0.6N, mass 0.027kg → ~22 m/s² theoretical
-  /// Conservative limit for control stability
-  double max_accel = 15.0;
+  /// Derived from sim_cf2: 4 motors × 0.119N = 0.476N total thrust
+  /// max_accel = (T_total - m*g) / m = (0.476 - 0.265) / 0.027 ≈ 7.8 m/s² (sustained)
+  /// Peak (all thrust for accel): 0.476 / 0.027 = 17.6 m/s²
+  /// Using 17.0 for realistic ceiling with some margin
+  double max_accel = 17.0;
 
   // ===== Drag Model (Linear → Quadratic Blend) =====
   /// Linear drag coefficient [N/(m/s)] or equivalently [kg/s]
   /// Force = -cd_lin * v_rel
-  /// Crazyflie: small frontal area, low drag
-  double drag_coeff_lin = 0.005;
+  /// Reduced slightly for Crazyflie's small profile (was 0.005)
+  double drag_coeff_lin = 0.003;
 
   /// Quadratic drag coefficient [N/(m/s)²] or [kg/m]
   /// Force = -cd_quad * |v_rel| * v_rel
-  /// Crazyflie: Cd*A ≈ 1.2 * 0.0015 = 0.0018, so 0.5*rho*Cd*A ≈ 0.001
-  double drag_coeff_quad = 0.001;
+  /// Crazyflie: Cd*A ≈ 1.2 * 0.001 = 0.0012, so 0.5*rho*Cd*A ≈ 0.0008
+  double drag_coeff_quad = 0.0008;
 
   /// Speed threshold [m/s] for drag model transition
   /// Below threshold: linear drag dominates
@@ -79,15 +83,16 @@ struct PhysicsParams {
   bool enable_diagnostics = false;
 
   // ===== Factory Methods for Common Drone Types =====
+  /// Crazyflie 2.1 parameters derived from sim_cf2 (CrazyflieTHI/sim_cf2)
   static PhysicsParams crazyflie() {
     PhysicsParams p;
-    p.mass = 0.027;
-    p.actuator_tau = 0.05;
-    p.actuator_tau_up = 0.04;
-    p.actuator_tau_down = 0.06;
-    p.max_accel = 15.0;
-    p.drag_coeff_lin = 0.005;
-    p.drag_coeff_quad = 0.001;
+    p.mass = 0.027;              // 27g
+    p.actuator_tau = 0.02;       // Average of up/down
+    p.actuator_tau_up = 0.0125;  // 12.5ms (sim_cf2)
+    p.actuator_tau_down = 0.025; // 25ms (sim_cf2)
+    p.max_accel = 17.0;          // ~17.6 m/s² from thrust calculation
+    p.drag_coeff_lin = 0.003;    // Reduced for nano quadrotor
+    p.drag_coeff_quad = 0.0008;  // Reduced for small frontal area
     p.drag_speed_threshold = 0.5;
     return p;
   }
@@ -200,22 +205,23 @@ struct FeedForwardParams {
   double mass_estimate = 0.027;
 
   /// Estimated linear drag coefficient [kg/s]
-  /// Default: Crazyflie value
-  double drag_coeff_lin_estimate = 0.005;
+  /// Default: Crazyflie value (matched to physics_types.hpp)
+  double drag_coeff_lin_estimate = 0.003;
 
   /// Estimated quadratic drag coefficient [kg/m]
-  /// Default: Crazyflie value
-  double drag_coeff_quad_estimate = 0.001;
+  /// Default: Crazyflie value (matched to physics_types.hpp)
+  double drag_coeff_quad_estimate = 0.0008;
 
   /// Drag speed threshold estimate [m/s]
   double drag_speed_threshold_estimate = 0.5;
 
   // ===== Factory Methods =====
+  /// Crazyflie 2.1 FF params (must match PhysicsParams::crazyflie())
   static FeedForwardParams crazyflie() {
     FeedForwardParams p;
     p.mass_estimate = 0.027;
-    p.drag_coeff_lin_estimate = 0.005;
-    p.drag_coeff_quad_estimate = 0.001;
+    p.drag_coeff_lin_estimate = 0.003;   // Matched to PhysicsParams
+    p.drag_coeff_quad_estimate = 0.0008; // Matched to PhysicsParams
     p.drag_speed_threshold_estimate = 0.5;
     return p;
   }

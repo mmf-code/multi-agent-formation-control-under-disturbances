@@ -76,11 +76,11 @@
         <namespace>agent_0</namespace>
         <target_altitude>0.5</target_altitude>
         <!-- Crazyflie physics parameters -->
-        <actuator_tau_up>0.04</actuator_tau_up>
-        <actuator_tau_down>0.06</actuator_tau_down>
-        <max_accel>15.0</max_accel>
-        <drag_coeff_lin>0.005</drag_coeff_lin>
-        <drag_coeff_quad>0.001</drag_coeff_quad>
+        <actuator_tau_up>0.0125</actuator_tau_up>
+        <actuator_tau_down>0.025</actuator_tau_down>
+        <max_accel>17.0</max_accel>
+        <drag_coeff_lin>0.003</drag_coeff_lin>
+        <drag_coeff_quad>0.0008</drag_coeff_quad>
         <drag_speed_threshold>0.5</drag_speed_threshold>
         <!-- HIGH sensor noise for IT2-FLS FOU advantage testing -->
         <position_noise_std>0.10</position_noise_std>
@@ -96,11 +96,11 @@
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_1</namespace>
         <target_altitude>0.5</target_altitude>
-        <actuator_tau_up>0.04</actuator_tau_up>
-        <actuator_tau_down>0.06</actuator_tau_down>
-        <max_accel>15.0</max_accel>
-        <drag_coeff_lin>0.005</drag_coeff_lin>
-        <drag_coeff_quad>0.001</drag_coeff_quad>
+        <actuator_tau_up>0.0125</actuator_tau_up>
+        <actuator_tau_down>0.025</actuator_tau_down>
+        <max_accel>17.0</max_accel>
+        <drag_coeff_lin>0.003</drag_coeff_lin>
+        <drag_coeff_quad>0.0008</drag_coeff_quad>
         <drag_speed_threshold>0.5</drag_speed_threshold>
         <!-- HIGH sensor noise for IT2-FLS FOU advantage testing -->
         <position_noise_std>0.10</position_noise_std>
@@ -116,11 +116,11 @@
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_2</namespace>
         <target_altitude>0.5</target_altitude>
-        <actuator_tau_up>0.04</actuator_tau_up>
-        <actuator_tau_down>0.06</actuator_tau_down>
-        <max_accel>15.0</max_accel>
-        <drag_coeff_lin>0.005</drag_coeff_lin>
-        <drag_coeff_quad>0.001</drag_coeff_quad>
+        <actuator_tau_up>0.0125</actuator_tau_up>
+        <actuator_tau_down>0.025</actuator_tau_down>
+        <max_accel>17.0</max_accel>
+        <drag_coeff_lin>0.003</drag_coeff_lin>
+        <drag_coeff_quad>0.0008</drag_coeff_quad>
         <drag_speed_threshold>0.5</drag_speed_threshold>
         <!-- HIGH sensor noise for IT2-FLS FOU advantage testing -->
         <position_noise_std>0.10</position_noise_std>
@@ -141,11 +141,11 @@
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_3</namespace>
         <target_altitude>0.5</target_altitude>
-        <actuator_tau_up>0.04</actuator_tau_up>
-        <actuator_tau_down>0.06</actuator_tau_down>
-        <max_accel>15.0</max_accel>
-        <drag_coeff_lin>0.005</drag_coeff_lin>
-        <drag_coeff_quad>0.001</drag_coeff_quad>
+        <actuator_tau_up>0.0125</actuator_tau_up>
+        <actuator_tau_down>0.025</actuator_tau_down>
+        <max_accel>17.0</max_accel>
+        <drag_coeff_lin>0.003</drag_coeff_lin>
+        <drag_coeff_quad>0.0008</drag_coeff_quad>
         <drag_speed_threshold>0.5</drag_speed_threshold>
         <!-- HIGH sensor noise for IT2-FLS FOU advantage testing -->
         <position_noise_std>0.10</position_noise_std>
@@ -161,11 +161,11 @@
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_4</namespace>
         <target_altitude>0.5</target_altitude>
-        <actuator_tau_up>0.04</actuator_tau_up>
-        <actuator_tau_down>0.06</actuator_tau_down>
-        <max_accel>15.0</max_accel>
-        <drag_coeff_lin>0.005</drag_coeff_lin>
-        <drag_coeff_quad>0.001</drag_coeff_quad>
+        <actuator_tau_up>0.0125</actuator_tau_up>
+        <actuator_tau_down>0.025</actuator_tau_down>
+        <max_accel>17.0</max_accel>
+        <drag_coeff_lin>0.003</drag_coeff_lin>
+        <drag_coeff_quad>0.0008</drag_coeff_quad>
         <drag_speed_threshold>0.5</drag_speed_threshold>
         <!-- HIGH sensor noise for IT2-FLS FOU advantage testing -->
         <position_noise_std>0.10</position_noise_std>
@@ -181,11 +181,11 @@
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_5</namespace>
         <target_altitude>0.5</target_altitude>
-        <actuator_tau_up>0.04</actuator_tau_up>
-        <actuator_tau_down>0.06</actuator_tau_down>
-        <max_accel>15.0</max_accel>
-        <drag_coeff_lin>0.005</drag_coeff_lin>
-        <drag_coeff_quad>0.001</drag_coeff_quad>
+        <actuator_tau_up>0.0125</actuator_tau_up>
+        <actuator_tau_down>0.025</actuator_tau_down>
+        <max_accel>17.0</max_accel>
+        <drag_coeff_lin>0.003</drag_coeff_lin>
+        <drag_coeff_quad>0.0008</drag_coeff_quad>
         <drag_speed_threshold>0.5</drag_speed_threshold>
         <!-- HIGH sensor noise for IT2-FLS FOU advantage testing -->
         <position_noise_std>0.10</position_noise_std>
@@ -206,11 +206,11 @@
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_6</namespace>
         <target_altitude>0.5</target_altitude>
-        <actuator_tau_up>0.04</actuator_tau_up>
-        <actuator_tau_down>0.06</actuator_tau_down>
-        <max_accel>15.0</max_accel>
-        <drag_coeff_lin>0.005</drag_coeff_lin>
-        <drag_coeff_quad>0.001</drag_coeff_quad>
+        <actuator_tau_up>0.0125</actuator_tau_up>
+        <actuator_tau_down>0.025</actuator_tau_down>
+        <max_accel>17.0</max_accel>
+        <drag_coeff_lin>0.003</drag_coeff_lin>
+        <drag_coeff_quad>0.0008</drag_coeff_quad>
         <drag_speed_threshold>0.5</drag_speed_threshold>
         <!-- HIGH sensor noise for IT2-FLS FOU advantage testing -->
         <position_noise_std>0.10</position_noise_std>
@@ -226,11 +226,11 @@
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_7</namespace>
         <target_altitude>0.5</target_altitude>
-        <actuator_tau_up>0.04</actuator_tau_up>
-        <actuator_tau_down>0.06</actuator_tau_down>
-        <max_accel>15.0</max_accel>
-        <drag_coeff_lin>0.005</drag_coeff_lin>
-        <drag_coeff_quad>0.001</drag_coeff_quad>
+        <actuator_tau_up>0.0125</actuator_tau_up>
+        <actuator_tau_down>0.025</actuator_tau_down>
+        <max_accel>17.0</max_accel>
+        <drag_coeff_lin>0.003</drag_coeff_lin>
+        <drag_coeff_quad>0.0008</drag_coeff_quad>
         <drag_speed_threshold>0.5</drag_speed_threshold>
         <!-- HIGH sensor noise for IT2-FLS FOU advantage testing -->
         <position_noise_std>0.10</position_noise_std>
@@ -246,11 +246,11 @@
       <plugin name="simple_drone_plugin" filename="libsimple_drone_plugin.so">
         <namespace>agent_8</namespace>
         <target_altitude>0.5</target_altitude>
-        <actuator_tau_up>0.04</actuator_tau_up>
-        <actuator_tau_down>0.06</actuator_tau_down>
-        <max_accel>15.0</max_accel>
-        <drag_coeff_lin>0.005</drag_coeff_lin>
-        <drag_coeff_quad>0.001</drag_coeff_quad>
+        <actuator_tau_up>0.0125</actuator_tau_up>
+        <actuator_tau_down>0.025</actuator_tau_down>
+        <max_accel>17.0</max_accel>
+        <drag_coeff_lin>0.003</drag_coeff_lin>
+        <drag_coeff_quad>0.0008</drag_coeff_quad>
         <drag_speed_threshold>0.5</drag_speed_threshold>
         <!-- HIGH sensor noise for IT2-FLS FOU advantage testing -->
         <position_noise_std>0.10</position_noise_std>
