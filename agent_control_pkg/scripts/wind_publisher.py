@@ -3,13 +3,15 @@
 Wind Publisher Node for Formation Control Simulation
 
 Publishes wind disturbance to /wind/velocity for use by simple_drone_plugin.
-Supports multiple wind profiles: constant, sinusoidal, step, gust, stochastic.
+Supports multiple wind profiles: constant, sinusoidal, step, gust, stochastic,
+vonkarman, dryden (scientifically-grounded turbulence models).
 
 Usage:
     ros2 run agent_control_pkg wind_publisher.py --ros-args -p profile:=sinusoidal -p magnitude:=0.5
 
 Parameters:
-    profile (str): Wind profile type - constant, sinusoidal, step, gust, stochastic (default: sinusoidal)
+    profile (str): Wind profile type - constant, sinusoidal, step, gust, stochastic,
+                   vonkarman, dryden (default: sinusoidal)
     magnitude (float): Base wind magnitude in m/s (default: 0.3)
     direction (float): Wind direction in degrees (0 = +X axis) (default: 0.0)
     frequency (float): Frequency for sinusoidal profile in Hz (default: 0.1)
@@ -24,18 +26,44 @@ Parameters:
     stochastic_gust_mag (float): Random gust magnitude multiplier (default: 2.0)
     stochastic_turbulence (float): High-freq turbulence intensity (default: 0.3)
 
+    # Turbulence model parameters (vonkarman, dryden)
+    turbulence_intensity (float): Turbulence intensity 0.0-1.0, typically 0.10-0.20 (default: 0.10)
+    integral_length_u (float): Longitudinal integral length scale [m] (default: 50.0)
+    integral_length_v (float): Lateral integral length scale [m] (default: 25.0)
+    integral_length_w (float): Vertical integral length scale [m] (default: 10.0)
+    mean_wind_speed (float): Mean wind speed for turbulence model [m/s] (default: 3.0)
+
 Topics Published:
     /wind/velocity (geometry_msgs/Vector3): Wind velocity in m/s
 
 Author: Rosie (ROS2 Systems Engineer Agent)
 Date: 2025-12
+Updated: 2026-01-02 - Added von Kármán and Dryden turbulence models
 """
 
 import math
 import random
+import sys
+import os
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Vector3
+
+# Import turbulence models
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, script_dir)
+try:
+    from wind_turbulence_models import (
+        VonKarmanTurbulence,
+        DrydenTurbulence,
+        TurbulenceParameters,
+        TurbulenceSample
+    )
+    TURBULENCE_MODELS_AVAILABLE = True
+except ImportError as e:
+    TURBULENCE_MODELS_AVAILABLE = False
+    print(f"Warning: Could not import turbulence models: {e}")
+    print("von Kármán and Dryden profiles will not be available.")
 
 
 class WindPublisher(Node):
@@ -62,6 +90,13 @@ class WindPublisher(Node):
         self.declare_parameter('stochastic_turbulence', 0.3)  # turbulence intensity
         self.declare_parameter('random_seed', -1)  # -1 for random seed, else fixed
 
+        # Turbulence model parameters (von Kármán, Dryden)
+        self.declare_parameter('turbulence_intensity', 0.10)  # TI: 0.0-1.0, typically 0.10-0.20
+        self.declare_parameter('integral_length_u', 50.0)  # [m]
+        self.declare_parameter('integral_length_v', 25.0)  # [m]
+        self.declare_parameter('integral_length_w', 10.0)  # [m]
+        self.declare_parameter('mean_wind_speed', 3.0)  # [m/s] for turbulence model
+
         # Get parameters
         self.profile = self.get_parameter('profile').get_parameter_value().string_value
         self.magnitude = self.get_parameter('magnitude').get_parameter_value().double_value
@@ -80,13 +115,62 @@ class WindPublisher(Node):
         self.stoch_turbulence = self.get_parameter('stochastic_turbulence').get_parameter_value().double_value
         random_seed = self.get_parameter('random_seed').get_parameter_value().integer_value
 
+        # Get turbulence model parameters
+        self.turbulence_intensity = self.get_parameter('turbulence_intensity').get_parameter_value().double_value
+        self.integral_length_u = self.get_parameter('integral_length_u').get_parameter_value().double_value
+        self.integral_length_v = self.get_parameter('integral_length_v').get_parameter_value().double_value
+        self.integral_length_w = self.get_parameter('integral_length_w').get_parameter_value().double_value
+        self.mean_wind_speed = self.get_parameter('mean_wind_speed').get_parameter_value().double_value
+
         # Initialize random seed (for reproducibility in experiments)
         if random_seed >= 0:
             random.seed(random_seed)
+            import numpy as np
+            np.random.seed(random_seed)
             self.get_logger().info(f'Using fixed random seed: {random_seed}')
 
         # Convert direction to radians
         self.direction_rad = math.radians(self.direction_deg)
+
+        # Initialize turbulence generators (von Kármán, Dryden)
+        self.turbulence_generator = None
+        if self.profile in ['vonkarman', 'dryden']:
+            if not TURBULENCE_MODELS_AVAILABLE:
+                self.get_logger().error(
+                    f'Turbulence models not available! Cannot use profile: {self.profile}'
+                )
+                raise RuntimeError('wind_turbulence_models.py not found or import failed')
+
+            # Calculate turbulence intensities from TI and mean wind speed
+            sigma_u = self.turbulence_intensity * self.mean_wind_speed
+            sigma_v = sigma_u  # Isotropic assumption
+            sigma_w = sigma_u
+
+            # Create turbulence parameters
+            turb_params = TurbulenceParameters(
+                L_u=self.integral_length_u,
+                L_v=self.integral_length_v,
+                L_w=self.integral_length_w,
+                sigma_u=sigma_u,
+                sigma_v=sigma_v,
+                sigma_w=sigma_w,
+                V=self.mean_wind_speed,
+                dt=1.0 / publish_rate
+            )
+
+            # Initialize appropriate model
+            if self.profile == 'vonkarman':
+                self.turbulence_generator = VonKarmanTurbulence(turb_params)
+                self.get_logger().info(
+                    f'Initialized von Kármán turbulence: TI={self.turbulence_intensity:.2%}, '
+                    f'L_u={self.integral_length_u:.1f}m, V_mean={self.mean_wind_speed:.1f}m/s'
+                )
+            elif self.profile == 'dryden':
+                self.turbulence_generator = DrydenTurbulence(turb_params)
+                self.get_logger().info(
+                    f'Initialized Dryden turbulence: TI={self.turbulence_intensity:.2%}, '
+                    f'L_u={self.integral_length_u:.1f}m, V_mean={self.mean_wind_speed:.1f}m/s'
+                )
 
         # Stochastic state variables
         self.stoch_current_dir = self.direction_rad  # current wandering direction
@@ -271,6 +355,29 @@ class WindPublisher(Node):
             msg.x = current_mag * math.cos(self.stoch_current_dir) + turbulence_x
             msg.y = current_mag * math.sin(self.stoch_current_dir) + turbulence_y
             msg.z = 0.0
+
+            self.wind_pub.publish(msg)
+            return
+
+        elif self.profile in ['vonkarman', 'dryden']:
+            # Scientifically-grounded turbulence models (MIL-F-8785C)
+            # Mean wind + atmospheric turbulence
+            if self.turbulence_generator is None:
+                self.get_logger().error('Turbulence generator not initialized!')
+                return
+
+            # Generate turbulence sample
+            turb_sample = self.turbulence_generator.generate_sample()
+
+            # Mean wind (base magnitude and direction)
+            mean_wind_x = self.magnitude * math.cos(self.direction_rad)
+            mean_wind_y = self.magnitude * math.sin(self.direction_rad)
+
+            # Superpose mean wind + turbulence
+            msg = Vector3()
+            msg.x = mean_wind_x + turb_sample.u
+            msg.y = mean_wind_y + turb_sample.v
+            msg.z = turb_sample.w
 
             self.wind_pub.publish(msg)
             return
