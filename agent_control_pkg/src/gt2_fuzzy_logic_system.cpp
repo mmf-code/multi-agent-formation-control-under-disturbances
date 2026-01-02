@@ -221,16 +221,26 @@ GT2FuzzyLogicSystem::MembershipInterval GT2FuzzyLogicSystem::getAlphaCutMembersh
 
     switch (fs.secondary_shape) {
         case SecondaryMFShape::TRIANGULAR: {
-            // Triangle with peak at center: μ_sec(u) = 1 - 2*|u - 0.5|
-            // At α-cut: u ∈ [0.5 - (1-α)/2, 0.5 + (1-α)/2]
-            double half_width = (1.0 - alpha_level) / 2.0;
-            double center = fs.secondary_peak_location;
-            double u_lower_norm = center - half_width * center;
-            double u_upper_norm = center + half_width * (1.0 - center);
+            // Triangular secondary MF with peak at position p ∈ [0,1]:
+            //   Left side:  μ_sec(u) = u / p           for u ≤ p
+            //   Right side: μ_sec(u) = (1-u) / (1-p)   for u > p
+            //
+            // α-cut (where μ_sec(u) ≥ α) yields:
+            //   u_low  = α × p
+            //   u_high = 1 - α × (1 - p)
+            //
+            // Example: p=0.5, α=0.5 → [0.25, 0.75]
+            // Example: p=0.5, α=1.0 → [0.5, 0.5] (single point at peak)
+            // Example: p=0.5, α=0.0 → [0, 1] (full interval)
+            double p = fs.secondary_peak_location;
+            double u_lower_norm = alpha_level * p;
+            double u_upper_norm = 1.0 - alpha_level * (1.0 - p);
+
+            // Clamp to valid range [0, 1]
             u_lower_norm = std::max(0.0, std::min(1.0, u_lower_norm));
             u_upper_norm = std::max(0.0, std::min(1.0, u_upper_norm));
 
-            // Map back to actual membership interval
+            // Map from normalized [0,1] to actual membership interval [lower_mu, upper_mu]
             double interval_width = upper_mu - lower_mu;
             alpha_lower = lower_mu + u_lower_norm * interval_width;
             alpha_upper = lower_mu + u_upper_norm * interval_width;

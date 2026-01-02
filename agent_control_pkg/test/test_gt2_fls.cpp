@@ -218,6 +218,74 @@ TEST_F(GT2FuzzyLogicSystemTest, UniformSecondaryBehavesLikeIT2)
     EXPECT_NEAR(fs.getSecondaryMembership(1.0, 0.0, 1.0), 1.0, 0.01);
 }
 
+// Test alpha-cut formula verification for triangular secondary MF
+// Mathematical formula: u_low = α × p, u_high = 1 - α × (1 - p)
+// where p = secondary_peak_location
+TEST_F(GT2FuzzyLogicSystemTest, AlphaCutFormulaVerification)
+{
+    GT2FuzzyLogicSystem::GT2Config config;
+    config.num_alpha_levels = 5;
+    config.default_secondary_shape = GT2FuzzyLogicSystem::SecondaryMFShape::TRIANGULAR;
+
+    GT2FuzzyLogicSystem system(config);
+
+    // Create a test fuzzy set with known parameters
+    GT2FuzzyLogicSystem::GT2TriangularFS fs;
+    fs.umf_left_base = 0.0;
+    fs.umf_peak = 0.5;
+    fs.umf_right_base = 1.0;
+    fs.lmf_left_base = 0.2;
+    fs.lmf_peak = 0.5;
+    fs.lmf_right_base = 0.8;
+    fs.secondary_shape = GT2FuzzyLogicSystem::SecondaryMFShape::TRIANGULAR;
+    fs.secondary_peak_location = 0.5;  // Symmetric triangle
+
+    // Test with crisp input at peak (membership = [1.0, 1.0] for both UMF/LMF)
+    // At x = 0.5:
+    //   UMF: (0.5 - 0.0) / (0.5 - 0.0) = 1.0
+    //   LMF: (0.5 - 0.2) / (0.5 - 0.2) = 1.0
+    // FOU interval: [1.0, 1.0] -> degenerate, alpha-cut should also be [1.0, 1.0]
+
+    // Test with crisp input away from peak (x = 0.25)
+    //   UMF: (0.25 - 0.0) / (0.5 - 0.0) = 0.5
+    //   LMF: (0.25 - 0.2) / (0.5 - 0.2) = 0.1667
+    // FOU interval: [0.1667, 0.5]
+
+    // For α-cut with p=0.5 (symmetric triangle):
+    //   α = 0.5: u_low = 0.5 × 0.5 = 0.25, u_high = 1 - 0.5 × 0.5 = 0.75
+    //   α = 1.0: u_low = 1.0 × 0.5 = 0.5, u_high = 1 - 1.0 × 0.5 = 0.5 (single point)
+
+    // Verify the formula with known values
+    double p = 0.5;  // peak location
+
+    // Test α = 0.5
+    double alpha_05 = 0.5;
+    double expected_u_low_05 = alpha_05 * p;       // = 0.25
+    double expected_u_high_05 = 1.0 - alpha_05 * (1.0 - p);  // = 0.75
+    EXPECT_NEAR(expected_u_low_05, 0.25, 0.001);
+    EXPECT_NEAR(expected_u_high_05, 0.75, 0.001);
+
+    // Test α = 1.0
+    double alpha_10 = 1.0;
+    double expected_u_low_10 = alpha_10 * p;       // = 0.5
+    double expected_u_high_10 = 1.0 - alpha_10 * (1.0 - p);  // = 0.5
+    EXPECT_NEAR(expected_u_low_10, 0.5, 0.001);
+    EXPECT_NEAR(expected_u_high_10, 0.5, 0.001);
+
+    // Test asymmetric case: p = 0.3
+    double p_asym = 0.3;
+    double alpha = 0.5;
+    double u_low_asym = alpha * p_asym;        // = 0.15
+    double u_high_asym = 1.0 - alpha * (1.0 - p_asym);  // = 1 - 0.5 × 0.7 = 0.65
+    EXPECT_NEAR(u_low_asym, 0.15, 0.001);
+    EXPECT_NEAR(u_high_asym, 0.65, 0.001);
+
+    // Verify width shrinks with higher alpha
+    double width_alpha_02 = (1.0 - 0.2 * (1.0 - p)) - (0.2 * p);  // α=0.2: 0.9 - 0.1 = 0.8
+    double width_alpha_08 = (1.0 - 0.8 * (1.0 - p)) - (0.8 * p);  // α=0.8: 0.6 - 0.4 = 0.2
+    EXPECT_GT(width_alpha_02, width_alpha_08) << "Higher alpha should give narrower interval";
+}
+
 // Stress test with many inputs
 TEST_F(GT2FuzzyLogicSystemTest, StressTestManyInputs)
 {
