@@ -18,7 +18,7 @@
     # Start at spawn centroid along X for step-wise trajectory.
     formation.center.x: -8.5
     formation.center.y: 0.0
-    formation.center.z: 3.0  # EQUAL HEIGHT for fair wind comparison
+    formation.center.z: 0.5  # EQUAL HEIGHT for fair wind comparison
 
     # Formation orientation (degrees)
     formation.yaw_deg: 0.0  # LOCKED - no rotation
@@ -54,4 +54,4 @@
 
     # Y/Z stay on the same altitude lane
     waypoints.y: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    waypoints.z: [3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0]
+    waypoints.z: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]

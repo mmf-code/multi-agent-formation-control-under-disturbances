@@ -18,7 +18,7 @@
     # Start at spawn centroid along X for step-wise trajectory.
     formation.center.x: -13.5
     formation.center.y: -15.0  # FAR LEFT - prevent inter-group collision
-    formation.center.z: 3.0  # EQUAL HEIGHT for fair wind comparison
+    formation.center.z: 0.5  # EQUAL HEIGHT for fair wind comparison
 
     # Formation orientation (degrees)
     formation.yaw_deg: 0.0  # LOCKED - no rotation to prevent position swapping
@@ -58,4 +58,4 @@
 
     # Y/Z remain on the same lane for all phases
     waypoints.y: [-15.0, -15.0, -15.0, -15.0, -15.0, -15.0, -15.0, -15.0]
-    waypoints.z: [3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0]
+    waypoints.z: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
