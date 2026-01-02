@@ -43,19 +43,59 @@
     motion.start_x: 0.0
     motion.end_x: 0.0
 
-    # WAYPOINT-BASED 4-PHASE TRAJECTORY (≈110s demo with settle gaps)
+    # WAYPOINT-BASED 16-WAYPOINT TRAJECTORY WITH Z-AXIS VARIATION (≈220s extended mission)
+    # Pattern: move + short hold, with altitude changes for comprehensive controller testing
     waypoints.enable: true
 
-    # Waypoint segment end times (seconds). Pattern: move ~22s, hold ~5s.
-    # Segments: [0-22] move to P1, [22-27] hold P1,
-    #           [27-49] move to P2, [49-54] hold P2,
-    #           [54-76] move to P3, [76-81] hold P3,
-    #           [81-103] move to P4, [103-110] hold P4.
-    waypoints.times: [22.0, 27.0, 49.0, 54.0, 76.0, 81.0, 103.0, 110.0]
+    # Waypoint segment end times (seconds)
+    # Pattern: move 15-20s, hold 3-5s for settling time measurement
+    # WP1-4: Initial triangle formation (low altitude)
+    # WP5-8: Line transition with altitude climb to 1.5m
+    # WP9-12: V-shape formation at varied altitude
+    # WP13-16: Return path with altitude descent back to 0.5m
+    waypoints.times: [
+      20.0, 23.0,   # WP1-2: Initial approach
+      38.0, 41.0,   # WP3-4: Continue triangle
+      61.0, 66.0,   # WP5-6: Begin altitude climb
+      86.0, 89.0,   # WP7-8: High altitude cruise
+      109.0, 112.0, # WP9-10: V-shape transition
+      132.0, 135.0, # WP11-12: Continue V-shape
+      155.0, 158.0, # WP13-14: Begin descent
+      183.0, 191.0  # WP15-16: Return to base
+    ]
 
-    # X coordinates for each segment (P1..P4) - much longer travel to expose drift
-    waypoints.x: [-8.0, -8.0, 4.0, 4.0, 12.0, 12.0, 20.0, 20.0]
+    # X coordinates - extended trajectory with forward-backward pattern
+    waypoints.x: [
+      -8.0, -8.0,   # WP1-2: Start position
+      -4.0, -4.0,   # WP3-4: Move forward
+      0.0, 0.0,     # WP5-6: Center (altitude climb starts)
+      4.0, 4.0,     # WP7-8: Forward at high altitude
+      8.0, 8.0,     # WP9-10: Further forward
+      12.0, 12.0,   # WP11-12: Maximum extent
+      8.0, 8.0,     # WP13-14: Return path begins
+      4.0, 0.0      # WP15-16: Final return to near-origin
+    ]
 
-    # Y/Z remain on the same lane for all phases
-    waypoints.y: [-15.0, -15.0, -15.0, -15.0, -15.0, -15.0, -15.0, -15.0]
-    waypoints.z: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+    # Y coordinates - maintain left lane separation for GROUP 0
+    waypoints.y: [
+      -15.0, -15.0, # WP1-2
+      -15.0, -15.0, # WP3-4
+      -15.0, -15.0, # WP5-6
+      -10.0, -10.0, # WP7-8: Slight Y shift at high altitude
+      -5.0, -5.0,   # WP9-10: Continue Y progression
+      0.0, 0.0,     # WP11-12: Cross center
+      5.0, 5.0,     # WP13-14: Return path
+      10.0, 0.0     # WP15-16: Final approach to origin
+    ]
+
+    # Z coordinates - CRITICAL Z-AXIS VARIATION for altitude change testing
+    waypoints.z: [
+      0.5, 0.5,     # WP1-2: Low altitude start
+      0.8, 0.8,     # WP3-4: Slight climb
+      1.5, 1.5,     # WP5-6: HIGH ALTITUDE (1.5m)
+      1.5, 1.5,     # WP7-8: Maintain high altitude
+      1.2, 1.2,     # WP9-10: Begin gradual descent
+      0.8, 0.8,     # WP11-12: Continue descent
+      0.5, 0.5,     # WP13-14: Back to low altitude
+      0.5, 0.5      # WP15-16: Maintain low for landing prep
+    ]

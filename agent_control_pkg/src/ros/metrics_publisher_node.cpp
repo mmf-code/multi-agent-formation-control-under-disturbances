@@ -179,23 +179,42 @@ private:
     current_target_ = msg;
     has_target_ = true;
 
-    // Detect target change (new setpoint)
+    // First target received - initialize mission metrics
+    if (!first_target_received_)
+    {
+      resetMissionMetrics();
+      first_target_received_ = true;
+      RCLCPP_INFO(this->get_logger(), "Mission started - mission-wide metrics tracking enabled");
+    }
+
+    // Detect target change (new setpoint/waypoint)
     if (!prev_target_ ||
         std::abs(msg->pose.position.x - prev_target_->pose.position.x) > 0.01 ||
         std::abs(msg->pose.position.y - prev_target_->pose.position.y) > 0.01 ||
         std::abs(msg->pose.position.z - prev_target_->pose.position.z) > 0.01)
     {
-      // Reset metrics on new target
-      resetMetrics();
+      // Reset per-waypoint metrics only (mission-wide metrics continue accumulating)
+      resetWaypointMetrics();
+      waypoint_count_++;
       prev_target_ = msg;
+
+      RCLCPP_INFO(
+        this->get_logger(),
+        "New waypoint #%d: (%.2f, %.2f, %.2f) - per-waypoint metrics reset",
+        waypoint_count_, msg->pose.position.x, msg->pose.position.y, msg->pose.position.z
+      );
     }
   }
 
-  void resetMetrics()
+  /**
+   * @brief Reset per-waypoint metrics (called at each waypoint transition)
+   */
+  void resetWaypointMetrics()
   {
     error_history_ = CircularBuffer();
     error_history_.set_capacity(this->get_parameter("history_size").as_int());
 
+    // Per-waypoint metrics
     iae_x_ = 0.0;
     iae_y_ = 0.0;
     itae_x_ = 0.0;
@@ -205,7 +224,22 @@ private:
     settling_time_ = -1.0;
     start_time_ = this->now();
 
-    RCLCPP_DEBUG(this->get_logger(), "Metrics reset - new target detected");
+    RCLCPP_DEBUG(this->get_logger(), "Per-waypoint metrics reset");
+  }
+
+  /**
+   * @brief Reset mission-wide cumulative metrics (called ONLY at mission start)
+   */
+  void resetMissionMetrics()
+  {
+    mission_rmse_sum_ = 0.0;
+    mission_itae_x_ = 0.0;
+    mission_itae_y_ = 0.0;
+    mission_sample_count_ = 0;
+    waypoint_count_ = 0;
+    mission_start_time_ = this->now();
+
+    RCLCPP_INFO(this->get_logger(), "Mission-wide metrics initialized");
   }
 
   void updateMetrics()
@@ -217,6 +251,7 @@ private:
 
     const auto now = this->now();
     const double elapsed = (now - start_time_).seconds();
+    const double mission_elapsed = (now - mission_start_time_).seconds();
 
     // Compute tracking errors
     const double ex = current_odom_->pose.pose.position.x - current_target_->pose.position.x;
@@ -242,11 +277,20 @@ private:
       dt = std::clamp(dt, 0.001, 0.1);  // Safety bounds
     }
 
-    // Update integral metrics
+    // Update PER-WAYPOINT integral metrics
     iae_x_ += std::abs(ex) * dt;
     iae_y_ += std::abs(ey) * dt;
     itae_x_ += elapsed * std::abs(ex) * dt;
     itae_y_ += elapsed * std::abs(ey) * dt;
+
+    // Update MISSION-WIDE cumulative metrics (never reset)
+    if (first_target_received_)
+    {
+      mission_rmse_sum_ += error_mag;  // Sum for averaging later
+      mission_itae_x_ += mission_elapsed * std::abs(ex) * dt;
+      mission_itae_y_ += mission_elapsed * std::abs(ey) * dt;
+      mission_sample_count_++;
+    }
 
     // Track overshoot (max error magnitude after initial approach)
     if (elapsed > 0.5)  // Ignore first 0.5s (initial transient)
@@ -353,6 +397,25 @@ private:
     msg.max_overshoot_x = max_overshoot_x_;
     msg.max_overshoot_y = max_overshoot_y_;
 
+    // Mission-wide cumulative metrics
+    if (first_target_received_ && mission_sample_count_ > 0)
+    {
+      msg.mission_rmse = mission_rmse_sum_ / mission_sample_count_;
+      msg.mission_itae_x = mission_itae_x_;
+      msg.mission_itae_y = mission_itae_y_;
+      msg.mission_elapsed_time = (this->now() - mission_start_time_).seconds();
+      msg.waypoint_count = waypoint_count_;
+    }
+    else
+    {
+      // No mission data yet
+      msg.mission_rmse = 0.0;
+      msg.mission_itae_x = 0.0;
+      msg.mission_itae_y = 0.0;
+      msg.mission_elapsed_time = 0.0;
+      msg.waypoint_count = 0;
+    }
+
     metrics_pub_->publish(msg);
 
     // Optionally publish group-level metrics (windowed RMSE + IAE) for comparison
@@ -420,12 +483,26 @@ private:
     static int log_counter = 0;
     if (++log_counter % 50 == 0)  // Every 5 seconds at 10Hz
     {
-      RCLCPP_INFO(
-        this->get_logger(),
-        "Metrics: error=%.3fm, RMSE=%.3fm, IAE=(%.2f,%.2f), settling_time=%.2fs, settled=%s",
-        current_error, rmse_total, iae_x_, iae_y_, settling_time_,
-        is_settled ? "YES" : "NO"
-      );
+      if (first_target_received_ && mission_sample_count_ > 0)
+      {
+        const double mission_rmse = mission_rmse_sum_ / mission_sample_count_;
+        RCLCPP_INFO(
+          this->get_logger(),
+          "Metrics | WP #%d: error=%.3fm, RMSE=%.3fm, IAE=(%.2f,%.2f), settling=%.2fs | "
+          "Mission: RMSE=%.3fm, ITAE=(%.2f,%.2f), elapsed=%.1fs",
+          waypoint_count_, current_error, rmse_total, iae_x_, iae_y_, settling_time_,
+          mission_rmse, mission_itae_x_, mission_itae_y_, (this->now() - mission_start_time_).seconds()
+        );
+      }
+      else
+      {
+        RCLCPP_INFO(
+          this->get_logger(),
+          "Metrics: error=%.3fm, RMSE=%.3fm, IAE=(%.2f,%.2f), settling_time=%.2fs, settled=%s",
+          current_error, rmse_total, iae_x_, iae_y_, settling_time_,
+          is_settled ? "YES" : "NO"
+        );
+      }
     }
   }
 
@@ -457,7 +534,7 @@ private:
   bool has_odom_ = false;
   bool has_target_ = false;
 
-  // Metrics
+  // Metrics - Per-waypoint (reset at each waypoint)
   CircularBuffer error_history_;
   double iae_x_ = 0.0;
   double iae_y_ = 0.0;
@@ -466,7 +543,16 @@ private:
   double max_overshoot_x_ = 0.0;
   double max_overshoot_y_ = 0.0;
   double settling_time_ = -1.0;
-  rclcpp::Time start_time_;
+  rclcpp::Time start_time_;  // Waypoint start time
+
+  // Metrics - Mission-wide cumulative (NEVER reset, except at mission start)
+  double mission_rmse_sum_ = 0.0;
+  double mission_itae_x_ = 0.0;
+  double mission_itae_y_ = 0.0;
+  int mission_sample_count_ = 0;
+  int waypoint_count_ = 0;
+  rclcpp::Time mission_start_time_;
+  bool first_target_received_ = false;
 
   // Parameters
   double settled_pos_threshold_{0.10};

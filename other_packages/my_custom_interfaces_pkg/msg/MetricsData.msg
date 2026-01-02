@@ -14,20 +14,27 @@ float64 error_y
 float64 error_z
 float64 error_magnitude
 
-# RMSE (Root Mean Square Error)
+# RMSE (Root Mean Square Error) - per-waypoint
 float64 rmse_x
 float64 rmse_y
 float64 rmse_z
 float64 rmse_total
 
-# Integral metrics
+# Integral metrics - per-waypoint
 float64 iae_x
 float64 iae_y
 float64 itae_x
 float64 itae_y
 
-# Response characteristics
+# Response characteristics - per-waypoint
 float64 settling_time
 bool is_settled
 float64 max_overshoot_x
 float64 max_overshoot_y
+
+# Mission-wide cumulative metrics (never reset, accumulated across all waypoints)
+float64 mission_rmse            # Mission-wide average RMSE [m]
+float64 mission_itae_x          # Mission-wide ITAE for X axis [m·s]
+float64 mission_itae_y          # Mission-wide ITAE for Y axis [m·s]
+float64 mission_elapsed_time    # Total mission elapsed time [s]
+int32 waypoint_count            # Number of waypoints visited
