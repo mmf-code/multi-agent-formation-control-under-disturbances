@@ -1,0 +1,99 @@
+/formation_3/formation_coordinator_group3:
+  ros__parameters:
+    # GROUP 3: PID+GT2-Fuzzy Controllers (General Type-2 Fuzzy Logic)
+    # Agents: agent_9, agent_10, agent_11
+    # Color: Lime, Teal, Brown
+    # Purpose: Compare GT2-FLS vs IT2-FLS performance under wind disturbance
+    agent_ids:
+      - agent_9
+      - agent_10
+      - agent_11
+
+    # Formation shape: triangle
+    formation.shape: triangle
+
+    # Spacing between agents (meters) - INCREASED for collision avoidance
+    formation.spacing: 3.0  # Optimal spacing for triangle formation
+
+    # Formation center position (initial target for group centroid)
+    # Start at spawn centroid along X for step-wise trajectory.
+    formation.center.x: 1.5
+    formation.center.y: 30.0  # FAR RIGHT (new lane) - prevent inter-group collision
+    formation.center.z: 0.5  # EQUAL HEIGHT for fair wind comparison
+
+    # Formation orientation (degrees)
+    formation.yaw_deg: 0.0  # LOCKED - no rotation
+
+    # Reference frame
+    frame_id: odom
+
+    # Update rate (Hz)
+    publish_frequency_hz: 10.0
+
+    # PSO parameters for formation optimization
+    pso.enable: true  # ENABLED - optimize spacing only
+    pso.num_particles: 20
+    pso.max_iterations: 50
+    pso.inertia_weight: 0.7
+    pso.cognitive_coeff: 1.5
+    pso.social_coeff: 1.5
+
+    # Legacy linear motion along X (DISABLED - using waypoints instead)
+    motion.enable: false
+    motion.vx: 0.0
+    motion.start_x: 0.0
+    motion.end_x: 0.0
+
+    # WAYPOINT-BASED 16-WAYPOINT TRAJECTORY WITH Z-AXIS VARIATION (≈220s extended mission)
+    # Same timing as Groups 0-2, but far right lane (Y≈+30.0) for separation
+    # This group tests GT2 fuzzy controller - compare with Group 0 (IT2 fuzzy)
+    waypoints.enable: true
+
+    # Waypoint segment end times (seconds) - synchronized with Groups 0-2
+    waypoints.times: [
+      20.0, 23.0,   # WP1-2: Initial approach
+      38.0, 41.0,   # WP3-4: Continue triangle
+      61.0, 66.0,   # WP5-6: Begin altitude climb
+      86.0, 89.0,   # WP7-8: High altitude cruise
+      109.0, 112.0, # WP9-10: V-shape transition
+      132.0, 135.0, # WP11-12: Continue V-shape
+      155.0, 158.0, # WP13-14: Begin descent
+      183.0, 191.0  # WP15-16: Return to base
+    ]
+
+    # X coordinates - same pattern as Groups 0-2
+    waypoints.x: [
+      -8.0, -8.0,   # WP1-2: Start position
+      -4.0, -4.0,   # WP3-4: Move forward
+      0.0, 0.0,     # WP5-6: Center (altitude climb starts)
+      4.0, 4.0,     # WP7-8: Forward at high altitude
+      8.0, 8.0,     # WP9-10: Further forward
+      12.0, 12.0,   # WP11-12: Maximum extent
+      8.0, 8.0,     # WP13-14: Return path begins
+      4.0, 0.0      # WP15-16: Final return to near-origin
+    ]
+
+    # Y coordinates - FAR RIGHT LANE (GROUP 3: GT2-Fuzzy controllers)
+    # Separate from other groups to ensure fair wind comparison
+    waypoints.y: [
+      30.0, 30.0,   # WP1-2
+      30.0, 30.0,   # WP3-4
+      30.0, 30.0,   # WP5-6
+      25.0, 25.0,   # WP7-8: Converge toward center at high altitude
+      20.0, 20.0,   # WP9-10: Continue Y progression
+      15.0, 15.0,   # WP11-12: Cross into Group 2 lane
+      10.0, 10.0,   # WP13-14: Return path
+      5.0, 0.0      # WP15-16: Final approach to origin
+    ]
+
+    # Z coordinates - SAME as Groups 0-2 for fair altitude comparison
+    waypoints.z: [
+      0.5, 0.5,     # WP1-2: Low altitude start
+      0.8, 0.8,     # WP3-4: Slight climb
+      1.5, 1.5,     # WP5-6: HIGH ALTITUDE (1.5m)
+      1.5, 1.5,     # WP7-8: Maintain high altitude
+      1.2, 1.2,     # WP9-10: Begin gradual descent
+      0.8, 0.8,     # WP11-12: Continue descent
+      0.5, 0.5,     # WP13-14: Back to low altitude
+      0.5, 0.5      # WP15-16: Maintain low for landing prep
+    ]

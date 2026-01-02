@@ -2,18 +2,20 @@
 """
 Formation Comparison Demo - Launch File
 
-This launch file creates a comparison demonstration with 3 formation groups:
-  - Group 0: 3x PID+Fuzzy controllers (agent_0,1,2) - Best wind handling expected
+This launch file creates a comparison demonstration with 4 formation groups:
+  - Group 0: 3x PID+IT2-Fuzzy controllers (agent_0,1,2) - IT2-FLS wind handling
   - Group 1: 3x PD controllers (agent_3,4,5) - Fastest settling expected
   - Group 2: 3x PID controllers (agent_6,7,8) - Balanced performance expected
+  - Group 3: 3x PID+GT2-Fuzzy controllers (agent_9,10,11) - GT2-FLS comparison
 
 Each group maintains triangle formation while moving from (-10, Y, 0) to (5, Y, 0)
 Wind disturbance is active to test controller robustness.
 
 Formation Targets:
-  - Group 0 (PID+Fuzzy): (5, -4, 0) - Bottom lane
-  - Group 1 (PD):        (5,  0, 0) - Middle lane
-  - Group 2 (PID):       (5,  4, 0) - Top lane
+  - Group 0 (PID+IT2-Fuzzy): (5, -15, 0) - Far left lane
+  - Group 1 (PD):            (5,   0, 0) - Center lane
+  - Group 2 (PID):           (5,  15, 0) - Right lane
+  - Group 3 (PID+GT2-Fuzzy): (5,  30, 0) - Far right lane
 
 Usage:
     # Full demo with visualizations
@@ -22,8 +24,11 @@ Usage:
     # Headless mode (maximum FPS)
     ros2 launch agent_control_pkg formation_comparison_demo.launch.py gazebo_gui:=false rviz:=false
 
+    # 12 drones comparison (requires 12-drone world file)
+    ros2 launch agent_control_pkg formation_comparison_demo.launch.py world_file:=crazyflie_formation_12.world
+
 Author: Multi-Agent Formation Control Research Team
-Date: 2025-10-17
+Date: 2025-10-17, Updated: 2026-01-03 (Added GT2-FLS Group 3)
 """
 
 import os
@@ -163,6 +168,45 @@ def generate_launch_description():
         description='Mixing gain k_fuzzy for PID+Fuzzy group (Group 0). Optimized via tuning: 0.35 provides Fuzzy<PID advantage.'
     )
 
+    # GT2 Fuzzy specific arguments (Group 3)
+    gt2_num_alpha_levels = LaunchConfiguration('gt2_num_alpha_levels')
+    gt2_secondary_shape = LaunchConfiguration('gt2_secondary_shape')
+    gt2_group_kp = LaunchConfiguration('gt2_group_kp')
+    gt2_group_ki = LaunchConfiguration('gt2_group_ki')
+    gt2_group_kd = LaunchConfiguration('gt2_group_kd')
+    gt2_group_k_fuzzy = LaunchConfiguration('gt2_group_k_fuzzy')
+
+    declare_gt2_num_alpha_levels = DeclareLaunchArgument(
+        'gt2_num_alpha_levels',
+        default_value='5',
+        description='Number of alpha-planes for GT2-FLS (Group 3: agents 9-11).'
+    )
+    declare_gt2_secondary_shape = DeclareLaunchArgument(
+        'gt2_secondary_shape',
+        default_value='triangular',
+        description='Secondary MF shape for GT2-FLS: triangular, gaussian, trapezoidal, uniform.'
+    )
+    declare_gt2_group_kp = DeclareLaunchArgument(
+        'gt2_group_kp',
+        default_value='3.501',
+        description='Kp for PID+GT2-Fuzzy group (Group 3: agents 9-11).'
+    )
+    declare_gt2_group_ki = DeclareLaunchArgument(
+        'gt2_group_ki',
+        default_value='1.946',
+        description='Ki for PID+GT2-Fuzzy group (Group 3: agents 9-11).'
+    )
+    declare_gt2_group_kd = DeclareLaunchArgument(
+        'gt2_group_kd',
+        default_value='3.608',
+        description='Kd for PID+GT2-Fuzzy group (Group 3: agents 9-11).'
+    )
+    declare_gt2_group_k_fuzzy = DeclareLaunchArgument(
+        'gt2_group_k_fuzzy',
+        default_value='0.35',
+        description='Mixing gain k_fuzzy for PID+GT2-Fuzzy group (Group 3).'
+    )
+
     # Wind + metrics launch arguments
     declare_wind_source_topic = DeclareLaunchArgument(
         'wind_source_topic',
@@ -271,12 +315,14 @@ def generate_launch_description():
     }
 
     # GROUP 1: PD (agent_3, agent_4, agent_5)
+    # NOTE: Pure PD has NO integral action - vulnerable to wind disturbances
+    # Increased Kp for better disturbance rejection (thesis comparison point)
     pd_controller_params = {
         'controller_type': 'pd',
         'dt': 0.005,
-        'pid.kp': 3.50,
-        'pid.ki': 0.0,
-        'pid.kd': 3.61,
+        'pid.kp': 5.00,  # Increased from 3.50 for better wind rejection
+        'pid.ki': 0.0,   # Pure PD - no integral action (thesis comparison)
+        'pid.kd': 4.50,  # Increased from 3.61 for better damping
         'pid.enable_derivative_filter': True,
         'fuzzy.enable': False,
         'wind_source_topic': wind_source_topic,
@@ -315,23 +361,63 @@ def generate_launch_description():
         'output_limits.y.max': 10.0,
     }
 
-    # Map agent IDs to controller params
+    # GROUP 3: PID+GT2-Fuzzy (agent_9, agent_10, agent_11)
+    # General Type-2 Fuzzy Logic System with alpha-plane decomposition
+    # Compare with Group 0 (IT2-FLS) under same wind conditions
+    gt2_fuzzy_controller_params = {
+        'controller_type': 'pid_gt2_fuzzy',  # NEW: GT2 hybrid controller
+        'dt': 0.005,
+        # PID baseline for hybrid controller (same as IT2 group for fair comparison)
+        'pid.kp': gt2_group_kp,
+        'pid.ki': gt2_group_ki,
+        'pid.kd': gt2_group_kd,
+        'fuzzy.enable': True,
+        'fuzzy.include_wind': True,
+        'fuzzy.wind_scalar': 1.0,
+        'mix.k_pid': 1.0,
+        'mix.k_fuzzy': gt2_group_k_fuzzy,
+        # GT2 specific parameters
+        'gt2.num_alpha_levels': gt2_num_alpha_levels,
+        'gt2.secondary_shape': gt2_secondary_shape,
+        # Wind handling
+        'wind_source_topic': wind_source_topic,
+        'wind_source_type': wind_source_type,
+        'feedforward.enable_wind': False,
+        'feedforward.k_wind': 0.0,
+        'use_sim_time': use_sim_time,
+        'output_limits.x.min': -10.0,
+        'output_limits.x.max': 10.0,
+        'output_limits.y.min': -10.0,
+        'output_limits.y.max': 10.0,
+    }
+
+    # Map agent IDs to controller params (12 agents, 4 groups)
     agent_controller_map = {
+        # Group 0: PID+IT2-Fuzzy (agents 0-2)
         0: fuzzy_controller_params,
         1: fuzzy_controller_params,
         2: fuzzy_controller_params,
+        # Group 1: PD (agents 3-5)
         3: pd_controller_params,
         4: pd_controller_params,
         5: pd_controller_params,
+        # Group 2: PID (agents 6-8)
         6: pid_controller_params,
         7: pid_controller_params,
         8: pid_controller_params,
+        # Group 3: PID+GT2-Fuzzy (agents 9-11)
+        9: gt2_fuzzy_controller_params,
+        10: gt2_fuzzy_controller_params,
+        11: gt2_fuzzy_controller_params,
     }
 
     # ===== Create Agent Controller Nodes =====
     agent_nodes = []
 
-    for i in range(9):
+    # Number of agents: 12 for 4-group comparison (or 9 for 3-group legacy mode)
+    num_agents = 12 if len(agent_controller_map) >= 12 else 9
+
+    for i in range(num_agents):
         agent_namespace = f'agent_{i}'
 
         # Get controller params for this agent
@@ -449,6 +535,28 @@ def generate_launch_description():
         )
     ])
 
+    # Group 3 Formation Coordinator (PID+GT2-Fuzzy)
+    formation_config_group3 = os.path.join(
+        pkg_formation_coordinator,
+        'config',
+        'formation_group3_gt2fuzzy.yaml'
+    )
+    formation_coordinator_group3 = GroupAction([
+        PushRosNamespace('formation_3'),
+        Node(
+            package='formation_coordinator_pkg',
+            executable='formation_coordinator_node',
+            name='formation_coordinator_group3',
+            output='screen',
+            # Force node name and namespace using explicit arguments
+            arguments=['--ros-args', '-r', '__node:=formation_coordinator_group3', '-r', '__ns:=/formation_3'],
+            parameters=[
+                formation_config_group3,
+                {'use_sim_time': use_sim_time}
+            ]
+        )
+    ])
+
     # ===== RViz Visualization =====
     rviz_node = Node(
         package='rviz2',
@@ -485,6 +593,14 @@ def generate_launch_description():
         declare_fuzzy_group_ki,
         declare_fuzzy_group_kd,
         declare_fuzzy_group_k_fuzzy,
+        # GT2-FLS specific arguments
+        declare_gt2_num_alpha_levels,
+        declare_gt2_secondary_shape,
+        declare_gt2_group_kp,
+        declare_gt2_group_ki,
+        declare_gt2_group_kd,
+        declare_gt2_group_k_fuzzy,
+        # Wind + metrics arguments
         declare_wind_source_topic,
         declare_wind_source_type,
         declare_settled_pos_threshold,
@@ -498,13 +614,14 @@ def generate_launch_description():
         # Wind disturbance
         wind_publisher,
 
-        # Agent controllers (9 agents)
+        # Agent controllers (12 agents for 4-group comparison)
         *agent_nodes,
 
-        # Formation coordinators (3 groups)
+        # Formation coordinators (4 groups)
         formation_coordinator_group0,
         formation_coordinator_group1,
         formation_coordinator_group2,
+        formation_coordinator_group3,  # NEW: GT2-FLS group
 
         # Visualization
         rviz_node,

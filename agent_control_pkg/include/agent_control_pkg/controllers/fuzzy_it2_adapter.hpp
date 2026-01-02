@@ -79,8 +79,7 @@ private:
   bool first_{true};
 };
 
-// Backward compatibility alias
-using FuzzyGT2Adapter = FuzzyIT2Adapter;
+// NOTE: FuzzyGT2Adapter is now a separate class in fuzzy_gt2_adapter.hpp
 
 } // namespace agent_control_pkg::controllers
 

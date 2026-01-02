@@ -96,6 +96,8 @@ target_include_directories(pid_logic_lib PUBLIC
 
 add_library(fuzzy_logic_lib
   src/it2_fuzzy_logic_system.cpp
+  src/gt2_fuzzy_logic_system.cpp
+  src/fuzzy_system_factory.cpp
 )
 target_include_directories(fuzzy_logic_lib PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -104,6 +106,7 @@ target_include_directories(fuzzy_logic_lib PUBLIC
 
 add_library(controller_adapters_lib
   src/controllers/fuzzy_it2_adapter.cpp
+  src/controllers/fuzzy_gt2_adapter.cpp
 )
 target_include_directories(controller_adapters_lib PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -214,6 +217,30 @@ if(BUILD_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
     target_link_libraries(test_it2_fls
+      fuzzy_logic_lib
+    )
+  endif()
+
+  ament_add_gtest(test_gt2_fls
+    test/test_gt2_fls.cpp
+  )
+  if(TARGET test_gt2_fls)
+    target_include_directories(test_gt2_fls PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
+    target_link_libraries(test_gt2_fls
+      fuzzy_logic_lib
+    )
+  endif()
+
+  ament_add_gtest(test_fuzzy_comparison
+    test/test_fuzzy_comparison.cpp
+  )
+  if(TARGET test_fuzzy_comparison)
+    target_include_directories(test_fuzzy_comparison PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
+    target_link_libraries(test_fuzzy_comparison
       fuzzy_logic_lib
     )
   endif()

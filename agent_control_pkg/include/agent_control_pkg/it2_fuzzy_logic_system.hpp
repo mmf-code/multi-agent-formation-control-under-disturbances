@@ -198,8 +198,8 @@ private:
     double defuzzify(const std::pair<double, double>& type_reduced_interval);
 };
 
-// Backward compatibility alias (deprecated, will be removed)
-using GT2FuzzyLogicSystem = IT2FuzzyLogicSystem;
+// NOTE: GT2FuzzyLogicSystem is now a separate class in gt2_fuzzy_logic_system.hpp
+// The old alias has been removed to avoid conflicts.
 
 } // namespace agent_control_pkg
 

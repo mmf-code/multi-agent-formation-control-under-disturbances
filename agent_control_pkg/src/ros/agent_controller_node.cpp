@@ -1,4 +1,5 @@
 #include "agent_control_pkg/agent_controller_node.hpp"
+#include "agent_control_pkg/gt2_fuzzy_logic_system.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -136,6 +137,10 @@ void AgentControllerNode::declareParameters()
   declare_parameter<double>("mix.k_pid", 1.0);
   declare_parameter<double>("mix.k_fuzzy", 1.0);
 
+  // GT2 Fuzzy specific parameters
+  declare_parameter<int>("gt2.num_alpha_levels", 5);
+  declare_parameter<std::string>("gt2.secondary_shape", "triangular");
+
   declare_parameter<bool>("diagnostics.enable", publish_diagnostics_);
 
   // Data freshness (stale data protection) parameters
@@ -212,6 +217,10 @@ void AgentControllerNode::loadParameters()
 
   mix_k_pid_ = get_parameter("mix.k_pid").as_double();
   mix_k_fuzzy_ = get_parameter("mix.k_fuzzy").as_double();
+
+  // Load GT2 parameters
+  gt2_num_alpha_levels_ = get_parameter("gt2.num_alpha_levels").as_int();
+  gt2_secondary_shape_ = to_lower(get_parameter("gt2.secondary_shape").as_string());
 
   publish_diagnostics_ = get_parameter("diagnostics.enable").as_bool();
 
@@ -406,6 +415,109 @@ AgentControllerNode::AxisController AgentControllerNode::createAxisController(
     result.fuzzy = raw_fuzzy;
     result.combined = combined.get();
     result.controller = std::move(combined);
+    return result;
+  }
+
+  // GT2 Fuzzy Logic System (General Type-2)
+  if (type == "pid_gt2_fuzzy" || type == "gt2_fuzzy") {
+    // Parse secondary shape string to enum
+    auto parse_secondary_shape = [](const std::string& shape_str) {
+      if (shape_str == "gaussian") return GT2FuzzyLogicSystem::SecondaryMFShape::GAUSSIAN;
+      if (shape_str == "trapezoidal") return GT2FuzzyLogicSystem::SecondaryMFShape::TRAPEZOIDAL;
+      if (shape_str == "uniform") return GT2FuzzyLogicSystem::SecondaryMFShape::UNIFORM;
+      return GT2FuzzyLogicSystem::SecondaryMFShape::TRIANGULAR;  // default
+    };
+
+    controllers::FuzzyGT2Adapter::Options gt2_opt;
+    gt2_opt.umin = limits.umin;
+    gt2_opt.umax = limits.umax;
+    gt2_opt.wind_scalar = fuzzy_wind_scalar_;
+    gt2_opt.num_alpha_levels = gt2_num_alpha_levels_;
+    gt2_opt.secondary_shape = parse_secondary_shape(gt2_secondary_shape_);
+
+    if (type == "gt2_fuzzy") {
+      // Pure GT2 fuzzy controller (no PID)
+      auto gt2_fuzzy = std::make_unique<controllers::FuzzyGT2Adapter>(gt2_opt);
+      gt2_fuzzy->configureDefault(fuzzy_include_wind_);
+      result.gt2_fuzzy = gt2_fuzzy.get();
+      result.controller = std::move(gt2_fuzzy);
+      RCLCPP_INFO(get_logger(), "Created GT2-FLS controller: alpha_levels=%d, shape=%s",
+                  gt2_num_alpha_levels_, gt2_secondary_shape_.c_str());
+      return result;
+    }
+
+    // Hybrid PID + GT2 Fuzzy controller
+    auto pid = std::make_unique<controllers::PIDAdapter>(pid_kp_, pid_ki_, pid_kd_, limits.umin, limits.umax);
+    pid->enableDerivativeFilter(pid_enable_derivative_filter_, pid_derivative_filter_alpha_);
+    pid->setAntiWindupMode(parse_anti_windup_mode(pid_anti_windup_mode_));
+    if (pid_tracking_time_constant_ > 0.0) {
+      pid->setTrackingTimeConstant(pid_tracking_time_constant_);
+    }
+    auto raw_pid = pid.get();
+
+    auto gt2_fuzzy = std::make_unique<controllers::FuzzyGT2Adapter>(gt2_opt);
+    gt2_fuzzy->configureDefault(fuzzy_include_wind_);
+    auto raw_gt2_fuzzy = gt2_fuzzy.get();
+
+    // Create IT2 adapter wrapper for combined controller (GT2 adapter is IController1D compatible)
+    // Note: CombinedPidFuzzyAdapter expects FuzzyIT2Adapter, but we can use a simple
+    // approach by computing outputs separately and combining manually.
+    // For now, we create a simple hybrid by running PID and adding GT2 correction.
+
+    // Store pointers for diagnostics
+    result.pid = raw_pid;
+    result.gt2_fuzzy = raw_gt2_fuzzy;
+
+    // Use a lambda-based combined controller
+    // For simplicity, we'll compute both and combine
+    class CombinedPidGT2Adapter : public controllers::IController1D {
+    public:
+      CombinedPidGT2Adapter(
+        std::unique_ptr<controllers::PIDAdapter> pid,
+        std::unique_ptr<controllers::FuzzyGT2Adapter> gt2,
+        double k_pid, double k_fuzzy, double umin, double umax)
+        : pid_(std::move(pid)), gt2_(std::move(gt2)),
+          k_pid_(k_pid), k_fuzzy_(k_fuzzy), umin_(umin), umax_(umax) {}
+
+      double compute(double y, double yref, double dt) override {
+        double u_pid = pid_->compute(y, yref, dt);
+        double u_gt2 = gt2_->compute(y, yref, dt);
+        double u = k_pid_ * u_pid + k_fuzzy_ * u_gt2;
+        last_pid_contrib_ = k_pid_ * u_pid;
+        last_fuzzy_contrib_ = k_fuzzy_ * u_gt2;
+        return std::clamp(u, umin_, umax_);
+      }
+
+      void reset() override {
+        pid_->reset();
+        gt2_->reset();
+        last_pid_contrib_ = 0.0;
+        last_fuzzy_contrib_ = 0.0;
+      }
+
+      double lastPidContribution() const { return last_pid_contrib_; }
+      double lastFuzzyContribution() const { return last_fuzzy_contrib_; }
+
+      controllers::PIDAdapter* pid() { return pid_.get(); }
+      controllers::FuzzyGT2Adapter* gt2() { return gt2_.get(); }
+
+    private:
+      std::unique_ptr<controllers::PIDAdapter> pid_;
+      std::unique_ptr<controllers::FuzzyGT2Adapter> gt2_;
+      double k_pid_, k_fuzzy_, umin_, umax_;
+      double last_pid_contrib_{0.0};
+      double last_fuzzy_contrib_{0.0};
+    };
+
+    auto combined = std::make_unique<CombinedPidGT2Adapter>(
+      std::move(pid), std::move(gt2_fuzzy), mix_k_pid_, mix_k_fuzzy_, limits.umin, limits.umax);
+
+    result.pid = combined->pid();
+    result.gt2_fuzzy = combined->gt2();
+    result.controller = std::move(combined);
+
+    RCLCPP_INFO(get_logger(), "Created hybrid PID+GT2-FLS controller: alpha_levels=%d, shape=%s, mix=[%.2f, %.2f]",
+                gt2_num_alpha_levels_, gt2_secondary_shape_.c_str(), mix_k_pid_, mix_k_fuzzy_);
     return result;
   }
 

@@ -20,6 +20,7 @@
 #include "agent_control_pkg/config_reader.hpp"
 #include "agent_control_pkg/controllers/combined_pid_fuzzy_adapter.hpp"
 #include "agent_control_pkg/controllers/fuzzy_it2_adapter.hpp"
+#include "agent_control_pkg/controllers/fuzzy_gt2_adapter.hpp"
 #include "agent_control_pkg/controllers/pid_adapter.hpp"
 #include "agent_control_pkg/core/physics_types.hpp"
 #include "agent_control_pkg/core/drone_physics_core.hpp"
@@ -39,6 +40,7 @@ private:
     std::unique_ptr<controllers::IController1D> controller;
     controllers::PIDAdapter * pid{nullptr};
     controllers::FuzzyIT2Adapter * fuzzy{nullptr};
+    controllers::FuzzyGT2Adapter * gt2_fuzzy{nullptr};  // GT2 fuzzy controller pointer
     controllers::CombinedPidFuzzyAdapter * combined{nullptr};
     double last_total_output{0.0};
     double last_pid_contribution{0.0};
@@ -83,6 +85,10 @@ private:
   double last_fuzzy_wind_y_{0.0};
   std::string fuzzy_params_file_{"fuzzy_params.yaml"};
   bool publish_diagnostics_{true};
+
+  // GT2 Fuzzy specific parameters
+  int gt2_num_alpha_levels_{5};  // Number of alpha-planes for GT2
+  std::string gt2_secondary_shape_{"triangular"};  // "triangular", "gaussian", "trapezoidal", "uniform"
 
   double pid_kp_{0.6};
   double pid_ki_{0.0};
