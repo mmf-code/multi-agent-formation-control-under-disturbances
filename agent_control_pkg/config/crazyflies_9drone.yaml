@@ -1,0 +1,108 @@
+# Crazyflies Configuration for 9-Drone Formation Control
+# ======================================================
+# Maps to thesis formation: 3 groups x 3 drones
+#
+# Group 0 (PID+IT2-FLS): cf231, cf232, cf233 -> agent_0, agent_1, agent_2
+# Group 1 (PD):          cf234, cf235, cf236 -> agent_3, agent_4, agent_5
+# Group 2 (PID):         cf237, cf238, cf239 -> agent_6, agent_7, agent_8
+#
+# Formation Layout (Top View):
+#   Y=4:  [cf237] [cf238] [cf239]  <- PID Group (Top Lane)
+#   Y=0:  [cf234] [cf235] [cf236]  <- PD Group (Middle Lane)
+#   Y=-4: [cf231] [cf232] [cf233]  <- PID+Fuzzy Group (Bottom Lane)
+#         X=-10   X=-9    X=-8     (Start positions)
+
+fileversion: 3
+
+robots:
+  # ===== GROUP 0: PID + IT2-FLS (Bottom Lane, Y=-4) =====
+  cf231:
+    enabled: true
+    uri: radio://0/80/2M/E7E7E7E731
+    initial_position: [-10.0, -5.0, 0.0]
+    type: cf21
+
+  cf232:
+    enabled: true
+    uri: radio://0/80/2M/E7E7E7E732
+    initial_position: [-9.0, -3.0, 0.0]
+    type: cf21
+
+  cf233:
+    enabled: true
+    uri: radio://0/80/2M/E7E7E7E733
+    initial_position: [-9.0, -5.0, 0.0]
+    type: cf21
+
+  # ===== GROUP 1: PD (Middle Lane, Y=0) =====
+  cf234:
+    enabled: true
+    uri: radio://0/80/2M/E7E7E7E734
+    initial_position: [-10.0, -1.0, 0.0]
+    type: cf21
+
+  cf235:
+    enabled: true
+    uri: radio://0/80/2M/E7E7E7E735
+    initial_position: [-9.0, 1.0, 0.0]
+    type: cf21
+
+  cf236:
+    enabled: true
+    uri: radio://0/80/2M/E7E7E7E736
+    initial_position: [-9.0, -1.0, 0.0]
+    type: cf21
+
+  # ===== GROUP 2: PID (Top Lane, Y=4) =====
+  cf237:
+    enabled: true
+    uri: radio://0/80/2M/E7E7E7E737
+    initial_position: [-10.0, 3.0, 0.0]
+    type: cf21
+
+  cf238:
+    enabled: true
+    uri: radio://0/80/2M/E7E7E7E738
+    initial_position: [-9.0, 5.0, 0.0]
+    type: cf21
+
+  cf239:
+    enabled: true
+    uri: radio://0/80/2M/E7E7E7E739
+    initial_position: [-9.0, 3.0, 0.0]
+    type: cf21
+
+# Robot type definition (Crazyflie 2.1)
+robot_types:
+  cf21:
+    motion_capture:
+      tracking: "librigidbodytracker"
+      marker: default_single_marker
+      dynamics: default
+    big_quad: false
+    battery:
+      voltage_warning: 3.8
+      voltage_critical: 3.7
+
+# Global settings
+all:
+  firmware_logging:
+    enabled: true
+    default_topics:
+      pose:
+        frequency: 100  # Hz - high rate for control
+      status:
+        frequency: 1
+  firmware_params:
+    commander:
+      enHighLevel: 1
+    stabilizer:
+      estimator: 2  # Kalman
+      controller: 2  # Mellinger
+    locSrv:
+      extPosStdDev: 1e-3
+      extQuatStdDev: 0.5e-1
+  reference_frame: "world"
+  broadcasts:
+    num_repeats: 15
+    delay_between_repeats_ms: 1

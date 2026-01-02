@@ -86,7 +86,7 @@
         <position_noise_std>0.10</position_noise_std>
         <velocity_noise_std>0.15</velocity_noise_std>
         <!-- Motor model feature flag (false=legacy F=ma, true=sim_cf2 motor) -->
-        <use_motor_model>false</use_motor_model>
+        <use_motor_model>true</use_motor_model>
       </plugin>
     </model>
 
@@ -108,7 +108,7 @@
         <position_noise_std>0.10</position_noise_std>
         <velocity_noise_std>0.15</velocity_noise_std>
         <!-- Motor model feature flag (false=legacy F=ma, true=sim_cf2 motor) -->
-        <use_motor_model>false</use_motor_model>
+        <use_motor_model>true</use_motor_model>
       </plugin>
     </model>
 
@@ -130,7 +130,7 @@
         <position_noise_std>0.10</position_noise_std>
         <velocity_noise_std>0.15</velocity_noise_std>
         <!-- Motor model feature flag (false=legacy F=ma, true=sim_cf2 motor) -->
-        <use_motor_model>false</use_motor_model>
+        <use_motor_model>true</use_motor_model>
       </plugin>
     </model>
 
@@ -157,7 +157,7 @@
         <position_noise_std>0.10</position_noise_std>
         <velocity_noise_std>0.15</velocity_noise_std>
         <!-- Motor model feature flag (false=legacy F=ma, true=sim_cf2 motor) -->
-        <use_motor_model>false</use_motor_model>
+        <use_motor_model>true</use_motor_model>
       </plugin>
     </model>
 
@@ -179,7 +179,7 @@
         <position_noise_std>0.10</position_noise_std>
         <velocity_noise_std>0.15</velocity_noise_std>
         <!-- Motor model feature flag (false=legacy F=ma, true=sim_cf2 motor) -->
-        <use_motor_model>false</use_motor_model>
+        <use_motor_model>true</use_motor_model>
       </plugin>
     </model>
 
@@ -201,7 +201,7 @@
         <position_noise_std>0.10</position_noise_std>
         <velocity_noise_std>0.15</velocity_noise_std>
         <!-- Motor model feature flag (false=legacy F=ma, true=sim_cf2 motor) -->
-        <use_motor_model>false</use_motor_model>
+        <use_motor_model>true</use_motor_model>
       </plugin>
     </model>
 
@@ -228,7 +228,7 @@
         <position_noise_std>0.10</position_noise_std>
         <velocity_noise_std>0.15</velocity_noise_std>
         <!-- Motor model feature flag (false=legacy F=ma, true=sim_cf2 motor) -->
-        <use_motor_model>false</use_motor_model>
+        <use_motor_model>true</use_motor_model>
       </plugin>
     </model>
 
@@ -250,7 +250,7 @@
         <position_noise_std>0.10</position_noise_std>
         <velocity_noise_std>0.15</velocity_noise_std>
         <!-- Motor model feature flag (false=legacy F=ma, true=sim_cf2 motor) -->
-        <use_motor_model>false</use_motor_model>
+        <use_motor_model>true</use_motor_model>
       </plugin>
     </model>
 
@@ -272,7 +272,7 @@
         <position_noise_std>0.10</position_noise_std>
         <velocity_noise_std>0.15</velocity_noise_std>
         <!-- Motor model feature flag (false=legacy F=ma, true=sim_cf2 motor) -->
-        <use_motor_model>false</use_motor_model>
+        <use_motor_model>true</use_motor_model>
       </plugin>
     </model>
 

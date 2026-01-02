@@ -11,29 +11,15 @@
     - Propeller diameter: 45mm
 
     Visual Enhancement:
-    - Visual scale: 5x for better visibility in Gazebo (92mm -> 46cm visual)
+    - Visual scale: 5x for better visibility in Gazebo (92mm → 46cm visual)
     - Physics (collision, inertia) remain at real scale
     - Propeller positions scaled to match visual body
-
-    Motor Model (sim_cf2 parameters):
-    - tau_up: 0.0125s, tau_down: 0.025s
-    - omega_max: 3052 rad/s
-    - k_thrust: 1.2819e-8 N/(rad/s)^2
-    - k_moment: 0.005965
-
-    X-Config Layout:
-      FL(CCW)    FR(CW)
-         \      /
-          Center
-         /      \
-      BL(CW)    BR(CCW)
 
     Reference: https://github.com/CrazyflieTHI/sim_cf2
   -->
   <model name="crazyflie">
     <pose>0 0 0.015 0 0 0</pose>
 
-    <!-- Base link (body only, propellers as separate links) -->
     <link name="base_link">
       <!-- Physics remain at real Crazyflie scale -->
       <inertial>
@@ -59,6 +45,66 @@
         </geometry>
       </visual>
 
+      <!-- Front Right Propeller - scaled position (0.0325*5=0.1625) -->
+      <visual name="prop_fr">
+        <pose>0.1625 -0.1625 0.0625 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
+            <scale>5 5 5</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>0.9 0.3 0.3 1</ambient>
+          <diffuse>0.9 0.3 0.3 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Front Left Propeller -->
+      <visual name="prop_fl">
+        <pose>0.1625 0.1625 0.0625 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
+            <scale>5 5 5</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>0.9 0.3 0.3 1</ambient>
+          <diffuse>0.9 0.3 0.3 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Back Left Propeller -->
+      <visual name="prop_bl">
+        <pose>-0.1625 0.1625 0.0625 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
+            <scale>5 5 5</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>0.3 0.3 0.9 1</ambient>
+          <diffuse>0.3 0.3 0.9 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Back Right Propeller -->
+      <visual name="prop_br">
+        <pose>-0.1625 -0.1625 0.0625 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://crazyflie/meshes/crazyflie_prop.dae</uri>
+            <scale>5 5 5</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>0.3 0.3 0.9 1</ambient>
+          <diffuse>0.3 0.3 0.9 1</diffuse>
+        </material>
+      </visual>
+
       <!-- Collision box - real physics scale -->
       <collision name="collision">
         <geometry>
@@ -66,204 +112,5 @@
         </geometry>
       </collision>
     </link>
-
-    <!-- ============================================= -->
-    <!-- Front-Right Rotor (CW - negative yaw torque) -->
-    <!-- ============================================= -->
-    <link name="rotor_fr">
-      <!-- Physics position: 0.0325m from center (X-config diagonal) -->
-      <pose>0.0325 -0.0325 0.0125 0 0 0</pose>
-      <gravity>false</gravity>
-      <self_collide>false</self_collide>
-      <inertial>
-        <mass>1e-6</mass>
-        <inertia>
-          <ixx>1e-9</ixx>
-          <iyy>1e-9</iyy>
-          <izz>1e-9</izz>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyz>0</iyz>
-        </inertia>
-      </inertial>
-      <visual name="prop_fr_visual">
-        <!-- Visual offset for 5x scale: 0.0325*5 = 0.1625, height 0.0125*5 = 0.0625 -->
-        <pose>0.13 -0.13 0.05 0 0 0</pose>
-        <geometry>
-          <mesh>
-            <uri>model://crazyflie/meshes/cw_prop.dae</uri>
-            <scale>5 5 5</scale>
-          </mesh>
-        </geometry>
-        <material>
-          <ambient>0.9 0.3 0.3 1</ambient>
-          <diffuse>0.9 0.3 0.3 1</diffuse>
-        </material>
-      </visual>
-    </link>
-
-    <joint name="rotor_fr_joint" type="revolute">
-      <parent>base_link</parent>
-      <child>rotor_fr</child>
-      <axis>
-        <xyz>0 0 1</xyz>
-        <limit>
-          <lower>-1e16</lower>
-          <upper>1e16</upper>
-        </limit>
-        <dynamics>
-          <damping>1e-6</damping>
-          <friction>0</friction>
-        </dynamics>
-      </axis>
-    </joint>
-
-    <!-- ============================================= -->
-    <!-- Front-Left Rotor (CCW - positive yaw torque) -->
-    <!-- ============================================= -->
-    <link name="rotor_fl">
-      <pose>0.0325 0.0325 0.0125 0 0 0</pose>
-      <gravity>false</gravity>
-      <self_collide>false</self_collide>
-      <inertial>
-        <mass>1e-6</mass>
-        <inertia>
-          <ixx>1e-9</ixx>
-          <iyy>1e-9</iyy>
-          <izz>1e-9</izz>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyz>0</iyz>
-        </inertia>
-      </inertial>
-      <visual name="prop_fl_visual">
-        <pose>0.13 0.13 0.05 0 0 0</pose>
-        <geometry>
-          <mesh>
-            <uri>model://crazyflie/meshes/ccw_prop.dae</uri>
-            <scale>5 5 5</scale>
-          </mesh>
-        </geometry>
-        <material>
-          <ambient>0.9 0.3 0.3 1</ambient>
-          <diffuse>0.9 0.3 0.3 1</diffuse>
-        </material>
-      </visual>
-    </link>
-
-    <joint name="rotor_fl_joint" type="revolute">
-      <parent>base_link</parent>
-      <child>rotor_fl</child>
-      <axis>
-        <xyz>0 0 1</xyz>
-        <limit>
-          <lower>-1e16</lower>
-          <upper>1e16</upper>
-        </limit>
-        <dynamics>
-          <damping>1e-6</damping>
-          <friction>0</friction>
-        </dynamics>
-      </axis>
-    </joint>
-
-    <!-- ============================================= -->
-    <!-- Back-Left Rotor (CW - negative yaw torque)   -->
-    <!-- ============================================= -->
-    <link name="rotor_bl">
-      <pose>-0.0325 0.0325 0.0125 0 0 0</pose>
-      <gravity>false</gravity>
-      <self_collide>false</self_collide>
-      <inertial>
-        <mass>1e-6</mass>
-        <inertia>
-          <ixx>1e-9</ixx>
-          <iyy>1e-9</iyy>
-          <izz>1e-9</izz>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyz>0</iyz>
-        </inertia>
-      </inertial>
-      <visual name="prop_bl_visual">
-        <pose>-0.13 0.13 0.05 0 0 0</pose>
-        <geometry>
-          <mesh>
-            <uri>model://crazyflie/meshes/cw_prop.dae</uri>
-            <scale>5 5 5</scale>
-          </mesh>
-        </geometry>
-        <material>
-          <ambient>0.3 0.3 0.9 1</ambient>
-          <diffuse>0.3 0.3 0.9 1</diffuse>
-        </material>
-      </visual>
-    </link>
-
-    <joint name="rotor_bl_joint" type="revolute">
-      <parent>base_link</parent>
-      <child>rotor_bl</child>
-      <axis>
-        <xyz>0 0 1</xyz>
-        <limit>
-          <lower>-1e16</lower>
-          <upper>1e16</upper>
-        </limit>
-        <dynamics>
-          <damping>1e-6</damping>
-          <friction>0</friction>
-        </dynamics>
-      </axis>
-    </joint>
-
-    <!-- ============================================= -->
-    <!-- Back-Right Rotor (CCW - positive yaw torque) -->
-    <!-- ============================================= -->
-    <link name="rotor_br">
-      <pose>-0.0325 -0.0325 0.0125 0 0 0</pose>
-      <gravity>false</gravity>
-      <self_collide>false</self_collide>
-      <inertial>
-        <mass>1e-6</mass>
-        <inertia>
-          <ixx>1e-9</ixx>
-          <iyy>1e-9</iyy>
-          <izz>1e-9</izz>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyz>0</iyz>
-        </inertia>
-      </inertial>
-      <visual name="prop_br_visual">
-        <pose>-0.13 -0.13 0.05 0 0 0</pose>
-        <geometry>
-          <mesh>
-            <uri>model://crazyflie/meshes/ccw_prop.dae</uri>
-            <scale>5 5 5</scale>
-          </mesh>
-        </geometry>
-        <material>
-          <ambient>0.3 0.3 0.9 1</ambient>
-          <diffuse>0.3 0.3 0.9 1</diffuse>
-        </material>
-      </visual>
-    </link>
-
-    <joint name="rotor_br_joint" type="revolute">
-      <parent>base_link</parent>
-      <child>rotor_br</child>
-      <axis>
-        <xyz>0 0 1</xyz>
-        <limit>
-          <lower>-1e16</lower>
-          <upper>1e16</upper>
-        </limit>
-        <dynamics>
-          <damping>1e-6</damping>
-          <friction>0</friction>
-        </dynamics>
-      </axis>
-    </joint>
-
   </model>
 </sdf>

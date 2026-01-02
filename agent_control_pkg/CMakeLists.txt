@@ -276,6 +276,7 @@ install(DIRECTORY rviz/
 install(PROGRAMS
   scripts/metrics_summary.py
   scripts/wind_publisher.py
+  scripts/tf_to_odom_bridge.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

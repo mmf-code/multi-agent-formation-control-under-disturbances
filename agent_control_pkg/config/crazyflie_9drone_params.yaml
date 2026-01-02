@@ -1,0 +1,391 @@
+# Crazyflie 9-Drone Formation Controller Parameters
+# ==================================================
+#
+# This configuration mirrors the thesis simulation setup:
+#   - Group 0 (agent_0-2): PID + IT2-FLS hybrid controller
+#   - Group 1 (agent_3-5): PD controller
+#   - Group 2 (agent_6-8): PID controller
+#
+# GAIN DESIGN for Crazyflie (27g nano quadrotor):
+# ===============================================
+# Same gains as Gazebo simulation - the AccelToAttitude converter
+# handles the translation from acceleration commands to attitude.
+#
+# Physical parameters:
+#   mass: 0.027 kg
+#   max_thrust: 0.6 N (~60g)
+#   max_tilt: 30 degrees
+#
+# PID Gains (from thesis tuning):
+#   Kp: 3.501, Ki: 1.946, Kd: 3.608
+#
+# IT2-FLS parameters scaled for Crazyflie dynamics.
+
+# ===== GROUP 0: PID + IT2-FLS (cf231, cf232, cf233) =====
+
+agent_0:
+  agent_controller:
+    ros__parameters:
+      controller_type: pid_fuzzy
+      dt: 0.005
+      control_frequency_hz: 200.0
+
+      crazyflie:
+        enable: true
+        cmd_topic: "cmd_full_state"
+        mass: 0.027
+        max_thrust: 0.6
+        max_roll_rad: 0.5236
+        max_pitch_rad: 0.5236
+
+      pid:
+        kp: 3.501
+        ki: 1.946
+        kd: 3.608
+        enable_derivative_filter: true
+        derivative_filter_alpha: 0.1
+        anti_windup_mode: "combined"
+
+      fuzzy:
+        enable: true
+        include_wind: true
+        wind_scalar: 1.5
+        params_file: "fuzzy_params_crazyflie.yaml"
+
+      mix:
+        k_pid: 1.0
+        k_fuzzy: 0.6
+
+      output_limits:
+        x: { min: -10.0, max: 10.0 }
+        y: { min: -10.0, max: 10.0 }
+
+      feedforward:
+        enable_drag: false
+        enable_wind: false
+
+      diagnostics:
+        enable: true
+
+agent_1:
+  agent_controller:
+    ros__parameters:
+      controller_type: pid_fuzzy
+      dt: 0.005
+      control_frequency_hz: 200.0
+
+      crazyflie:
+        enable: true
+        cmd_topic: "cmd_full_state"
+        mass: 0.027
+        max_thrust: 0.6
+        max_roll_rad: 0.5236
+        max_pitch_rad: 0.5236
+
+      pid:
+        kp: 3.501
+        ki: 1.946
+        kd: 3.608
+        enable_derivative_filter: true
+        derivative_filter_alpha: 0.1
+        anti_windup_mode: "combined"
+
+      fuzzy:
+        enable: true
+        include_wind: true
+        wind_scalar: 1.5
+        params_file: "fuzzy_params_crazyflie.yaml"
+
+      mix:
+        k_pid: 1.0
+        k_fuzzy: 0.6
+
+      output_limits:
+        x: { min: -10.0, max: 10.0 }
+        y: { min: -10.0, max: 10.0 }
+
+      feedforward:
+        enable_drag: false
+        enable_wind: false
+
+      diagnostics:
+        enable: true
+
+agent_2:
+  agent_controller:
+    ros__parameters:
+      controller_type: pid_fuzzy
+      dt: 0.005
+      control_frequency_hz: 200.0
+
+      crazyflie:
+        enable: true
+        cmd_topic: "cmd_full_state"
+        mass: 0.027
+        max_thrust: 0.6
+        max_roll_rad: 0.5236
+        max_pitch_rad: 0.5236
+
+      pid:
+        kp: 3.501
+        ki: 1.946
+        kd: 3.608
+        enable_derivative_filter: true
+        derivative_filter_alpha: 0.1
+        anti_windup_mode: "combined"
+
+      fuzzy:
+        enable: true
+        include_wind: true
+        wind_scalar: 1.5
+        params_file: "fuzzy_params_crazyflie.yaml"
+
+      mix:
+        k_pid: 1.0
+        k_fuzzy: 0.6
+
+      output_limits:
+        x: { min: -10.0, max: 10.0 }
+        y: { min: -10.0, max: 10.0 }
+
+      feedforward:
+        enable_drag: false
+        enable_wind: false
+
+      diagnostics:
+        enable: true
+
+# ===== GROUP 1: PD (cf234, cf235, cf236) =====
+
+agent_3:
+  agent_controller:
+    ros__parameters:
+      controller_type: pd
+      dt: 0.005
+      control_frequency_hz: 200.0
+
+      crazyflie:
+        enable: true
+        cmd_topic: "cmd_full_state"
+        mass: 0.027
+        max_thrust: 0.6
+        max_roll_rad: 0.5236
+        max_pitch_rad: 0.5236
+
+      pid:
+        kp: 3.50
+        ki: 0.0
+        kd: 3.61
+        enable_derivative_filter: true
+        derivative_filter_alpha: 0.1
+
+      fuzzy:
+        enable: false
+
+      output_limits:
+        x: { min: -10.0, max: 10.0 }
+        y: { min: -10.0, max: 10.0 }
+
+      feedforward:
+        enable_drag: false
+        enable_wind: false
+
+      diagnostics:
+        enable: true
+
+agent_4:
+  agent_controller:
+    ros__parameters:
+      controller_type: pd
+      dt: 0.005
+      control_frequency_hz: 200.0
+
+      crazyflie:
+        enable: true
+        cmd_topic: "cmd_full_state"
+        mass: 0.027
+        max_thrust: 0.6
+        max_roll_rad: 0.5236
+        max_pitch_rad: 0.5236
+
+      pid:
+        kp: 3.50
+        ki: 0.0
+        kd: 3.61
+        enable_derivative_filter: true
+        derivative_filter_alpha: 0.1
+
+      fuzzy:
+        enable: false
+
+      output_limits:
+        x: { min: -10.0, max: 10.0 }
+        y: { min: -10.0, max: 10.0 }
+
+      feedforward:
+        enable_drag: false
+        enable_wind: false
+
+      diagnostics:
+        enable: true
+
+agent_5:
+  agent_controller:
+    ros__parameters:
+      controller_type: pd
+      dt: 0.005
+      control_frequency_hz: 200.0
+
+      crazyflie:
+        enable: true
+        cmd_topic: "cmd_full_state"
+        mass: 0.027
+        max_thrust: 0.6
+        max_roll_rad: 0.5236
+        max_pitch_rad: 0.5236
+
+      pid:
+        kp: 3.50
+        ki: 0.0
+        kd: 3.61
+        enable_derivative_filter: true
+        derivative_filter_alpha: 0.1
+
+      fuzzy:
+        enable: false
+
+      output_limits:
+        x: { min: -10.0, max: 10.0 }
+        y: { min: -10.0, max: 10.0 }
+
+      feedforward:
+        enable_drag: false
+        enable_wind: false
+
+      diagnostics:
+        enable: true
+
+# ===== GROUP 2: PID (cf237, cf238, cf239) =====
+
+agent_6:
+  agent_controller:
+    ros__parameters:
+      controller_type: pid
+      dt: 0.005
+      control_frequency_hz: 200.0
+
+      crazyflie:
+        enable: true
+        cmd_topic: "cmd_full_state"
+        mass: 0.027
+        max_thrust: 0.6
+        max_roll_rad: 0.5236
+        max_pitch_rad: 0.5236
+
+      pid:
+        kp: 3.501
+        ki: 1.946
+        kd: 3.608
+        enable_derivative_filter: true
+        derivative_filter_alpha: 0.1
+        anti_windup_mode: "combined"
+
+      fuzzy:
+        enable: false
+
+      mix:
+        k_pid: 1.0
+        k_fuzzy: 0.0
+
+      output_limits:
+        x: { min: -10.0, max: 10.0 }
+        y: { min: -10.0, max: 10.0 }
+
+      feedforward:
+        enable_drag: false
+        enable_wind: false
+
+      diagnostics:
+        enable: true
+
+agent_7:
+  agent_controller:
+    ros__parameters:
+      controller_type: pid
+      dt: 0.005
+      control_frequency_hz: 200.0
+
+      crazyflie:
+        enable: true
+        cmd_topic: "cmd_full_state"
+        mass: 0.027
+        max_thrust: 0.6
+        max_roll_rad: 0.5236
+        max_pitch_rad: 0.5236
+
+      pid:
+        kp: 3.501
+        ki: 1.946
+        kd: 3.608
+        enable_derivative_filter: true
+        derivative_filter_alpha: 0.1
+        anti_windup_mode: "combined"
+
+      fuzzy:
+        enable: false
+
+      mix:
+        k_pid: 1.0
+        k_fuzzy: 0.0
+
+      output_limits:
+        x: { min: -10.0, max: 10.0 }
+        y: { min: -10.0, max: 10.0 }
+
+      feedforward:
+        enable_drag: false
+        enable_wind: false
+
+      diagnostics:
+        enable: true
+
+agent_8:
+  agent_controller:
+    ros__parameters:
+      controller_type: pid
+      dt: 0.005
+      control_frequency_hz: 200.0
+
+      crazyflie:
+        enable: true
+        cmd_topic: "cmd_full_state"
+        mass: 0.027
+        max_thrust: 0.6
+        max_roll_rad: 0.5236
+        max_pitch_rad: 0.5236
+
+      pid:
+        kp: 3.501
+        ki: 1.946
+        kd: 3.608
+        enable_derivative_filter: true
+        derivative_filter_alpha: 0.1
+        anti_windup_mode: "combined"
+
+      fuzzy:
+        enable: false
+
+      mix:
+        k_pid: 1.0
+        k_fuzzy: 0.0
+
+      output_limits:
+        x: { min: -10.0, max: 10.0 }
+        y: { min: -10.0, max: 10.0 }
+
+      feedforward:
+        enable_drag: false
+        enable_wind: false
+
+      diagnostics:
+        enable: true
