@@ -198,12 +198,27 @@ namespace gazebo
         std::bind(&SimpleDronePlugin::OnCmdAccel, this, std::placeholders::_1));
 
       // Subscribe to wind velocity (for drag calculation with relative airspeed)
+      // Per-drone wind topics for spatial coherence support: /{namespace}/wind/velocity
+      // Falls back to global /wind/velocity if per-drone topic not available
+      std::string wind_velocity_topic = "/" + this->namespace_ + "/wind/velocity";
       this->wind_velocity_sub_ = this->ros_node_->create_subscription<geometry_msgs::msg::Vector3>(
+        wind_velocity_topic, 10,
+        std::bind(&SimpleDronePlugin::OnWindVelocity, this, std::placeholders::_1));
+
+      // Also subscribe to global wind velocity as fallback (lower priority)
+      this->wind_velocity_sub_global_ = this->ros_node_->create_subscription<geometry_msgs::msg::Vector3>(
         "/wind/velocity", 10,
         std::bind(&SimpleDronePlugin::OnWindVelocity, this, std::placeholders::_1));
 
       // Subscribe to wind force (for constant acceleration bias)
+      // Per-drone wind force topics
+      std::string wind_force_topic = "/" + this->namespace_ + "/wind/force";
       this->wind_force_sub_ = this->ros_node_->create_subscription<geometry_msgs::msg::Vector3>(
+        wind_force_topic, 10,
+        std::bind(&SimpleDronePlugin::OnWindForce, this, std::placeholders::_1));
+
+      // Global wind force fallback
+      this->wind_force_sub_global_ = this->ros_node_->create_subscription<geometry_msgs::msg::Vector3>(
         "/wind/force", 10,
         std::bind(&SimpleDronePlugin::OnWindForce, this, std::placeholders::_1));
 
@@ -615,8 +630,10 @@ namespace gazebo
     // ===== ROS2 Interface =====
     gazebo_ros::Node::SharedPtr ros_node_;  ///< ROS2 node handle
     rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr cmd_accel_sub_;  ///< Acceleration command subscriber
-    rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr wind_velocity_sub_;  ///< Wind velocity subscriber
-    rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr wind_force_sub_;  ///< Wind force subscriber
+    rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr wind_velocity_sub_;  ///< Per-drone wind velocity subscriber
+    rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr wind_velocity_sub_global_;  ///< Global wind velocity fallback
+    rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr wind_force_sub_;  ///< Per-drone wind force subscriber
+    rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr wind_force_sub_global_;  ///< Global wind force fallback
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;  ///< Odometry publisher
 
     // ===== Gazebo Event Connection =====
