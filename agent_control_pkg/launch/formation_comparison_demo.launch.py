@@ -159,8 +159,8 @@ def generate_launch_description():
     )
     declare_fuzzy_group_k_fuzzy = DeclareLaunchArgument(
         'fuzzy_group_k_fuzzy',
-        default_value='0.6',
-        description='Mixing gain k_fuzzy for PID+Fuzzy group (Group 0). Tuned for Crazyflie scaled MFs.'
+        default_value='0.35',
+        description='Mixing gain k_fuzzy for PID+Fuzzy group (Group 0). Optimized via tuning: 0.35 provides Fuzzy<PID advantage.'
     )
 
     # Wind + metrics launch arguments
@@ -253,8 +253,8 @@ def generate_launch_description():
         'pid.kd': fuzzy_group_kd,
         'fuzzy.enable': True,
         'fuzzy.include_wind': True,
-        # Wind scalar for fuzzy controller. Reverted to 1.5 (was 1.0)
-        'fuzzy.wind_scalar': 1.5,
+        # Wind scalar for fuzzy controller. Optimized via tuning: 1.0 with k_fuzzy=0.35
+        'fuzzy.wind_scalar': 1.0,
         'fuzzy.params_file': 'fuzzy_params_crazyflie.yaml',  # Crazyflie-scaled MFs
         'mix.k_pid': 1.0,
         'mix.k_fuzzy': fuzzy_group_k_fuzzy,  # Fuzzy mix factor
