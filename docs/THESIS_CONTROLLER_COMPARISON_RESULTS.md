@@ -9,10 +9,15 @@ This document presents comprehensive experimental results comparing four control
 |------------|------|-------------|
 | **PD** | Proportional-Derivative | Baseline controller without integral action |
 | **PID** | Proportional-Integral-Derivative | Classical PID with anti-windup |
-| **IT2-FLS** | Interval Type-2 Fuzzy Logic System | PID + IT2 fuzzy compensation (65/35 mix) |
-| **GT2-FLS** | General Type-2 Fuzzy Logic System | PID + GT2 fuzzy with 5 alpha-planes (65/35 mix) |
+| **IT2-FLS** | Interval Type-2 Fuzzy Logic System | PID + IT2 fuzzy (additive: 100% PID + 50% fuzzy) |
+| **GT2-FLS** | General Type-2 Fuzzy Logic System | PID + GT2 with 5 alpha-planes (additive mode) |
 
-### Key Findings (Updated 2026-01-03)
+### Key Findings (Updated 2026-01-04)
+
+> **CRITICAL BUG FIX (2026-01-04)**: Previous results had `fuzzy.wind_scalar=0` (default),
+> meaning wind input was NOT reaching fuzzy controllers. Results below need re-validation
+> with `fuzzy.wind_scalar=1.0` now enabled.
+
 - **Baseline**: PD achieves best RMSE (1.03m) due to zero integral windup during transients
 - **Steady Wind**: GT2-FLS (2.35m) outperforms PID (4.81m) and IT2 (3.57m)
 - **Turbulence**: IT2-FLS (1.82m) handles stochastic uncertainty well
@@ -208,9 +213,14 @@ PID Gains (all controllers):
   Ki: 1.946 (0 for PD)
   Kd: 3.608
 
-Fuzzy Mixing:
-  k_pid: 0.65
-  k_fuzzy: 0.35
+Fuzzy Mixing (Additive Mode):
+  k_pid: 1.0    # Full PID contribution
+  k_fuzzy: 0.5  # Fuzzy adds on top
+  # Formula: u = 1.0*u_pid + 0.5*u_fuzzy
+
+Wind Input:
+  fuzzy.include_wind: true
+  fuzzy.wind_scalar: 1.0  # CRITICAL: Must be non-zero!
 
 GT2 Specific:
   Alpha Levels: 5
@@ -227,4 +237,5 @@ GT2 Specific:
 ---
 
 *Report Generated: 2026-01-03*
+*Last Updated: 2026-01-04 (wind_scalar bug fix)*
 *Framework: 6-Phase Thesis Test Framework v1.0*

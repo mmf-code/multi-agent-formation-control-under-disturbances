@@ -112,6 +112,12 @@ def generate_launch_description():
     TUNED_KI = 1.946   # Integral gain (steady-state error elimination)
     TUNED_KD = 3.608   # Derivative gain (velocity damping)
 
+    # Fuzzy mix ratios - ADDITIVE mode
+    # Keep full PID, add fuzzy correction on top
+    # Formula: u = 1.0*PID + 0.5*Fuzzy
+    MIX_K_PID = 1.0
+    MIX_K_FUZZY = 0.5
+
     common_base = {
         'dt': 0.005,
         'output_limits.x.min': -10.0,
@@ -156,10 +162,10 @@ def generate_launch_description():
         'pid.kd': TUNED_KD,
         'fuzzy.enable': True,
         'fuzzy.include_wind': True,
-        'fuzzy.wind_scalar': 1.0,
+        'fuzzy.wind_scalar': 1.0,  # CRITICAL: Enable wind input to fuzzy
         'fuzzy.params_file': fuzzy_params_file,
-        'mix.k_pid': 0.65,
-        'mix.k_fuzzy': 0.35,
+        'mix.k_pid': MIX_K_PID,
+        'mix.k_fuzzy': MIX_K_FUZZY,
     }
 
     # GT2 Fuzzy controller params (Group 3: agents 9-11)
@@ -173,12 +179,13 @@ def generate_launch_description():
         'pid.kd': TUNED_KD,
         'fuzzy.enable': False,  # GT2 uses gt2.params_file, not IT2 fuzzy.params_file
         'fuzzy.include_wind': True,
+        'fuzzy.wind_scalar': 1.0,  # CRITICAL: Enable wind input to fuzzy
         'gt2.params_file': gt2_params_file,
         'gt2.num_alpha_levels': 5,
         'gt2.secondary_shape': 'triangular',
         'gt2.secondary_spread': 0.3,
-        'mix.k_pid': 0.65,
-        'mix.k_fuzzy': 0.35,
+        'mix.k_pid': MIX_K_PID,
+        'mix.k_fuzzy': MIX_K_FUZZY,
     }
 
     # Agent controller map: agent_id -> params
