@@ -235,6 +235,7 @@ def launch_setup(context, *args, **kwargs):
         'fuzzy.enable': True,
         'fuzzy.params_file': fuzzy_params_file,
         'fuzzy.include_wind': True,
+        'fuzzy.wind_scalar': 1.0,  # CRITICAL: Enable wind input to fuzzy
         'mix.k_pid': MIX_K_PID, 'mix.k_fuzzy': MIX_K_FUZZY,
     }
 
@@ -251,6 +252,7 @@ def launch_setup(context, *args, **kwargs):
         'gt2.secondary_shape': 'triangular',
         'gt2.secondary_spread': 0.3,
         'fuzzy.include_wind': True,
+        'fuzzy.wind_scalar': 1.0,  # CRITICAL: Enable wind input to fuzzy
         'mix.k_pid': MIX_K_PID, 'mix.k_fuzzy': MIX_K_FUZZY,
     }
 
