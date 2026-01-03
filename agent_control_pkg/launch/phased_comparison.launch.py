@@ -204,10 +204,10 @@ def launch_setup(context, *args, **kwargs):
     TUNED_KD = 3.608   # Derivative gain
 
     # Fuzzy mix ratios - ADDITIVE mode
-    # Keep full PID, add small fuzzy correction on top
-    # Formula: u = 1.0*PID + 0.3*Fuzzy
+    # Keep full PID, add fuzzy correction on top
+    # Formula: u = 1.0*PID + 0.5*Fuzzy (increased from 0.3)
     MIX_K_PID = 1.0
-    MIX_K_FUZZY = 0.3
+    MIX_K_FUZZY = 0.5
 
     # PD controller params (Group 0) - No integral action
     pd_controller_params = {

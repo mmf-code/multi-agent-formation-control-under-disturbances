@@ -1,0 +1,70 @@
+{
+  "phase_id": 3,
+  "run_index": 1,
+  "duration_sec": 60,
+  "actual_sim_duration_sec": 60.173981384,
+  "start_time": "2026-01-04T00:36:05.219532",
+  "end_time": "2026-01-04T00:36:05.219546",
+  "num_agents": 12,
+  "total_samples": 6644,
+  "wind_samples": 1161,
+  "timing_source": "simulation_time",
+  "group_summaries": {
+    "PD": {
+      "group_id": 0,
+      "controller_type": "PD",
+      "agent_count": 3,
+      "mean_rmse": 1.8275988882474847,
+      "std_rmse": 0.023015961762975455,
+      "mean_itae": 0.0,
+      "std_itae": 0.0,
+      "mean_settling_time": 0.0,
+      "mean_max_overshoot": 0.0,
+      "mean_control_effort": 0.0,
+      "agents_settled": 3,
+      "settled_ratio": 1.0
+    },
+    "PID": {
+      "group_id": 1,
+      "controller_type": "PID",
+      "agent_count": 3,
+      "mean_rmse": 0.9942210918976623,
+      "std_rmse": 0.2111596073946072,
+      "mean_itae": 0.0,
+      "std_itae": 0.0,
+      "mean_settling_time": 0.0,
+      "mean_max_overshoot": 0.0,
+      "mean_control_effort": 0.0,
+      "agents_settled": 3,
+      "settled_ratio": 1.0
+    },
+    "IT2": {
+      "group_id": 2,
+      "controller_type": "IT2",
+      "agent_count": 3,
+      "mean_rmse": 0.9740019964554127,
+      "std_rmse": 0.21836132412896136,
+      "mean_itae": 0.0,
+      "std_itae": 0.0,
+      "mean_settling_time": 0.0,
+      "mean_max_overshoot": 0.0,
+      "mean_control_effort": 0.0,
+      "agents_settled": 3,
+      "settled_ratio": 1.0
+    },
+    "GT2": {
+      "group_id": 3,
+      "controller_type": "GT2",
+      "agent_count": 3,
+      "mean_rmse": 1.0040848381128418,
+      "std_rmse": 0.19294861589841888,
+      "mean_itae": 0.0,
+      "std_itae": 0.0,
+      "mean_settling_time": 0.0,
+      "mean_max_overshoot": 0.0,
+      "mean_control_effort": 0.0,
+      "agents_settled": 3,
+      "settled_ratio": 1.0
+    }
+  }
+}
