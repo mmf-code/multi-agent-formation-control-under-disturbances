@@ -1,72 +1,106 @@
-# Crazyflie-scaled IT2-FLS Parameters
+# IT2-FLS Parameters - Transient Disturbance Rejection
 #
-# Original MFs were designed for ±10m error range (heavy drone)
-# This version is scaled for Crazyflie's tighter control (~±0.5m errors)
+# DESIGN PHILOSOPHY:
+# - PID handles steady-state errors (integral term)
+# - Fuzzy handles TRANSIENT disturbances (gusts, sudden changes)
+# - Focus on dError (error rate) rather than wind feedforward
+# - Avoid conflicting with PID's integral action
 #
-# Scale factor: 20x reduction for error/dError universes
-# Result: Fuzzy activates at smaller errors, providing adaptive control
-#
-# Author: Dr. Nova (Control Engineer Agent)
-# Date: 2025-12-09
+# Author: Multi-Agent Formation Control Research
+# Date: 2026-01-04
 
 membership_functions:
-  # Error: Scaled from ±10m to ±0.5m (20x reduction)
-  # Now responds to position errors in 5-50cm range
+  # Error: ±2.0m range (matches observed simulation errors)
   error:
-    NB: [-0.50, -0.40, -0.30, -0.55, -0.425, -0.275]   # Large negative: -50cm to -30cm
-    NS: [-0.35, -0.20, -0.05, -0.40, -0.225, 0.0]      # Small negative: -35cm to -5cm
-    ZE: [-0.05, 0.0, 0.05, -0.10, 0.0, 0.10]           # Zero: ±5cm (tight)
-    PS: [0.05, 0.20, 0.35, 0.0, 0.225, 0.40]           # Small positive: 5cm to 35cm
-    PB: [0.30, 0.40, 0.50, 0.275, 0.425, 0.55]         # Large positive: 30cm to 50cm
+    NB: [-2.0, -1.6, -1.2, -2.2, -1.7, -1.1]
+    NS: [-1.4, -0.8, -0.2, -1.6, -0.9, 0.0]
+    ZE: [-0.3, 0.0, 0.3, -0.4, 0.0, 0.4]
+    PS: [0.2, 0.8, 1.4, 0.0, 0.9, 1.6]
+    PB: [1.2, 1.6, 2.0, 1.1, 1.7, 2.2]
 
-  # dError (velocity error): Scaled from ±5 m/s to ±0.5 m/s (10x reduction)
-  # Crazyflie moves slower, so error rate is also smaller
+  # dError: ±1.0 m/s - CRITICAL for transient detection
+  # Fast error changes indicate disturbance
   dError:
-    DN: [-0.50, -0.30, 0.0, -0.60, -0.35, 0.10]        # Decreasing error
-    DZ: [-0.10, 0.0, 0.10, -0.15, 0.0, 0.15]           # Zero change
-    DP: [0.0, 0.30, 0.50, -0.10, 0.30, 0.60]           # Increasing error
+    DN: [-1.0, -0.6, 0.0, -1.2, -0.7, 0.1]      # Error decreasing fast
+    DZ: [-0.2, 0.0, 0.2, -0.3, 0.0, 0.3]        # Stable
+    DP: [0.0, 0.6, 1.0, -0.1, 0.7, 1.2]         # Error increasing fast (DISTURBANCE!)
 
-  # Wind: Keep original scale (m/s) - wind doesn't depend on drone size
-  # But scale output to match controller output range
+  # Wind: Used for context, not direct feedforward
+  # Helps distinguish wind-caused transients from other sources
   wind:
-    SNW: [-10.0, -8.0, -5.0, -11.0, -8.5, -4.5]        # Strong negative wind
-    WNW: [-7.0, -4.0, -1.0, -8.0, -4.5, 0.0]           # Weak negative wind
-    NWN: [-1.0, 0.0, 1.0, -1.5, 0.0, 1.5]              # No wind
-    WPW: [1.0, 4.0, 7.0, 0.0, 4.5, 8.0]                # Weak positive wind
-    SPW: [6.0, 8.0, 10.0, 5.5, 8.5, 11.0]              # Strong positive wind
+    LOW:  [0.0, 0.0, 1.5, 0.0, 0.0, 2.0]        # Calm (0-1.5 m/s)
+    MED:  [1.0, 2.5, 4.0, 0.5, 2.5, 4.5]        # Moderate (1-4 m/s)
+    HIGH: [3.0, 4.5, 6.0, 2.5, 5.0, 6.5]        # Strong (3+ m/s)
 
-  # Correction: Scaled output for Crazyflie acceleration range (±5 m/s²)
-  # Original was ±4 m/s², increase slightly for responsiveness
+  # Correction: Transient boost (adds to PID)
   correction:
-    XLNC: [-5.0, -4.0, -3.0, -5.5, -4.25, -2.5]        # Extra large negative
-    LNC: [-3.5, -2.5, -1.5, -4.0, -2.75, -1.0]         # Large negative
-    SNC: [-2.0, -1.0, 0.0, -2.5, -1.0, 0.5]            # Small negative
-    NC: [-0.5, 0.0, 0.5, -1.0, 0.0, 1.0]               # No correction
-    SPC: [0.0, 1.0, 2.0, -0.5, 1.0, 2.5]               # Small positive
-    LPC: [1.5, 2.5, 3.5, 1.0, 2.75, 4.0]               # Large positive
-    XLPC: [3.0, 4.0, 5.0, 2.5, 4.25, 5.5]              # Extra large positive
+    LNC: [-4.0, -3.0, -2.0, -4.5, -3.25, -1.5]  # Large negative
+    SNC: [-2.5, -1.5, -0.5, -3.0, -1.75, 0.0]   # Small negative
+    NC:  [-0.5, 0.0, 0.5, -0.8, 0.0, 0.8]       # No correction
+    SPC: [0.5, 1.5, 2.5, 0.0, 1.75, 3.0]        # Small positive
+    LPC: [2.0, 3.0, 4.0, 1.5, 3.25, 4.5]        # Large positive
 
-# Rules: Same logic, but now triggers at smaller errors
-# Format: [error_mf, derror_mf, wind_mf, correction_mf]
+# Rules: Focus on ERROR DYNAMICS, not steady-state
+# Key insight: Fast error increase (DP) = disturbance hitting = boost correction
 rules:
-  - [PB, DZ, NWN, LPC]
-  - [PS, DZ, NWN, SPC]
-  - [ZE, DZ, NWN, NC]
-  - [NS, DZ, NWN, SNC]
-  - [NB, DZ, NWN, LNC]
-  - [PB, DN, NWN, LPC]
-  - [PS, DN, NWN, SPC]
-  - [ZE, DN, NWN, SNC]
-  - [NS, DN, NWN, NC]
-  - [NB, DN, NWN, SNC]
-  - [PB, DP, NWN, NC]
-  - [PS, DP, NWN, SNC]
-  - [ZE, DP, NWN, SPC]
-  - [NS, DP, NWN, SNC]
-  - [NB, DP, NWN, LNC]
-  - [ZE, DZ, SPW, LNC]
-  - [ZE, DZ, SNW, LPC]
-  - [ZE, DZ, WPW, SNC]
-  - [ZE, DZ, WNW, SPC]
-  - [PB, DZ, SPW, XLPC]
-  - [NB, DZ, SNW, XLNC]
+  # === CALM CONDITIONS (LOW wind) ===
+  # Standard PD-like response, minimal intervention
+  - [PB, DZ, LOW, SPC]    # Large error, stable -> small boost
+  - [PS, DZ, LOW, NC]     # Small error, stable -> let PID handle
+  - [ZE, DZ, LOW, NC]     # On target -> no action
+  - [NS, DZ, LOW, NC]
+  - [NB, DZ, LOW, SNC]
+
+  # Error decreasing (system recovering) -> reduce action, avoid overshoot
+  - [PB, DN, LOW, NC]     # Error shrinking fast -> ease off
+  - [PS, DN, LOW, NC]
+  - [ZE, DN, LOW, SNC]    # Approaching target fast -> brake
+  - [NS, DN, LOW, NC]
+  - [NB, DN, LOW, NC]
+
+  # Error increasing (disturbance!) -> BOOST correction
+  - [PB, DP, LOW, LPC]    # Error growing -> strong response
+  - [PS, DP, LOW, SPC]
+  - [ZE, DP, LOW, SPC]    # Was stable, now drifting -> act early
+  - [NS, DP, LOW, SNC]
+  - [NB, DP, LOW, LNC]
+
+  # === MODERATE WIND (MED) ===
+  # More aggressive on transients
+  - [PB, DZ, MED, SPC]
+  - [PS, DZ, MED, NC]
+  - [ZE, DZ, MED, NC]     # Steady wind, steady error -> PID handles
+  - [NS, DZ, MED, NC]
+  - [NB, DZ, MED, SNC]
+
+  - [PB, DN, MED, NC]
+  - [PS, DN, MED, NC]
+  - [ZE, DN, MED, SNC]
+  - [NS, DN, MED, NC]
+  - [NB, DN, MED, NC]
+
+  - [PB, DP, MED, LPC]    # Gust hitting -> strong response
+  - [PS, DP, MED, LPC]
+  - [ZE, DP, MED, SPC]
+  - [NS, DP, MED, SNC]
+  - [NB, DP, MED, LNC]
+
+  # === STRONG WIND (HIGH) ===
+  # Maximum transient response, trust PID for steady-state
+  - [PB, DZ, HIGH, SPC]   # Steady under strong wind -> small boost
+  - [PS, DZ, HIGH, NC]
+  - [ZE, DZ, HIGH, NC]    # Stabilized -> don't fight PID
+  - [NS, DZ, HIGH, NC]
+  - [NB, DZ, HIGH, SNC]
+
+  - [PB, DN, HIGH, NC]    # Recovering -> let it settle
+  - [PS, DN, HIGH, NC]
+  - [ZE, DN, HIGH, SNC]
+  - [NS, DN, HIGH, NC]
+  - [NB, DN, HIGH, NC]
+
+  - [PB, DP, HIGH, LPC]   # Strong gust on top of wind -> MAX response
+  - [PS, DP, HIGH, LPC]
+  - [ZE, DP, HIGH, LPC]   # Sudden disturbance -> immediate action
+  - [NS, DP, HIGH, LNC]
+  - [NB, DP, HIGH, LNC]

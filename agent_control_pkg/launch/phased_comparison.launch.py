@@ -197,14 +197,17 @@ def launch_setup(context, *args, **kwargs):
     }
 
     # ==========================================================================
-    # PID GAINS - Tuned for Crazyflie 2.1 physics model
+    # PID GAINS - Tuned for Crazyflie 2.1 physics model (DO NOT CHANGE)
     # ==========================================================================
-    # These gains were tuned for the Crazyflie simulation model.
-    # Ki=1.946 provides strong integral action for disturbance rejection.
-    # ==========================================================================
-    TUNED_KP = 3.501   # Proportional gain (position error → acceleration)
-    TUNED_KI = 1.946   # Integral gain (steady-state error elimination)
-    TUNED_KD = 3.608   # Derivative gain (velocity damping)
+    TUNED_KP = 3.501   # Proportional gain
+    TUNED_KI = 1.946   # Integral gain
+    TUNED_KD = 3.608   # Derivative gain
+
+    # Fuzzy mix ratios - ADDITIVE mode
+    # Keep full PID, add small fuzzy correction on top
+    # Formula: u = 1.0*PID + 0.3*Fuzzy
+    MIX_K_PID = 1.0
+    MIX_K_FUZZY = 0.3
 
     # PD controller params (Group 0) - No integral action
     pd_controller_params = {
@@ -232,7 +235,7 @@ def launch_setup(context, *args, **kwargs):
         'fuzzy.enable': True,
         'fuzzy.params_file': fuzzy_params_file,
         'fuzzy.include_wind': True,
-        'mix.k_pid': 0.65, 'mix.k_fuzzy': 0.35,
+        'mix.k_pid': MIX_K_PID, 'mix.k_fuzzy': MIX_K_FUZZY,
     }
 
     # GT2-Fuzzy params (Group 3) - PID + GT2 Fuzzy hybrid
@@ -248,7 +251,7 @@ def launch_setup(context, *args, **kwargs):
         'gt2.secondary_shape': 'triangular',
         'gt2.secondary_spread': 0.3,
         'fuzzy.include_wind': True,
-        'mix.k_pid': 0.65, 'mix.k_fuzzy': 0.35,
+        'mix.k_pid': MIX_K_PID, 'mix.k_fuzzy': MIX_K_FUZZY,
     }
 
     # Agent-controller mapping

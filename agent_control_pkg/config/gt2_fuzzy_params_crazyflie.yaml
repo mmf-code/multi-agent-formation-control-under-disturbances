@@ -1,158 +1,142 @@
-# GT2-FLS Crazyflie-Optimized Parameters
+# GT2-FLS Parameters - Transient Disturbance Rejection
 #
-# General Type-2 Fuzzy Logic System with alpha-plane decomposition
-# Scaled for Crazyflie 2.1 nano quadrotor (~27g)
+# DESIGN PHILOSOPHY:
+# - PID handles steady-state errors (integral term)
+# - GT2-Fuzzy handles TRANSIENT disturbances with uncertainty modeling
+# - Alpha-plane decomposition provides robust output under uncertainty
+# - Focus on dError dynamics, not wind feedforward
 #
-# Key differences from IT2:
-# - Secondary MF shape defines uncertainty distribution within FOU
-# - Alpha-plane method computes multiple IT2 slices for richer output
-# - Better uncertainty handling under wind disturbances
-#
-# Scale factor: Same as IT2 for fair comparison
-# Error range: ±0.5m (Crazyflie typical tracking errors)
-# dError range: ±0.5 m/s (Crazyflie velocity errors)
-#
-# GT2 config (set via ROS params): num_alpha_levels=5, secondary_shape=triangular
+# GT2 advantage: Better handling of uncertainty in disturbance magnitude
 #
 # Author: Multi-Agent Formation Control Research
-# Date: 2026-01-03
+# Date: 2026-01-04
 
-# Membership functions with GT2 FOU bounds
-# Format: [lmf_left, lmf_peak, lmf_right, umf_left, umf_peak, umf_right]
-# The secondary MF is defined over the vertical slice between LMF and UMF
 membership_functions:
-  # Error: Scaled for Crazyflie (±0.5m typical range)
+  # Error: ±2.0m range
   error:
-    NB: [-0.50, -0.40, -0.30, -0.55, -0.425, -0.275]   # Large negative
-    NS: [-0.35, -0.20, -0.05, -0.40, -0.225, 0.0]      # Small negative
-    ZE: [-0.05, 0.0, 0.05, -0.10, 0.0, 0.10]           # Zero
-    PS: [0.05, 0.20, 0.35, 0.0, 0.225, 0.40]           # Small positive
-    PB: [0.30, 0.40, 0.50, 0.275, 0.425, 0.55]         # Large positive
+    NB: [-2.0, -1.6, -1.2, -2.2, -1.7, -1.1]
+    NS: [-1.4, -0.8, -0.2, -1.6, -0.9, 0.0]
+    ZE: [-0.3, 0.0, 0.3, -0.4, 0.0, 0.4]
+    PS: [0.2, 0.8, 1.4, 0.0, 0.9, 1.6]
+    PB: [1.2, 1.6, 2.0, 1.1, 1.7, 2.2]
 
-  # dError (error derivative): Scaled for Crazyflie velocities
+  # dError: 5 levels for finer transient detection
+  # Key: DP/PB = disturbance hitting, DN/NB = recovering
   dError:
-    NB: [-0.50, -0.40, -0.20, -0.60, -0.45, -0.15]     # Fast decreasing
-    NS: [-0.30, -0.15, 0.0, -0.35, -0.18, 0.05]        # Slow decreasing
-    ZE: [-0.08, 0.0, 0.08, -0.12, 0.0, 0.12]           # Stationary
-    PS: [0.0, 0.15, 0.30, -0.05, 0.18, 0.35]           # Slow increasing
-    PB: [0.20, 0.40, 0.50, 0.15, 0.45, 0.60]           # Fast increasing
+    NB: [-1.0, -0.8, -0.4, -1.2, -0.9, -0.3]    # Fast recovery
+    NS: [-0.6, -0.3, 0.0, -0.7, -0.35, 0.05]    # Slow recovery
+    ZE: [-0.15, 0.0, 0.15, -0.2, 0.0, 0.2]      # Stable
+    PS: [0.0, 0.3, 0.6, -0.05, 0.35, 0.7]       # Slow drift
+    PB: [0.4, 0.8, 1.0, 0.3, 0.9, 1.2]          # Fast drift (DISTURBANCE!)
 
-  # Wind: Normalized [0, 1] for disturbance magnitude
-  # 0 = no wind, 1 = maximum expected wind (~5 m/s for Crazyflie)
+  # Wind: Normalized [0, 1] - used for context only
   wind:
-    LOW:    [0.0, 0.0, 0.25, 0.0, 0.0, 0.35]           # Calm conditions
-    MEDIUM: [0.15, 0.40, 0.65, 0.10, 0.40, 0.75]       # Moderate wind
-    HIGH:   [0.55, 0.80, 1.0, 0.45, 0.85, 1.0]         # Strong wind
+    LOW:    [0.0, 0.0, 0.3, 0.0, 0.0, 0.4]      # Calm
+    MEDIUM: [0.2, 0.5, 0.8, 0.15, 0.5, 0.85]    # Moderate
+    HIGH:   [0.6, 0.85, 1.0, 0.5, 0.9, 1.0]     # Strong
 
-  # Correction output: Acceleration adjustment (m/s²)
-  # Scaled for Crazyflie max acceleration (~10 m/s²)
+  # Correction: Transient boost
   correction:
-    NB: [-5.0, -4.0, -2.5, -5.5, -4.25, -2.0]          # Strong negative
-    NS: [-3.0, -1.5, -0.3, -3.5, -1.75, 0.0]           # Weak negative
-    ZE: [-0.5, 0.0, 0.5, -0.8, 0.0, 0.8]               # No correction
-    PS: [0.3, 1.5, 3.0, 0.0, 1.75, 3.5]                # Weak positive
-    PB: [2.5, 4.0, 5.0, 2.0, 4.25, 5.5]                # Strong positive
+    NB: [-4.0, -3.0, -2.0, -4.5, -3.25, -1.5]
+    NS: [-2.5, -1.5, -0.3, -3.0, -1.75, 0.0]
+    ZE: [-0.4, 0.0, 0.4, -0.6, 0.0, 0.6]
+    PS: [0.3, 1.5, 2.5, 0.0, 1.75, 3.0]
+    PB: [2.0, 3.0, 4.0, 1.5, 3.25, 4.5]
 
-# Rule base: 75 rules (5 error × 5 dError × 3 wind levels)
-# Format: [error_label, dError_label, wind_label, correction_label]
-#
-# Rule design philosophy:
-# - Low wind: Standard PD-like response
-# - Medium wind: More aggressive correction to counter disturbances
-# - High wind: Maximum response to maintain position
+# Rules: 75 rules (5×5×3) - Focus on dError dynamics
 rules:
-  # ===== LOW WIND RULES (25 rules) =====
-  # Calm conditions - normal tracking behavior
-  - [NB, NB, LOW, NB]    # Large negative error + fast decreasing -> strong negative
-  - [NB, NS, LOW, NB]
-  - [NB, ZE, LOW, NS]
-  - [NB, PS, LOW, NS]
-  - [NB, PB, LOW, ZE]
+  # ===== LOW WIND (25 rules) =====
+  # Minimal intervention, let PID work
+  - [NB, NB, LOW, ZE]     # Recovering fast -> ease off
+  - [NB, NS, LOW, ZE]
+  - [NB, ZE, LOW, NS]     # Stable error -> small correction
+  - [NB, PS, LOW, NS]     # Starting to drift -> act
+  - [NB, PB, LOW, NB]     # Disturbance! -> strong response
 
-  - [NS, NB, LOW, NB]
-  - [NS, NS, LOW, NS]
-  - [NS, ZE, LOW, NS]
-  - [NS, PS, LOW, ZE]
-  - [NS, PB, LOW, PS]
+  - [NS, NB, LOW, ZE]
+  - [NS, NS, LOW, ZE]
+  - [NS, ZE, LOW, ZE]     # Let PID handle
+  - [NS, PS, LOW, NS]
+  - [NS, PB, LOW, NB]
 
-  - [ZE, NB, LOW, NS]
-  - [ZE, NS, LOW, NS]
-  - [ZE, ZE, LOW, ZE]    # No error, no change -> no correction
-  - [ZE, PS, LOW, PS]
-  - [ZE, PB, LOW, PS]
+  - [ZE, NB, LOW, PS]     # Overshooting -> brake
+  - [ZE, NS, LOW, ZE]
+  - [ZE, ZE, LOW, ZE]     # Perfect -> no action
+  - [ZE, PS, LOW, ZE]
+  - [ZE, PB, LOW, NS]     # Sudden drift -> counter
 
-  - [PS, NB, LOW, NS]
-  - [PS, NS, LOW, ZE]
-  - [PS, ZE, LOW, PS]
-  - [PS, PS, LOW, PS]
-  - [PS, PB, LOW, PB]
+  - [PS, NB, LOW, PB]
+  - [PS, NS, LOW, PS]
+  - [PS, ZE, LOW, ZE]
+  - [PS, PS, LOW, ZE]
+  - [PS, PB, LOW, PS]
 
-  - [PB, NB, LOW, ZE]
-  - [PB, NS, LOW, PS]
+  - [PB, NB, LOW, PB]     # Recovering from disturbance
+  - [PB, NS, LOW, ZE]
   - [PB, ZE, LOW, PS]
-  - [PB, PS, LOW, PB]
-  - [PB, PB, LOW, PB]
+  - [PB, PS, LOW, PS]
+  - [PB, PB, LOW, PB]     # Disturbance! -> strong
 
-  # ===== MEDIUM WIND RULES (25 rules) =====
-  # Moderate disturbance - more aggressive response
-  - [NB, NB, MEDIUM, NB]
-  - [NB, NS, MEDIUM, NB]
-  - [NB, ZE, MEDIUM, NB]   # Stronger response under wind
-  - [NB, PS, MEDIUM, NS]
-  - [NB, PB, MEDIUM, NS]
+  # ===== MEDIUM WIND (25 rules) =====
+  # More responsive to transients
+  - [NB, NB, MEDIUM, ZE]
+  - [NB, NS, MEDIUM, ZE]
+  - [NB, ZE, MEDIUM, NS]
+  - [NB, PS, MEDIUM, NB]  # Wind + drift -> act fast
+  - [NB, PB, MEDIUM, NB]
 
-  - [NS, NB, MEDIUM, NB]
-  - [NS, NS, MEDIUM, NB]
-  - [NS, ZE, MEDIUM, NS]
+  - [NS, NB, MEDIUM, ZE]
+  - [NS, NS, MEDIUM, ZE]
+  - [NS, ZE, MEDIUM, ZE]
   - [NS, PS, MEDIUM, NS]
-  - [NS, PB, MEDIUM, ZE]
+  - [NS, PB, MEDIUM, NB]
 
-  - [ZE, NB, MEDIUM, NS]
-  - [ZE, NS, MEDIUM, NS]
-  - [ZE, ZE, MEDIUM, ZE]
-  - [ZE, PS, MEDIUM, PS]
-  - [ZE, PB, MEDIUM, PS]
+  - [ZE, NB, MEDIUM, PS]
+  - [ZE, NS, MEDIUM, ZE]
+  - [ZE, ZE, MEDIUM, ZE]  # Stable in wind -> PID has it
+  - [ZE, PS, MEDIUM, NS]
+  - [ZE, PB, MEDIUM, NB]  # Gust! -> respond
 
-  - [PS, NB, MEDIUM, ZE]
+  - [PS, NB, MEDIUM, PB]
   - [PS, NS, MEDIUM, PS]
-  - [PS, ZE, MEDIUM, PS]
-  - [PS, PS, MEDIUM, PB]
+  - [PS, ZE, MEDIUM, ZE]
+  - [PS, PS, MEDIUM, PS]
   - [PS, PB, MEDIUM, PB]
 
-  - [PB, NB, MEDIUM, NS]
+  - [PB, NB, MEDIUM, PB]
   - [PB, NS, MEDIUM, PS]
-  - [PB, ZE, MEDIUM, PB]   # Stronger response under wind
+  - [PB, ZE, MEDIUM, PS]
   - [PB, PS, MEDIUM, PB]
   - [PB, PB, MEDIUM, PB]
 
-  # ===== HIGH WIND RULES (25 rules) =====
-  # Strong disturbance - maximum response to maintain stability
-  - [NB, NB, HIGH, NB]
-  - [NB, NS, HIGH, NB]
-  - [NB, ZE, HIGH, NB]
-  - [NB, PS, HIGH, NB]
-  - [NB, PB, HIGH, NS]
+  # ===== HIGH WIND (25 rules) =====
+  # Maximum transient response, trust PID for steady-state
+  - [NB, NB, HIGH, ZE]    # Let recovery happen
+  - [NB, NS, HIGH, ZE]
+  - [NB, ZE, HIGH, NS]
+  - [NB, PS, HIGH, NB]    # Gust on wind -> max response
+  - [NB, PB, HIGH, NB]
 
-  - [NS, NB, HIGH, NB]
-  - [NS, NS, HIGH, NB]
-  - [NS, ZE, HIGH, NB]
-  - [NS, PS, HIGH, NS]
-  - [NS, PB, HIGH, ZE]
+  - [NS, NB, HIGH, PS]
+  - [NS, NS, HIGH, ZE]
+  - [NS, ZE, HIGH, ZE]
+  - [NS, PS, HIGH, NB]
+  - [NS, PB, HIGH, NB]
 
-  - [ZE, NB, HIGH, NB]
-  - [ZE, NS, HIGH, NS]
-  - [ZE, ZE, HIGH, ZE]
-  - [ZE, PS, HIGH, PS]
-  - [ZE, PB, HIGH, PB]
+  - [ZE, NB, HIGH, PS]
+  - [ZE, NS, HIGH, ZE]
+  - [ZE, ZE, HIGH, ZE]    # Stable in strong wind -> don't fight PID
+  - [ZE, PS, HIGH, NS]
+  - [ZE, PB, HIGH, NB]    # Sudden gust -> immediate
 
-  - [PS, NB, HIGH, ZE]
+  - [PS, NB, HIGH, PB]
   - [PS, NS, HIGH, PS]
-  - [PS, ZE, HIGH, PB]
+  - [PS, ZE, HIGH, ZE]
   - [PS, PS, HIGH, PB]
   - [PS, PB, HIGH, PB]
 
-  - [PB, NB, HIGH, NS]
-  - [PB, NS, HIGH, PB]
-  - [PB, ZE, HIGH, PB]
+  - [PB, NB, HIGH, PB]
+  - [PB, NS, HIGH, PS]
+  - [PB, ZE, HIGH, PS]
   - [PB, PS, HIGH, PB]
-  - [PB, PB, HIGH, PB]
+  - [PB, PB, HIGH, PB]    # Max error + gust -> max response
