@@ -179,8 +179,15 @@ class WindPublisher(Node):
         self.stoch_gust_remaining = 0.0  # seconds of gust remaining
         self.stoch_gust_intensity = 0.0  # current gust intensity
 
-        # Publisher
+        # Publishers
         self.wind_pub = self.create_publisher(Vector3, '/wind/velocity', 10)
+        self.wind_force_pub = self.create_publisher(Vector3, '/wind/force', 10)
+
+        # Aerodynamic force coefficient for Crazyflie 2.1
+        # F = 0.5 * rho * A * Cd * v²
+        # rho = 1.225 kg/m³, A ≈ 0.0092 m² (92mm rotor diameter), Cd ≈ 1.0
+        # k_aero = 0.5 * 1.225 * 0.0092 * 1.0 ≈ 0.0056
+        self.k_aero = 0.0056  # [N/(m/s)²]
 
         # Timer
         self.timer = self.create_timer(1.0 / publish_rate, self.publish_wind)
@@ -293,6 +300,16 @@ class WindPublisher(Node):
             msg.z = 0.0
 
             self.wind_pub.publish(msg)
+
+            # Compute and publish aerodynamic force
+            total_wind_mag = math.sqrt(msg.x**2 + msg.y**2)
+            force_magnitude = self.k_aero * (total_wind_mag ** 2)
+            if total_wind_mag > 1e-6:
+                force_msg = Vector3()
+                force_msg.x = force_magnitude * (msg.x / total_wind_mag)
+                force_msg.y = force_magnitude * (msg.y / total_wind_mag)
+                force_msg.z = 0.0
+                self.wind_force_pub.publish(force_msg)
             return  # Early return since we already published
 
         elif self.profile == 'aggressive':
@@ -357,6 +374,16 @@ class WindPublisher(Node):
             msg.z = 0.0
 
             self.wind_pub.publish(msg)
+
+            # Compute and publish aerodynamic force
+            total_wind_mag = math.sqrt(msg.x**2 + msg.y**2)
+            force_magnitude = self.k_aero * (total_wind_mag ** 2)
+            if total_wind_mag > 1e-6:
+                force_msg = Vector3()
+                force_msg.x = force_magnitude * (msg.x / total_wind_mag)
+                force_msg.y = force_magnitude * (msg.y / total_wind_mag)
+                force_msg.z = 0.0
+                self.wind_force_pub.publish(force_msg)
             return
 
         elif self.profile in ['vonkarman', 'dryden']:
@@ -380,6 +407,16 @@ class WindPublisher(Node):
             msg.z = turb_sample.w
 
             self.wind_pub.publish(msg)
+
+            # Compute and publish aerodynamic force for turbulent wind
+            total_wind_mag = math.sqrt(msg.x**2 + msg.y**2)
+            force_magnitude = self.k_aero * (total_wind_mag ** 2)
+            if total_wind_mag > 1e-6:
+                force_msg = Vector3()
+                force_msg.x = force_magnitude * (msg.x / total_wind_mag)
+                force_msg.y = force_magnitude * (msg.y / total_wind_mag)
+                force_msg.z = 0.0
+                self.wind_force_pub.publish(force_msg)
             return
 
         else:
@@ -393,6 +430,16 @@ class WindPublisher(Node):
         msg.z = 0.0
 
         self.wind_pub.publish(msg)
+
+        # Compute and publish aerodynamic force: F = k_aero * v²
+        # Force acts in the direction of wind (pushes drone downwind)
+        force_magnitude = self.k_aero * (current_mag ** 2)
+        force_msg = Vector3()
+        force_msg.x = force_magnitude * math.cos(self.direction_rad)
+        force_msg.y = force_magnitude * math.sin(self.direction_rad)
+        force_msg.z = 0.0
+
+        self.wind_force_pub.publish(force_msg)
 
 
 def main(args=None):

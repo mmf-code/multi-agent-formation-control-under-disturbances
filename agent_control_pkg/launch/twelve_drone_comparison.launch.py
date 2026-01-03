@@ -102,94 +102,83 @@ def generate_launch_description():
 
     # ===== Controller Configurations =====
 
-    # Common PID gains (tuned for Crazyflie)
-    common_pid = {
-        'pid.kp': 3.501,
-        'pid.ki': 1.946,
-        'pid.kd': 3.608,
+    # ==========================================================================
+    # PID GAINS - Tuned for Crazyflie 2.1 physics model
+    # ==========================================================================
+    # These gains were tuned for the Crazyflie simulation model.
+    # Ki=1.946 provides strong integral action for disturbance rejection.
+    # ==========================================================================
+    TUNED_KP = 3.501   # Proportional gain (position error → acceleration)
+    TUNED_KI = 1.946   # Integral gain (steady-state error elimination)
+    TUNED_KD = 3.608   # Derivative gain (velocity damping)
+
+    common_base = {
+        'dt': 0.005,
+        'output_limits.x.min': -10.0,
+        'output_limits.x.max': 10.0,
+        'output_limits.y.min': -10.0,
+        'output_limits.y.max': 10.0,
+        'use_sim_time': use_sim_time,
+        'wind_source_topic': '/wind/velocity',
+        'wind_source_type': 'velocity',
+        'feedforward.enable_wind': False,
+        'feedforward.k_wind': 0.0,
     }
 
     # PD controller params (Group 0: agents 0-2) - No integral term
     pd_controller_params = {
+        **common_base,
         'controller_type': 'pd',
-        'dt': 0.005,
-        'pid.kp': 3.501,
+        'pid.kp': TUNED_KP,
         'pid.ki': 0.0,  # No integral for PD
-        'pid.kd': 3.608,
+        'pid.kd': TUNED_KD,
         'fuzzy.enable': False,
-        'wind_source_topic': '/wind/velocity',
-        'wind_source_type': 'velocity',
-        'feedforward.enable_wind': False,
-        'feedforward.k_wind': 0.0,
-        'use_sim_time': use_sim_time,
-        'output_limits.x.min': -10.0,
-        'output_limits.x.max': 10.0,
-        'output_limits.y.min': -10.0,
-        'output_limits.y.max': 10.0,
     }
 
     # PID controller params (Group 1: agents 3-5) - Full PID
     pid_controller_params = {
+        **common_base,
         'controller_type': 'pid',
-        'dt': 0.005,
-        **common_pid,
+        'pid.kp': TUNED_KP,
+        'pid.ki': TUNED_KI,
+        'pid.kd': TUNED_KD,
         'fuzzy.enable': False,
-        'wind_source_topic': '/wind/velocity',
-        'wind_source_type': 'velocity',
-        'feedforward.enable_wind': False,
-        'feedforward.k_wind': 0.0,
-        'use_sim_time': use_sim_time,
-        'output_limits.x.min': -10.0,
-        'output_limits.x.max': 10.0,
-        'output_limits.y.min': -10.0,
-        'output_limits.y.max': 10.0,
     }
 
     # IT2 Fuzzy controller params (Group 2: agents 6-8)
+    # Same PID gains, fuzzy adds disturbance compensation
+    fuzzy_params_file = os.path.join(pkg_agent_control, 'config', 'fuzzy_params_crazyflie.yaml')
     it2_controller_params = {
+        **common_base,
         'controller_type': 'pid_fuzzy',
-        'dt': 0.005,
-        **common_pid,
+        'pid.kp': TUNED_KP,
+        'pid.ki': TUNED_KI,
+        'pid.kd': TUNED_KD,
         'fuzzy.enable': True,
         'fuzzy.include_wind': True,
         'fuzzy.wind_scalar': 1.0,
-        'fuzzy.params_file': 'fuzzy_params_crazyflie.yaml',
-        'mix.k_pid': 1.0,
+        'fuzzy.params_file': fuzzy_params_file,
+        'mix.k_pid': 0.65,
         'mix.k_fuzzy': 0.35,
-        'wind_source_topic': '/wind/velocity',
-        'wind_source_type': 'velocity',
-        'feedforward.enable_wind': False,
-        'feedforward.k_wind': 0.0,
-        'use_sim_time': use_sim_time,
-        'output_limits.x.min': -10.0,
-        'output_limits.x.max': 10.0,
-        'output_limits.y.min': -10.0,
-        'output_limits.y.max': 10.0,
     }
 
     # GT2 Fuzzy controller params (Group 3: agents 9-11)
+    # Same PID gains, GT2 fuzzy adds uncertainty handling
+    gt2_params_file = os.path.join(pkg_agent_control, 'config', 'gt2_fuzzy_params_crazyflie.yaml')
     gt2_controller_params = {
+        **common_base,
         'controller_type': 'pid_gt2_fuzzy',
-        'dt': 0.005,
-        **common_pid,
-        'fuzzy.enable': True,
+        'pid.kp': TUNED_KP,
+        'pid.ki': TUNED_KI,
+        'pid.kd': TUNED_KD,
+        'fuzzy.enable': False,  # GT2 uses gt2.params_file, not IT2 fuzzy.params_file
         'fuzzy.include_wind': True,
-        'fuzzy.wind_scalar': 1.0,
-        'mix.k_pid': 1.0,
-        'mix.k_fuzzy': 0.35,
+        'gt2.params_file': gt2_params_file,
         'gt2.num_alpha_levels': 5,
         'gt2.secondary_shape': 'triangular',
         'gt2.secondary_spread': 0.3,
-        'gt2.params_file': 'gt2_fuzzy_params_crazyflie.yaml',
-        'wind_source_topic': '/wind/velocity',
-        'wind_source_type': 'velocity',
-        'feedforward.enable_wind': False,
-        'feedforward.k_wind': 0.0,
-        'use_sim_time': use_sim_time,
-        'output_limits.x.min': -10.0,
-        'output_limits.x.max': 10.0,
-        'output_limits.y.min': -10.0,
-        'output_limits.y.max': 10.0,
+        'mix.k_pid': 0.65,
+        'mix.k_fuzzy': 0.35,
     }
 
     # Agent controller map: agent_id -> params

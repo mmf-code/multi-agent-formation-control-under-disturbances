@@ -142,8 +142,9 @@ def launch_setup(context, *args, **kwargs):
                                  f"{'='*60}")
 
     # Gazebo server
+    # Note: Plugin loading via -s flags removed - plugins are defined in the world file
     gzserver = ExecuteProcess(
-        cmd=['gzserver', '-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so', world_file],
+        cmd=['gzserver', world_file],
         output='screen',
         additional_env={
             'GAZEBO_PLUGIN_PATH': os.environ.get('GAZEBO_PLUGIN_PATH', ''),
@@ -195,42 +196,53 @@ def launch_setup(context, *args, **kwargs):
         'feedforward.enable_wind': False,
     }
 
-    # PD controller params (Group 0)
+    # ==========================================================================
+    # PID GAINS - Tuned for Crazyflie 2.1 physics model
+    # ==========================================================================
+    # These gains were tuned for the Crazyflie simulation model.
+    # Ki=1.946 provides strong integral action for disturbance rejection.
+    # ==========================================================================
+    TUNED_KP = 3.501   # Proportional gain (position error → acceleration)
+    TUNED_KI = 1.946   # Integral gain (steady-state error elimination)
+    TUNED_KD = 3.608   # Derivative gain (velocity damping)
+
+    # PD controller params (Group 0) - No integral action
     pd_controller_params = {
         **common_base,
         'controller_type': 'pd',
-        'pid.kp': 3.501, 'pid.ki': 0.0, 'pid.kd': 3.608,
+        'pid.kp': TUNED_KP, 'pid.ki': 0.0, 'pid.kd': TUNED_KD,
         'fuzzy.enable': False,
     }
 
-    # PID controller params (Group 1)
+    # PID controller params (Group 1) - Full PID
     pid_controller_params = {
         **common_base,
         'controller_type': 'pid',
-        'pid.kp': 3.501, 'pid.ki': 1.946, 'pid.kd': 3.608,
+        'pid.kp': TUNED_KP, 'pid.ki': TUNED_KI, 'pid.kd': TUNED_KD,
         'fuzzy.enable': False,
     }
 
-    # IT2-Fuzzy params (Group 2)
+    # IT2-Fuzzy params (Group 2) - PID + IT2 Fuzzy hybrid
+    # Same PID gains, fuzzy adds disturbance compensation
     fuzzy_params_file = os.path.join(pkg_agent_control, 'config', 'fuzzy_params_crazyflie.yaml')
     it2_controller_params = {
         **common_base,
-        'controller_type': 'pid',
-        'pid.kp': 3.501, 'pid.ki': 1.946, 'pid.kd': 3.608,
+        'controller_type': 'pid_fuzzy',
+        'pid.kp': TUNED_KP, 'pid.ki': TUNED_KI, 'pid.kd': TUNED_KD,
         'fuzzy.enable': True,
         'fuzzy.params_file': fuzzy_params_file,
         'fuzzy.include_wind': True,
         'mix.k_pid': 0.65, 'mix.k_fuzzy': 0.35,
     }
 
-    # GT2-Fuzzy params (Group 3)
+    # GT2-Fuzzy params (Group 3) - PID + GT2 Fuzzy hybrid
+    # Same PID gains, GT2 fuzzy adds uncertainty handling
     gt2_params_file = os.path.join(pkg_agent_control, 'config', 'gt2_fuzzy_params_crazyflie.yaml')
     gt2_controller_params = {
         **common_base,
-        'controller_type': 'pid',
-        'pid.kp': 3.501, 'pid.ki': 1.946, 'pid.kd': 3.608,
-        'fuzzy.enable': True,
-        'gt2.enable': True,
+        'controller_type': 'pid_gt2_fuzzy',
+        'pid.kp': TUNED_KP, 'pid.ki': TUNED_KI, 'pid.kd': TUNED_KD,
+        'fuzzy.enable': False,  # GT2 uses gt2.params_file, not IT2 fuzzy.params_file
         'gt2.params_file': gt2_params_file,
         'gt2.num_alpha_levels': 5,
         'gt2.secondary_shape': 'triangular',

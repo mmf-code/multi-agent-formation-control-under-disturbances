@@ -58,7 +58,7 @@ class AgentMetrics:
     errors_mag: List[float] = field(default_factory=list)
     rmse_x: List[float] = field(default_factory=list)
     rmse_y: List[float] = field(default_factory=list)
-    rmse_total: List[float] = field(default_factory=list)
+    rmse_total: List[float] = field(default_factory=list)  # Per-waypoint RMSE (for CSV)
     iae_x: List[float] = field(default_factory=list)
     iae_y: List[float] = field(default_factory=list)
     itae_x: List[float] = field(default_factory=list)
@@ -68,8 +68,13 @@ class AgentMetrics:
     max_overshoots_y: List[float] = field(default_factory=list)
     control_efforts: List[float] = field(default_factory=list)
 
+    # Mission-wide metrics (accumulated across all waypoints)
+    mission_rmse: List[float] = field(default_factory=list)
+    mission_itae_x: List[float] = field(default_factory=list)
+    mission_itae_y: List[float] = field(default_factory=list)
+
     # Final summary metrics
-    final_rmse: float = 0.0
+    final_rmse: float = 0.0  # Will use mission_rmse, not per-waypoint rmse_total
     final_itae: float = 0.0
     final_settling_time: float = 0.0
     final_max_overshoot: float = 0.0
@@ -224,6 +229,12 @@ class PhaseMetricsLogger(Node):
         am.settling_times.append(msg.settling_time)
         am.max_overshoots_x.append(msg.max_overshoot_x)
         am.max_overshoots_y.append(msg.max_overshoot_y)
+
+        # Store mission-wide metrics (these accumulate across waypoints)
+        am.mission_rmse.append(msg.mission_rmse)
+        am.mission_itae_x.append(msg.mission_itae_x)
+        am.mission_itae_y.append(msg.mission_itae_y)
+
         am.samples += 1
 
     def wind_callback(self, msg: Vector3):
@@ -270,12 +281,28 @@ class PhaseMetricsLogger(Node):
         if am.samples == 0:
             return
 
-        # Use final values from time series
-        am.final_rmse = am.rmse_total[-1] if am.rmse_total else 0.0
-        am.final_itae = (
-            (am.itae_x[-1] if am.itae_x else 0.0) +
-            (am.itae_y[-1] if am.itae_y else 0.0)
-        )
+        # Use MISSION-WIDE RMSE (not per-waypoint rmse_total)
+        # mission_rmse accumulates across all waypoints for true mission performance
+        # Fall back to computing from error time series if mission_rmse not available
+        if am.mission_rmse and am.mission_rmse[-1] > 0:
+            am.final_rmse = am.mission_rmse[-1]
+        elif am.errors_x and am.errors_y:
+            # Compute time-weighted RMSE from error time series
+            import numpy as np
+            errors_sq = np.array(am.errors_x)**2 + np.array(am.errors_y)**2
+            am.final_rmse = float(np.sqrt(np.mean(errors_sq)))
+        else:
+            am.final_rmse = am.rmse_total[-1] if am.rmse_total else 0.0
+
+        # Use mission-wide ITAE if available, otherwise per-waypoint
+        if am.mission_itae_x and am.mission_itae_y:
+            am.final_itae = am.mission_itae_x[-1] + am.mission_itae_y[-1]
+        else:
+            am.final_itae = (
+                (am.itae_x[-1] if am.itae_x else 0.0) +
+                (am.itae_y[-1] if am.itae_y else 0.0)
+            )
+
         am.final_settling_time = am.settling_times[-1] if am.settling_times else 0.0
         am.final_max_overshoot = max(
             max(am.max_overshoots_x) if am.max_overshoots_x else 0.0,

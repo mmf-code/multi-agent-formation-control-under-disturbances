@@ -641,8 +641,13 @@ void AgentControllerNode::windCallback(const geometry_msgs::msg::Vector3::Shared
   last_fuzzy_wind_x_ = fuzzy_x;
   last_fuzzy_wind_y_ = fuzzy_y;
 
-  // Feed to fuzzy controllers when enabled.
-  if (fuzzy_enable_ && fuzzy_include_wind_) {
+  // Feed to fuzzy controllers when wind input is enabled.
+  // Check for IT2 fuzzy (fuzzy_enable_) OR GT2 fuzzy (controller type check)
+  // GT2 controllers use fuzzy.enable=false but still need wind input via gt2.params_file
+  const bool has_gt2_controller = (controller_type_ == "gt2_fuzzy" || controller_type_ == "pid_gt2_fuzzy");
+  const bool should_feed_wind = fuzzy_include_wind_ && (fuzzy_enable_ || has_gt2_controller);
+
+  if (should_feed_wind) {
     // IT2 expects signed wind in [-10, 10] m/s range
     if (axis_x_.fuzzy) {
       axis_x_.fuzzy->setWindScalar(fuzzy_x);
