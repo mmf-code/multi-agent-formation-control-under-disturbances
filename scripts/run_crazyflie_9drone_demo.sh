@@ -4,6 +4,12 @@
 # =================================
 # Runs the complete 9-drone formation control system with Crazyswarm2.
 #
+# WARNING: This script requires ros-humble-crazyflie package (Crazyswarm2).
+#          This package is NOT installed by default.
+#          For Gazebo simulation without Crazyswarm2, use:
+#            ros2 launch agent_control_pkg formation_comparison_demo.launch.py
+#            ros2 launch agent_control_pkg it2_vs_gt2_comparison.launch.py
+#
 # This script:
 # 1. Launches Crazyswarm2 simulation (9 Crazyflies)
 # 2. Launches TF->Odom bridge
@@ -17,7 +23,7 @@
 #
 # Prerequisites:
 #   - ROS2 Humble
-#   - ros-humble-crazyflie package
+#   - ros-humble-crazyflie package (sudo apt install ros-humble-crazyflie)
 #   - colcon build --cmake-args -DENABLE_CRAZYFLIE=ON
 
 set -e

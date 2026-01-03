@@ -17,6 +17,132 @@ std::string to_lower(std::string value)
 }
 }  // namespace
 
+FormationShape FormationCoordinatorNode::stringToFormationShape(const std::string & shape_str) const
+{
+  const std::string lower_shape = to_lower(shape_str);
+
+  if (lower_shape == "triangle") {
+    return FormationShape::TRIANGLE;
+  } else if (lower_shape == "line") {
+    return FormationShape::LINE;
+  } else if (lower_shape == "square") {
+    return FormationShape::SQUARE;
+  } else if (lower_shape == "v_shape" || lower_shape == "v-shape" || lower_shape == "vshape") {
+    return FormationShape::V_SHAPE;
+  }
+
+  // Default to triangle if unknown
+  RCLCPP_WARN_ONCE(get_logger(), "Unknown formation shape '%s', defaulting to triangle", shape_str.c_str());
+  return FormationShape::TRIANGLE;
+}
+
+std::string FormationCoordinatorNode::formationShapeToString(FormationShape shape) const
+{
+  switch (shape) {
+    case FormationShape::TRIANGLE:
+      return "triangle";
+    case FormationShape::LINE:
+      return "line";
+    case FormationShape::SQUARE:
+      return "square";
+    case FormationShape::V_SHAPE:
+      return "v_shape";
+    default:
+      return "triangle";
+  }
+}
+
+std::vector<std::array<double, 2>> FormationCoordinatorNode::generateFormationPositions(
+  FormationShape shape, std::size_t count) const
+{
+  std::vector<std::array<double, 2>> positions(count, {0.0, 0.0});
+  if (count == 0) {
+    return positions;
+  }
+
+  const double s = std::max(spacing_, 0.1);
+
+  switch (shape) {
+    case FormationShape::TRIANGLE:
+      // Equilateral triangle with centroid at origin
+      if (count >= 1) {
+        positions[0] = {0.0, (std::sqrt(3.0) / 3.0) * s};
+      }
+      if (count >= 2) {
+        positions[1] = {-s / 2.0, -(std::sqrt(3.0) / 6.0) * s};
+      }
+      if (count >= 3) {
+        positions[2] = {s / 2.0, -(std::sqrt(3.0) / 6.0) * s};
+      }
+      // Extra agents in circular pattern
+      for (std::size_t i = 3; i < count; ++i) {
+        const double angle = 2.0 * M_PI * static_cast<double>(i) / static_cast<double>(count);
+        positions[i] = {s * std::cos(angle), s * std::sin(angle)};
+      }
+      break;
+
+    case FormationShape::LINE:
+      // Horizontal line centered at origin
+      {
+        const double half_count = static_cast<double>(count - 1) / 2.0;
+        for (std::size_t i = 0; i < count; ++i) {
+          const double offset_index = static_cast<double>(i) - half_count;
+          positions[i] = {offset_index * s, 0.0};
+        }
+      }
+      break;
+
+    case FormationShape::SQUARE:
+      // L-shape for 3 drones (incomplete square)
+      if (count >= 1) {
+        positions[0] = {-s / 2.0, s / 2.0};   // Top-left
+      }
+      if (count >= 2) {
+        positions[1] = {s / 2.0, s / 2.0};    // Top-right
+      }
+      if (count >= 3) {
+        positions[2] = {-s / 2.0, -s / 2.0};  // Bottom-left
+      }
+      // Extra agents complete the square pattern
+      if (count >= 4) {
+        positions[3] = {s / 2.0, -s / 2.0};   // Bottom-right
+      }
+      for (std::size_t i = 4; i < count; ++i) {
+        // Additional agents in circular pattern around square
+        const double angle = 2.0 * M_PI * static_cast<double>(i - 4) / static_cast<double>(count - 4);
+        positions[i] = {s * 1.5 * std::cos(angle), s * 1.5 * std::sin(angle)};
+      }
+      break;
+
+    case FormationShape::V_SHAPE:
+      // V formation: leader at front, wings behind
+      if (count >= 1) {
+        positions[0] = {0.0, s * 0.5};           // Leader (front center)
+      }
+      if (count >= 2) {
+        positions[1] = {-s * 0.7, -s * 0.5};     // Left wing
+      }
+      if (count >= 3) {
+        positions[2] = {s * 0.7, -s * 0.5};      // Right wing
+      }
+      // Extra agents extend the V pattern
+      for (std::size_t i = 3; i < count; ++i) {
+        const bool is_left_wing = (i % 2 == 1);
+        const double wing_index = static_cast<double>((i - 3) / 2 + 2);
+        const double x_offset = is_left_wing ? -s * 0.7 * wing_index : s * 0.7 * wing_index;
+        const double y_offset = -s * 0.5 * wing_index;
+        positions[i] = {x_offset, y_offset};
+      }
+      break;
+
+    default:
+      RCLCPP_WARN_ONCE(get_logger(), "Unsupported formation shape in generateFormationPositions");
+      break;
+  }
+
+  return positions;
+}
+
 FormationCoordinatorNode::FormationCoordinatorNode(const rclcpp::NodeOptions & options)
 : rclcpp::Node("formation_coordinator_node", options)
 {
@@ -69,6 +195,10 @@ void FormationCoordinatorNode::declareParameters()
   declare_parameter<std::vector<double>>("waypoints.x", std::vector<double>{});
   declare_parameter<std::vector<double>>("waypoints.y", std::vector<double>{});
   declare_parameter<std::vector<double>>("waypoints.z", std::vector<double>{});
+  declare_parameter<std::vector<std::string>>("waypoints.shapes", std::vector<std::string>{});
+
+  // Shape transition parameters
+  declare_parameter<double>("shape_transition_duration", shape_transition_duration_);
 }
 
 void FormationCoordinatorNode::loadParameters()
@@ -89,6 +219,17 @@ void FormationCoordinatorNode::loadParameters()
 
   const double publish_frequency = get_parameter("publish_frequency_hz").as_double();
   publish_period_ = publish_frequency > 1e-6 ? 1.0 / publish_frequency : 0.1;
+
+  // Load shape transition duration
+  shape_transition_duration_ = get_parameter("shape_transition_duration").as_double();
+  if (shape_transition_duration_ < 0.5) {
+    shape_transition_duration_ = 3.0;  // Minimum 0.5s, default 3.0s
+    RCLCPP_WARN(get_logger(), "Shape transition duration too short, using default 3.0s");
+  }
+
+  // Initialize current shape from default formation shape
+  current_shape_ = stringToFormationShape(formation_shape_);
+  target_shape_ = current_shape_;
 
   // Load legacy motion parameters
   motion_enable_ = get_parameter("motion.enable").as_bool();
@@ -124,48 +265,33 @@ std::vector<std::array<double, 2>> FormationCoordinatorNode::computeOffsets(std:
     return offsets;
   }
 
-  const double s = std::max(spacing_, 0.1);
+  // If in transition, interpolate between current and target shapes
+  if (in_shape_transition_) {
+    const double elapsed = (now() - shape_transition_start_).seconds();
+    const double progress = std::min(1.0, elapsed / shape_transition_duration_);
 
-  if (formation_shape_ == "triangle") {
-    if (count >= 1) {
-      offsets[0] = {0.0, (std::sqrt(3.0) / 3.0) * s};
-    }
-    if (count >= 2) {
-      offsets[1] = {-s / 2.0, -(std::sqrt(3.0) / 6.0) * s};
-    }
-    if (count >= 3) {
-      offsets[2] = {s / 2.0, -(std::sqrt(3.0) / 6.0) * s};
-    }
-    for (std::size_t i = 3; i < count; ++i) {
-      const double angle = 2.0 * M_PI * static_cast<double>(i) / static_cast<double>(count);
-      offsets[i] = {s * std::cos(angle), s * std::sin(angle)};
-    }
-    return offsets;
-  }
-
-  if (formation_shape_ == "line") {
-    const double half_count = static_cast<double>(count - 1) / 2.0;
+    // Linear interpolation (LERP) between current and target offsets
     for (std::size_t i = 0; i < count; ++i) {
-      const double offset_index = static_cast<double>(i) - half_count;
-      offsets[i] = {offset_index * s, 0.0};
+      if (i < current_offsets_.size() && i < target_offsets_.size()) {
+        offsets[i][0] = current_offsets_[i][0] + progress * (target_offsets_[i][0] - current_offsets_[i][0]);
+        offsets[i][1] = current_offsets_[i][1] + progress * (target_offsets_[i][1] - current_offsets_[i][1]);
+      }
     }
+
+    // Transition complete
+    if (progress >= 1.0) {
+      const_cast<FormationCoordinatorNode*>(this)->in_shape_transition_ = false;
+      const_cast<FormationCoordinatorNode*>(this)->current_shape_ = target_shape_;
+      const_cast<FormationCoordinatorNode*>(this)->current_offsets_ = target_offsets_;
+      RCLCPP_INFO(get_logger(), "Shape transition complete: %s",
+        formationShapeToString(current_shape_).c_str());
+    }
+
     return offsets;
   }
 
-  if (formation_shape_ == "square") {
-    const double half = s / 2.0;
-    const std::vector<std::array<double, 2>> square_offsets = {
-      {-half, half}, {half, half}, {-half, -half}, {half, -half}};
-    for (std::size_t i = 0; i < count; ++i) {
-      offsets[i] = square_offsets[i % square_offsets.size()];
-    }
-    return offsets;
-  }
-
-  RCLCPP_WARN_ONCE(
-    get_logger(),
-    "Unsupported formation shape '%s'. All offsets set to zero.", formation_shape_.c_str());
-  return offsets;
+  // No transition, return current shape positions
+  return generateFormationPositions(current_shape_, count);
 }
 
 geometry_msgs::msg::PoseStamped FormationCoordinatorNode::makePoseFromOffset(double dx, double dy) const
@@ -253,6 +379,7 @@ void FormationCoordinatorNode::loadWaypoints()
   auto x_vals = get_parameter("waypoints.x").as_double_array();
   auto y_vals = get_parameter("waypoints.y").as_double_array();
   auto z_vals = get_parameter("waypoints.z").as_double_array();
+  auto shape_strs = get_parameter("waypoints.shapes").as_string_array();
 
   const size_t n = times.size();
   if (x_vals.size() != n || y_vals.size() != n || z_vals.size() != n) {
@@ -269,6 +396,14 @@ void FormationCoordinatorNode::loadWaypoints()
     return;
   }
 
+  // If shapes array is empty or size mismatch, use default shape for all waypoints
+  bool use_default_shapes = shape_strs.empty() || shape_strs.size() != n;
+  if (use_default_shapes && !shape_strs.empty()) {
+    RCLCPP_WARN(get_logger(),
+      "Waypoint shapes array size mismatch (%zu vs %zu), using default shape for all waypoints",
+      shape_strs.size(), n);
+  }
+
   waypoints_.clear();
   waypoints_.reserve(n);
 
@@ -279,14 +414,22 @@ void FormationCoordinatorNode::loadWaypoints()
     wp.x = x_vals[i];
     wp.y = y_vals[i];
     wp.z = z_vals[i];
+
+    // Set shape for this waypoint
+    if (use_default_shapes) {
+      wp.shape = current_shape_;  // Use default formation shape
+    } else {
+      wp.shape = stringToFormationShape(shape_strs[i]);
+    }
+
     waypoints_.push_back(wp);
   }
 
   RCLCPP_INFO(get_logger(), "Loaded %zu waypoints for trajectory", waypoints_.size());
   for (size_t i = 0; i < waypoints_.size(); ++i) {
     const auto & wp = waypoints_[i];
-    RCLCPP_INFO(get_logger(), "  WP[%zu]: t=%.1f-%.1f s, pos=(%.2f, %.2f, %.2f)",
-      i, wp.t_start, wp.t_end, wp.x, wp.y, wp.z);
+    RCLCPP_INFO(get_logger(), "  WP[%zu]: t=%.1f-%.1f s, pos=(%.2f, %.2f, %.2f), shape=%s",
+      i, wp.t_start, wp.t_end, wp.x, wp.y, wp.z, formationShapeToString(wp.shape).c_str());
   }
 }
 
@@ -311,6 +454,27 @@ void FormationCoordinatorNode::updatePositionFromWaypoints(double elapsed_time)
   }
 
   const auto & current_wp = waypoints_[idx];
+
+  // Check if waypoint changed and trigger shape transition if needed
+  if (idx != current_waypoint_idx_) {
+    current_waypoint_idx_ = idx;
+
+    // Check if shape needs to change
+    if (current_wp.shape != target_shape_) {
+      // Start shape transition
+      target_shape_ = current_wp.shape;
+      current_offsets_ = generateFormationPositions(current_shape_, agent_publishers_.size());
+      target_offsets_ = generateFormationPositions(target_shape_, agent_publishers_.size());
+      in_shape_transition_ = true;
+      shape_transition_start_ = now();
+
+      RCLCPP_INFO(get_logger(),
+        "Starting shape transition: %s -> %s (waypoint %zu)",
+        formationShapeToString(current_shape_).c_str(),
+        formationShapeToString(target_shape_).c_str(),
+        idx);
+    }
+  }
 
   // Linear interpolation between waypoints
   double alpha = 0.0;
@@ -360,6 +524,21 @@ void FormationCoordinatorNode::handleSetFormation(
   const std::string requested_shape = to_lower(request->shape);
   if (!requested_shape.empty()) {
     formation_shape_ = requested_shape;
+
+    // Trigger shape transition if shape changed
+    FormationShape new_shape = stringToFormationShape(requested_shape);
+    if (new_shape != current_shape_ && !in_shape_transition_) {
+      target_shape_ = new_shape;
+      current_offsets_ = generateFormationPositions(current_shape_, agent_publishers_.size());
+      target_offsets_ = generateFormationPositions(target_shape_, agent_publishers_.size());
+      in_shape_transition_ = true;
+      shape_transition_start_ = now();
+
+      RCLCPP_INFO(get_logger(),
+        "Service triggered shape transition: %s -> %s",
+        formationShapeToString(current_shape_).c_str(),
+        formationShapeToString(target_shape_).c_str());
+    }
   }
 
   if (request->spacing > 1e-3) {

@@ -13,6 +13,15 @@
 namespace formation_coordinator_pkg
 {
 
+// Formation shape enumeration for 4 supported formations
+enum class FormationShape
+{
+  TRIANGLE,
+  LINE,
+  SQUARE,    // L-shape for 3 drones (incomplete square)
+  V_SHAPE
+};
+
 class FormationCoordinatorNode : public rclcpp::Node
 {
 public:
@@ -29,6 +38,9 @@ private:
   void loadParameters();
   void rebuildPublishers();
   std::vector<std::array<double, 2>> computeOffsets(std::size_t count) const;
+  std::vector<std::array<double, 2>> generateFormationPositions(FormationShape shape, std::size_t count) const;
+  FormationShape stringToFormationShape(const std::string & shape_str) const;
+  std::string formationShapeToString(FormationShape shape) const;
   geometry_msgs::msg::PoseStamped makePoseFromOffset(double dx, double dy) const;
   void timerCallback();
   void publishState() const;
@@ -68,11 +80,21 @@ private:
     double x;
     double y;
     double z;
+    FormationShape shape;  // Formation shape at this waypoint
   };
 
   bool waypoints_enable_{false};
   std::vector<Waypoint> waypoints_;
   size_t current_waypoint_idx_{0};
+
+  // Shape transition management
+  FormationShape current_shape_{FormationShape::TRIANGLE};
+  FormationShape target_shape_{FormationShape::TRIANGLE};
+  rclcpp::Time shape_transition_start_;
+  bool in_shape_transition_{false};
+  double shape_transition_duration_{3.0};  // 3 seconds for smooth transition
+  std::vector<std::array<double, 2>> current_offsets_;
+  std::vector<std::array<double, 2>> target_offsets_;
 
   void loadWaypoints();
   void updatePositionFromWaypoints(double elapsed_time);

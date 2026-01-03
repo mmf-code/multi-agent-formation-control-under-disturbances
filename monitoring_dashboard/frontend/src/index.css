@@ -2,14 +2,95 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+/* ============================================================================
+   Design System - Professional Robotics Dashboard
+   Inspired by: Foxglove, Boston Dynamics, NVIDIA Robotics
+
+   Supports:
+   - Dark Mode (default) - for development/monitoring
+   - Light Mode - for thesis/academic publications
+   - Thesis Export Mode - clean, print-optimized styling
+   ============================================================================ */
+
+/* ============================================================================
+   Dark Theme (Default) - Development & Monitoring
+   ============================================================================ */
+
+:root,
+.dark {
+  /* Background hierarchy */
+  --color-bg-primary: #09090b;
+  --color-bg-secondary: #0f0f12;
+  --color-bg-tertiary: #18181b;
+  --color-bg-elevated: #1c1c20;
+  --color-bg-surface: #232328;
+
+  /* Border hierarchy */
+  --color-border-subtle: #27272a;
+  --color-border-default: #3f3f46;
+  --color-border-strong: #52525b;
+
+  /* Text hierarchy */
+  --color-text-primary: #fafafa;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
+  --color-text-disabled: #52525b;
+
+  /* Accent - Foxglove Violet inspired */
+  --color-accent-primary: #6366f1;
+  --color-accent-hover: #818cf8;
+  --color-accent-muted: rgba(99, 102, 241, 0.15);
+  --color-accent-subtle: rgba(99, 102, 241, 0.08);
+
+  /* Semantic colors */
+  --color-success: #22c55e;
+  --color-success-bg: rgba(34, 197, 94, 0.12);
+  --color-success-border: rgba(34, 197, 94, 0.25);
+
+  --color-warning: #f59e0b;
+  --color-warning-bg: rgba(245, 158, 11, 0.12);
+  --color-warning-border: rgba(245, 158, 11, 0.25);
+
+  --color-error: #ef4444;
+  --color-error-bg: rgba(239, 68, 68, 0.12);
+  --color-error-border: rgba(239, 68, 68, 0.25);
+
+  --color-info: #06b6d4;
+  --color-info-bg: rgba(6, 182, 212, 0.12);
+  --color-info-border: rgba(6, 182, 212, 0.25);
+
+  /* Controller colors - Dark mode (Robotics: Cyan, Purple, Orange) */
+  --color-pid-fuzzy: #06b6d4;
+  --color-pid-fuzzy-bg: rgba(6, 182, 212, 0.18);
+  --color-pid-fuzzy-border: rgba(6, 182, 212, 0.4);
+
+  --color-pd: #fb923c;
+  --color-pd-bg: rgba(251, 146, 60, 0.18);
+  --color-pd-border: rgba(251, 146, 60, 0.4);
+
+  --color-pid: #a855f7;
+  --color-pid-bg: rgba(168, 85, 247, 0.18);
+  --color-pid-border: rgba(168, 85, 247, 0.4);
+
+  /* Chart colors */
+  --color-chart-1: #6366f1;
+  --color-chart-2: #22c55e;
+  --color-chart-3: #f59e0b;
+  --color-chart-4: #ef4444;
+  --color-chart-5: #06b6d4;
+  --color-chart-grid: rgba(63, 63, 70, 0.5);
+
+  /* Panel styling */
+  --panel-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  --panel-radius: 8px;
+
+  /* Typography */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
   color-scheme: dark;
-  color: #e2e8f0;
-  background-color: #030712; /* space-950 */
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -17,41 +98,530 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ============================================================================
+   Light Theme - Academic Publications & Thesis
+   Optimized for: print, readability, high contrast
+   ============================================================================ */
+
+.light {
+  /* Background hierarchy - Clean whites/grays */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #fafafa;
+  --color-bg-tertiary: #f4f4f5;
+  --color-bg-elevated: #ffffff;
+  --color-bg-surface: #f8f8f9;
+
+  /* Border hierarchy - Subtle but visible */
+  --color-border-subtle: #e4e4e7;
+  --color-border-default: #d4d4d8;
+  --color-border-strong: #a1a1aa;
+
+  /* Text hierarchy - High contrast for readability */
+  --color-text-primary: #09090b;
+  --color-text-secondary: #3f3f46;
+  --color-text-muted: #71717a;
+  --color-text-disabled: #a1a1aa;
+
+  /* Accent - Foxglove Violet (darker for contrast) */
+  --color-accent-primary: #4f46e5;
+  --color-accent-hover: #4338ca;
+  --color-accent-muted: rgba(79, 70, 229, 0.12);
+  --color-accent-subtle: rgba(79, 70, 229, 0.06);
+
+  /* Semantic colors - Darker for light bg */
+  --color-success: #16a34a;
+  --color-success-bg: rgba(22, 163, 74, 0.1);
+  --color-success-border: rgba(22, 163, 74, 0.25);
+
+  --color-warning: #d97706;
+  --color-warning-bg: rgba(217, 119, 6, 0.1);
+  --color-warning-border: rgba(217, 119, 6, 0.25);
+
+  --color-error: #dc2626;
+  --color-error-bg: rgba(220, 38, 38, 0.1);
+  --color-error-border: rgba(220, 38, 38, 0.25);
+
+  --color-info: #0891b2;
+  --color-info-bg: rgba(8, 145, 178, 0.1);
+  --color-info-border: rgba(8, 145, 178, 0.25);
+
+  /* Controller colors - Light mode (Robotics: Cyan, Purple, Orange - darker for print) */
+  --color-pid-fuzzy: #0891b2;
+  --color-pid-fuzzy-bg: rgba(8, 145, 178, 0.12);
+  --color-pid-fuzzy-border: rgba(8, 145, 178, 0.35);
+
+  --color-pd: #c2410c;
+  --color-pd-bg: rgba(194, 65, 12, 0.12);
+  --color-pd-border: rgba(194, 65, 12, 0.35);
+
+  --color-pid: #7c3aed;
+  --color-pid-bg: rgba(124, 58, 237, 0.12);
+  --color-pid-border: rgba(124, 58, 237, 0.35);
+
+  /* Chart colors - Higher contrast */
+  --color-chart-1: #4f46e5;
+  --color-chart-2: #16a34a;
+  --color-chart-3: #d97706;
+  --color-chart-4: #dc2626;
+  --color-chart-5: #0891b2;
+  --color-chart-grid: rgba(161, 161, 170, 0.3);
+
+  /* Panel styling */
+  --panel-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --panel-radius: 8px;
+
+  color-scheme: light;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
+}
+
+/* ============================================================================
+   Thesis Export Mode - Print-optimized overlay
+   Removes decorative elements, maximizes data clarity
+   ============================================================================ */
+
+.thesis-mode {
+  /* Force light mode colors for thesis */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #fafafa;
+  --color-bg-tertiary: #f5f5f5;
+  --color-bg-elevated: #ffffff;
+
+  /* Stronger borders for print */
+  --color-border-subtle: #d4d4d8;
+  --color-border-default: #a1a1aa;
+
+  /* Maximum contrast text */
+  --color-text-primary: #000000;
+  --color-text-secondary: #27272a;
+  --color-text-muted: #52525b;
+}
+
+.thesis-mode {
+  /* Hide decorative elements */
+  .bg-grid-pattern,
+  .glass-panel::before,
+  .animate-pulse {
+    display: none !important;
+    animation: none !important;
+  }
+
+  /* Solid backgrounds (no transparency) */
+  .glass-panel {
+    background: var(--color-bg-elevated) !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Cleaner borders */
+  * {
+    border-radius: 4px !important;
+  }
+
+  /* Larger, clearer text */
+  .text-xs {
+    font-size: 0.8125rem !important;
+  }
+
+  .text-sm {
+    font-size: 0.9375rem !important;
+  }
+
+  /* Disable all animations */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0s !important;
+    transition-duration: 0s !important;
+  }
+}
+
+/* ============================================================================
+   Base Styles
+   ============================================================================ */
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-image: radial-gradient(circle at 50% 50%, #0b0f19 0%, #030712 100%);
+  background: var(--color-bg-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Custom scrollbar */
+/* ============================================================================
+   Scrollbar - Adaptive
+   ============================================================================ */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0b0f19;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1f2937;
+  background: var(--color-border-default);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #00f3ff; /* neon-blue */
+  background: var(--color-border-strong);
 }
 
-/* Glassmorphism utilities */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ============================================================================
+   Panel System - Modular Architecture
+   ============================================================================ */
+
+.panel {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-tertiary);
+  border-radius: var(--panel-radius) var(--panel-radius) 0 0;
+}
+
+.panel-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.panel-content {
+  padding: 14px;
+}
+
+/* ============================================================================
+   Glass Effect - Theme aware
+   ============================================================================ */
+
 .glass-panel {
-  background: rgba(17, 24, 39, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
 }
 
-.glass-panel:hover {
-  border-color: rgba(0, 243, 255, 0.3);
-  box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+.dark .glass-panel {
+  background: rgba(15, 15, 18, 0.85);
+  backdrop-filter: blur(12px);
+}
+
+.light .glass-panel {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* ============================================================================
+   Grid Pattern - Technical Background
+   ============================================================================ */
+
+.dark .bg-grid-pattern {
+  background-image:
+    linear-gradient(to right, rgba(39, 39, 42, 0.4) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(39, 39, 42, 0.4) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.light .bg-grid-pattern {
+  background-image:
+    linear-gradient(to right, rgba(212, 212, 216, 0.4) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(212, 212, 216, 0.4) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ============================================================================
+   Animations - Minimal & Functional
+   ============================================================================ */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.15s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.2s ease-out;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* ============================================================================
+   Focus & Selection
+   ============================================================================ */
+
+::selection {
+  background: var(--color-accent-muted);
+  color: var(--color-text-primary);
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-accent-primary);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-accent-muted);
+}
+
+/* ============================================================================
+   Form Elements
+   ============================================================================ */
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2371717a' d='M3 5l3 3 3-3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* ============================================================================
+   Data Display - High Contrast Values
+   ============================================================================ */
+
+.data-value {
+  font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* ============================================================================
+   Status Indicators - Theme Aware
+   ============================================================================ */
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot-success {
+  background: var(--color-success);
+  box-shadow: 0 0 8px var(--color-success-border);
+}
+
+.status-dot-warning {
+  background: var(--color-warning);
+  box-shadow: 0 0 8px var(--color-warning-border);
+}
+
+.status-dot-error {
+  background: var(--color-error);
+  box-shadow: 0 0 8px var(--color-error-border);
+}
+
+.status-dot-info {
+  background: var(--color-info);
+  box-shadow: 0 0 8px var(--color-info-border);
+}
+
+/* Light mode - no glow, use border instead */
+.light .status-dot {
+  box-shadow: none;
+  border: 2px solid currentColor;
+}
+
+/* ============================================================================
+   Controller Type Badges - Theme Aware
+   ============================================================================ */
+
+.controller-badge-pid-fuzzy {
+  background: var(--color-pid-fuzzy-bg);
+  color: var(--color-pid-fuzzy);
+  border: 1px solid var(--color-pid-fuzzy-border);
+}
+
+.controller-badge-pd {
+  background: var(--color-pd-bg);
+  color: var(--color-pd);
+  border: 1px solid var(--color-pd-border);
+}
+
+.controller-badge-pid {
+  background: var(--color-pid-bg);
+  color: var(--color-pid);
+  border: 1px solid var(--color-pid-border);
+}
+
+/* ============================================================================
+   Plotly Chart Overrides - Theme Aware
+   ============================================================================ */
+
+.js-plotly-plot .plotly .modebar {
+  background: var(--color-bg-elevated) !important;
+  border-radius: 6px;
+  padding: 4px;
+  border: 1px solid var(--color-border-subtle);
+}
+
+.js-plotly-plot .plotly .modebar-btn {
+  fill: var(--color-text-muted) !important;
+}
+
+.js-plotly-plot .plotly .modebar-btn:hover {
+  fill: var(--color-text-secondary) !important;
+}
+
+.js-plotly-plot .plotly .modebar-btn.active {
+  fill: var(--color-accent-primary) !important;
+}
+
+/* ============================================================================
+   Sonner Toast Overrides - Theme Aware
+   ============================================================================ */
+
+[data-sonner-toaster] {
+  --normal-bg: var(--color-bg-elevated) !important;
+  --normal-border: var(--color-border-subtle) !important;
+  --normal-text: var(--color-text-primary) !important;
+  --success-bg: var(--color-success-bg) !important;
+  --success-border: var(--color-success-border) !important;
+  --success-text: var(--color-success) !important;
+  --error-bg: var(--color-error-bg) !important;
+  --error-border: var(--color-error-border) !important;
+  --error-text: var(--color-error) !important;
+  --warning-bg: var(--color-warning-bg) !important;
+  --warning-border: var(--color-warning-border) !important;
+  --warning-text: var(--color-warning) !important;
+}
+
+[data-sonner-toast] {
+  backdrop-filter: blur(8px);
+  border-radius: 8px;
+}
+
+.light [data-sonner-toast] {
+  backdrop-filter: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================================================
+   Utility Classes
+   ============================================================================ */
+
+.text-mono {
+  font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.border-subtle {
+  border-color: var(--color-border-subtle);
+}
+
+.bg-elevated {
+  background: var(--color-bg-elevated);
+}
+
+.bg-surface {
+  background: var(--color-bg-surface);
+}
+
+/* Theme-aware text colors */
+.text-theme-primary {
+  color: var(--color-text-primary);
+}
+
+.text-theme-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-theme-muted {
+  color: var(--color-text-muted);
+}
+
+/* Theme-aware backgrounds */
+.bg-theme-primary {
+  background: var(--color-bg-primary);
+}
+
+.bg-theme-secondary {
+  background: var(--color-bg-secondary);
+}
+
+.bg-theme-tertiary {
+  background: var(--color-bg-tertiary);
+}
+
+/* ============================================================================
+   Print Styles
+   ============================================================================ */
+
+@media print {
+  :root {
+    --color-bg-primary: #ffffff !important;
+    --color-bg-secondary: #ffffff !important;
+    --color-text-primary: #000000 !important;
+  }
+
+  .bg-grid-pattern,
+  .glass-panel::before,
+  header,
+  .resize-handle {
+    display: none !important;
+  }
+
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
 }

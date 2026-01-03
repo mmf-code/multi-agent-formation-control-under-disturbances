@@ -38,3 +38,12 @@ float64 mission_itae_x          # Mission-wide ITAE for X axis [m·s]
 float64 mission_itae_y          # Mission-wide ITAE for Y axis [m·s]
 float64 mission_elapsed_time    # Total mission elapsed time [s]
 int32 waypoint_count            # Number of waypoints visited
+
+# Wind disturbance metrics (Phase 1 - Defense Industry Testing)
+float64 wind_velocity_x         # Current wind velocity X [m/s]
+float64 wind_velocity_y         # Current wind velocity Y [m/s]
+float64 wind_velocity_z         # Current wind velocity Z [m/s]
+float64 wind_magnitude          # Wind magnitude |V_wind| [m/s]
+float64 disturbance_rejection_ratio  # DRR = |error| / |wind| (lower is better)
+float64 wind_normalized_rmse    # RMSE / |wind| (disturbance-normalized performance)
+float64 wind_exposure_time      # Cumulative time under wind > 1.0 m/s [s]

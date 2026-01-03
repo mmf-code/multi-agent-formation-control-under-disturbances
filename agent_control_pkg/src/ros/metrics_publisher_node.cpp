@@ -23,6 +23,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/vector3.hpp>
 #include <my_custom_interfaces_pkg/msg/metrics_data.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
 
@@ -77,6 +78,13 @@ public:
       "target_pose",
       10,
       std::bind(&MetricsPublisherNode::targetCallback, this, std::placeholders::_1)
+    );
+
+    // Subscribe to wind velocity for wind disturbance metrics (global topic)
+    wind_sub_ = this->create_subscription<geometry_msgs::msg::Vector3>(
+      "/wind/velocity",
+      10,
+      std::bind(&MetricsPublisherNode::windCallback, this, std::placeholders::_1)
     );
 
     // Publisher (using proper MetricsData message type)
@@ -206,6 +214,13 @@ private:
     }
   }
 
+  void windCallback(const geometry_msgs::msg::Vector3::SharedPtr msg)
+  {
+    wind_vx_ = msg->x;
+    wind_vy_ = msg->y;
+    wind_vz_ = msg->z;
+  }
+
   /**
    * @brief Reset per-waypoint metrics (called at each waypoint transition)
    */
@@ -224,6 +239,9 @@ private:
     settling_time_ = -1.0;
     start_time_ = this->now();
 
+    // Wind exposure time (per-waypoint tracking)
+    wind_exposure_time_ = 0.0;
+
     RCLCPP_DEBUG(this->get_logger(), "Per-waypoint metrics reset");
   }
 
@@ -232,7 +250,7 @@ private:
    */
   void resetMissionMetrics()
   {
-    mission_rmse_sum_ = 0.0;
+    mission_sse_ = 0.0;
     mission_itae_x_ = 0.0;
     mission_itae_y_ = 0.0;
     mission_sample_count_ = 0;
@@ -286,7 +304,7 @@ private:
     // Update MISSION-WIDE cumulative metrics (never reset)
     if (first_target_received_)
     {
-      mission_rmse_sum_ += error_mag;  // Sum for averaging later
+      mission_sse_ += error_mag * error_mag;  // Sum of squared errors for true RMSE
       mission_itae_x_ += mission_elapsed * std::abs(ex) * dt;
       mission_itae_y_ += mission_elapsed * std::abs(ey) * dt;
       mission_sample_count_++;
@@ -400,7 +418,7 @@ private:
     // Mission-wide cumulative metrics
     if (first_target_received_ && mission_sample_count_ > 0)
     {
-      msg.mission_rmse = mission_rmse_sum_ / mission_sample_count_;
+      msg.mission_rmse = std::sqrt(mission_sse_ / mission_sample_count_);  // True RMSE formula
       msg.mission_itae_x = mission_itae_x_;
       msg.mission_itae_y = mission_itae_y_;
       msg.mission_elapsed_time = (this->now() - mission_start_time_).seconds();
@@ -415,6 +433,34 @@ private:
       msg.mission_elapsed_time = 0.0;
       msg.waypoint_count = 0;
     }
+
+    // Wind disturbance metrics (Phase 1 - Defense Industry Testing)
+    msg.wind_velocity_x = wind_vx_;
+    msg.wind_velocity_y = wind_vy_;
+    msg.wind_velocity_z = wind_vz_;
+    msg.wind_magnitude = std::sqrt(wind_vx_*wind_vx_ + wind_vy_*wind_vy_ + wind_vz_*wind_vz_);
+
+    // Disturbance Rejection Ratio (DRR): |error| / |wind|
+    const double error_mag = std::sqrt(latest.error_x*latest.error_x + latest.error_y*latest.error_y);
+    msg.disturbance_rejection_ratio = (msg.wind_magnitude > 0.1)
+        ? (error_mag / msg.wind_magnitude)
+        : 0.0;
+
+    // Wind-Normalized RMSE
+    msg.wind_normalized_rmse = (msg.wind_magnitude > 0.1)
+        ? (rmse_total / msg.wind_magnitude)
+        : rmse_total;
+
+    // Accumulate wind exposure time
+    if (msg.wind_magnitude > WIND_THRESHOLD) {
+      if (!error_history_.empty() && error_history_.size() >= 2) {
+        const auto& prev = error_history_[error_history_.size() - 2];
+        const auto& curr = error_history_[error_history_.size() - 1];
+        const double dt = (curr.timestamp - prev.timestamp).seconds();
+        wind_exposure_time_ += dt;
+      }
+    }
+    msg.wind_exposure_time = wind_exposure_time_;
 
     metrics_pub_->publish(msg);
 
@@ -485,7 +531,7 @@ private:
     {
       if (first_target_received_ && mission_sample_count_ > 0)
       {
-        const double mission_rmse = mission_rmse_sum_ / mission_sample_count_;
+        const double mission_rmse = std::sqrt(mission_sse_ / mission_sample_count_);
         RCLCPP_INFO(
           this->get_logger(),
           "Metrics | WP #%d: error=%.3fm, RMSE=%.3fm, IAE=(%.2f,%.2f), settling=%.2fs | "
@@ -522,6 +568,7 @@ private:
   // ROS2 interfaces
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr target_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr wind_sub_;
   rclcpp::Publisher<my_custom_interfaces_pkg::msg::MetricsData>::SharedPtr metrics_pub_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr group_metrics_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
@@ -546,13 +593,20 @@ private:
   rclcpp::Time start_time_;  // Waypoint start time
 
   // Metrics - Mission-wide cumulative (NEVER reset, except at mission start)
-  double mission_rmse_sum_ = 0.0;
+  double mission_sse_ = 0.0;  // Sum of Squared Errors for true RMSE
   double mission_itae_x_ = 0.0;
   double mission_itae_y_ = 0.0;
   int mission_sample_count_ = 0;
   int waypoint_count_ = 0;
   rclcpp::Time mission_start_time_;
   bool first_target_received_ = false;
+
+  // Wind disturbance tracking (Phase 1 - Defense Industry Testing)
+  double wind_vx_ = 0.0;
+  double wind_vy_ = 0.0;
+  double wind_vz_ = 0.0;
+  double wind_exposure_time_ = 0.0;
+  static constexpr double WIND_THRESHOLD = 1.0;  // [m/s]
 
   // Parameters
   double settled_pos_threshold_{0.10};

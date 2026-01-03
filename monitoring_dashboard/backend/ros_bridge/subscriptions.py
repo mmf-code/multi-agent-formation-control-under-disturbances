@@ -147,7 +147,7 @@ class ROSBridge(Node):
 
             msg_type = msg_types[0] if msg_types else ""
 
-            # Discover agent topics
+            # Discover agent topics (custom sim: /agent_X/*)
             if '/agent_' in topic_name:
                 parts = topic_name.split('/')
                 if len(parts) >= 3:
@@ -164,6 +164,26 @@ class ROSBridge(Node):
                         self.subscribe_diagnostics(agent_id)
                     elif topic_name.endswith('/controller_params'):
                         self.subscribe_controller_params(agent_id)
+
+            # Discover Crazyflie topics (Crazyswarm2: /cfXXX/*)
+            elif '/cf' in topic_name and topic_name[1:].startswith('cf'):
+                parts = topic_name.split('/')
+                if len(parts) >= 3:
+                    cf_name = parts[1]  # e.g., "cf231"
+
+                    # Map cf231-cf239 to agent_0-agent_8
+                    try:
+                        cf_id = int(cf_name[2:])  # Extract numeric ID from "cf231"
+                        if 231 <= cf_id <= 239:
+                            agent_id = f"agent_{cf_id - 231}"
+                            self.active_agents.add(agent_id)
+
+                            if topic_name.endswith('/odom'):
+                                self.subscribe_odom_crazyflie(cf_name, agent_id)
+                            elif topic_name.endswith('/metrics'):
+                                self.subscribe_metrics_crazyflie(cf_name, agent_id)
+                    except (ValueError, IndexError):
+                        pass  # Skip malformed cf names
 
             # Global topics
             elif topic_name == '/wind/velocity':
@@ -258,6 +278,36 @@ class ROSBridge(Node):
         )
         self._subs_registry[topic] = sub
         logger.info(f"Subscribed to {topic}")
+
+    def subscribe_odom_crazyflie(self, cf_name: str, agent_id: str):
+        """Subscribe to Crazyflie odometry topic and store under agent_id"""
+        topic = f'/{cf_name}/odom'
+        if topic in self._subs_registry:
+            return
+
+        sub = self.create_subscription(
+            Odometry,
+            topic,
+            lambda msg: self._on_odom(agent_id, msg),
+            self.sensor_qos
+        )
+        self._subs_registry[topic] = sub
+        logger.info(f"Subscribed to {topic} (mapped to {agent_id})")
+
+    def subscribe_metrics_crazyflie(self, cf_name: str, agent_id: str):
+        """Subscribe to Crazyflie agent metrics topic and store under agent_id"""
+        topic = f'/{cf_name}/metrics'
+        if topic in self._subs_registry:
+            return
+
+        sub = self.create_subscription(
+            ROSMetricsData,
+            topic,
+            lambda msg: self._on_metrics(agent_id, msg),
+            10
+        )
+        self._subs_registry[topic] = sub
+        logger.info(f"Subscribed to {topic} (mapped to {agent_id})")
 
     def subscribe_wind_velocity(self):
         """Subscribe to wind velocity topic"""

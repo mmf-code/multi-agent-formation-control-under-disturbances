@@ -1,699 +1,660 @@
+/**
+ * Simulation Metrics Panel - Robotics Dashboard
+ * Design: Foxglove-inspired modular data visualization
+ */
 import React, { useState, useMemo } from 'react';
 import {
-    Activity,
-    Wind,
-    Users,
-    BarChart2,
-    Map as MapIcon,
-    Settings,
-    LayoutDashboard,
-    AlertTriangle,
-    CheckCircle,
-    XCircle,
-    Radio,
-    Info,
+  Activity,
+  Users,
+  BarChart2,
+  Map as MapIcon,
+  Settings,
+  LayoutGrid,
+  TrendingUp,
+  TrendingDown,
+  CheckCircle2,
+  Clock,
+  Navigation,
+  Gauge,
 } from 'lucide-react';
 import {
-    MetricsData,
-    WindData,
-    FormationState,
-    SystemStatus,
-    OdometryData,
-    ControllerParams,
-    RosGraphData,
+  MetricsData,
+  WindData,
+  FormationState,
+  SystemStatus,
+  OdometryData,
+  ControllerParams,
+  RosGraphData,
 } from '../api/ws';
 import { FormationMap } from './FormationMap';
 import { TimeSeries } from './TimeSeries';
 import { SystemStatePanel } from './SystemStatePanel';
 import { ControllerParamsPanel } from './ControllerParamsPanel';
 
+// ============================================================================
+// Types
+// ============================================================================
+
 interface SimulationMetricsPanelProps {
-    metrics: Record<string, MetricsData>;
-    wind: WindData | null;
-    formation: FormationState | null;
-    status: SystemStatus | null;
-    metricsHistory: Record<string, MetricsData[]>;
-    windHistory: WindData[];
-    odomData: Record<string, OdometryData>;
-    targetData: Record<string, any>;
-    controllerParams?: Record<string, ControllerParams>;
-    rosGraph?: RosGraphData | null;
+  metrics: Record<string, MetricsData>;
+  wind: WindData | null;
+  formation: FormationState | null;
+  status: SystemStatus | null;
+  metricsHistory: Record<string, MetricsData[]>;
+  windHistory: WindData[];
+  odomData: Record<string, OdometryData>;
+  targetData: Record<string, { position: { x: number; y: number; z: number } }>;
+  controllerParams?: Record<string, ControllerParams>;
+  rosGraph?: RosGraphData | null;
 }
 
-type TabType = 'dashboard' | 'overview' | 'charts' | 'agents' | 'map' | 'system' | 'params';
+type TabType = 'overview' | 'charts' | 'agents' | 'map' | 'params' | 'system';
+
+// ============================================================================
+// Main Component
+// ============================================================================
 
 export const SimulationMetricsPanel: React.FC<SimulationMetricsPanelProps> = ({
-    metrics,
-    wind,
-    formation: _formation,
-    status,
-    metricsHistory,
-    windHistory,
-    odomData,
-    targetData,
-    controllerParams = {},
-    rosGraph,
+  metrics,
+  wind,
+  formation,
+  status,
+  metricsHistory,
+  windHistory,
+  odomData,
+  targetData,
+  controllerParams = {},
 }) => {
-    const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
 
-    const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
-        { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
-        { id: 'overview', label: 'Overview', icon: <Activity className="w-4 h-4" /> },
-        { id: 'map', label: 'Map', icon: <MapIcon className="w-4 h-4" /> },
-        { id: 'charts', label: 'Charts', icon: <BarChart2 className="w-4 h-4" /> },
-        { id: 'agents', label: 'Agents', icon: <Users className="w-4 h-4" /> },
-        { id: 'params', label: 'Params', icon: <Settings className="w-4 h-4" /> },
-        { id: 'system', label: 'System', icon: <Radio className="w-4 h-4" /> },
-    ];
+  const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
+    { id: 'overview', label: 'Overview', icon: <LayoutGrid className="w-3.5 h-3.5" /> },
+    { id: 'charts', label: 'Analytics', icon: <BarChart2 className="w-3.5 h-3.5" /> },
+    { id: 'map', label: 'Formation', icon: <MapIcon className="w-3.5 h-3.5" /> },
+    { id: 'agents', label: 'Agents', icon: <Users className="w-3.5 h-3.5" /> },
+    { id: 'params', label: 'Params', icon: <Settings className="w-3.5 h-3.5" /> },
+    { id: 'system', label: 'System', icon: <Activity className="w-3.5 h-3.5" /> },
+  ];
 
-    return (
-        <div className="h-full flex flex-col bg-gray-900 text-white">
-            {/* Tabs */}
-            <div className="flex border-b border-gray-800 overflow-x-auto">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center px-3 py-2.5 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id
-                            ? 'text-blue-400 border-b-2 border-blue-400 bg-gray-800/50'
-                            : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/30'
-                            }`}
-                    >
-                        <span className="mr-1.5">{tab.icon}</span>
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
+  return (
+    <div className="h-full flex flex-col">
+      {/* Tab Navigation */}
+      <nav className="flex gap-1 mb-3 pb-2" style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium transition-colors ${
+              activeTab === tab.id
+                ? 'bg-blue-500/15 text-blue-400'
+                : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+            }`}
+          >
+            {tab.icon}
+            <span className="hidden sm:inline">{tab.label}</span>
+          </button>
+        ))}
+      </nav>
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4">
-                {activeTab === 'dashboard' && (
-                    <DashboardSection
-                        metrics={metrics}
-                        wind={wind}
-                        status={status}
-                        rosGraph={rosGraph}
-                        controllerParams={controllerParams}
-                    />
-                )}
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        {activeTab === 'overview' && (
+          <OverviewPanel
+            metrics={metrics}
+            wind={wind}
+            status={status}
+            controllerParams={controllerParams}
+          />
+        )}
 
-                {activeTab === 'overview' && (
-                    <OverviewSection
-                        metrics={metrics}
-                        wind={wind}
-                        status={status}
-                    />
-                )}
+        {activeTab === 'charts' && (
+          <ChartsPanel
+            metricsHistory={metricsHistory}
+            windHistory={windHistory}
+            controllerParams={controllerParams}
+          />
+        )}
 
-                {activeTab === 'map' && (
-                    <div className="h-full flex flex-col">
-                        <FormationMap
-                            odomData={odomData}
-                            targetData={targetData}
-                            formationState={_formation}
-                            selectedAgents={new Set()}
-                            windData={wind}
-                            metricsData={metrics}
-                        />
-                    </div>
-                )}
+        {activeTab === 'map' && (
+          <div className="panel h-[480px]">
+            <FormationMap
+              odomData={odomData}
+              targetData={targetData}
+              formationState={formation}
+              selectedAgents={new Set()}
+              windData={wind}
+              metricsData={metrics}
+            />
+          </div>
+        )}
 
-                {activeTab === 'system' && (
-                    <SystemStatePanel
-                        metrics={metrics}
-                        wind={wind}
-                        status={status}
-                    />
-                )}
+        {activeTab === 'agents' && (
+          <AgentsPanel metrics={metrics} controllerParams={controllerParams} />
+        )}
 
-                {activeTab === 'charts' && (
-                    <ChartsSection
-                        metricsHistory={metricsHistory}
-                        windHistory={windHistory}
-                        controllerParams={controllerParams}
-                    />
-                )}
+        {activeTab === 'params' && (
+          <ControllerParamsPanel controllerParams={controllerParams} />
+        )}
 
-                {activeTab === 'agents' && (
-                    <AgentsSection metrics={metrics} controllerParams={controllerParams} />
-                )}
-
-                {activeTab === 'params' && (
-                    <ControllerParamsPanel
-                        controllerParams={controllerParams}
-                    />
-                )}
-            </div>
-        </div>
-    );
+        {activeTab === 'system' && (
+          <SystemStatePanel metrics={metrics} wind={wind} status={status} />
+        )}
+      </div>
+    </div>
+  );
 };
 
-// Dashboard Section - Summary view with all key info
-const DashboardSection: React.FC<{
-    metrics: Record<string, MetricsData>;
-    wind: WindData | null;
-    status: SystemStatus | null;
-    rosGraph?: RosGraphData | null;
-    controllerParams?: Record<string, ControllerParams>;
-}> = ({ metrics, wind, status, rosGraph, controllerParams = {} }) => {
-    const agentCount = Object.keys(metrics).length;
-    const settledCount = Object.values(metrics).filter(m => m.is_settled).length;
-    const avgError = agentCount > 0
-        ? Object.values(metrics).reduce((sum, m) => sum + m.error_magnitude, 0) / agentCount
-        : 0;
+// ============================================================================
+// Overview Panel
+// ============================================================================
 
-    // Group metrics by controller type
-    const groupStats = useMemo(() => {
-        const groups: Record<string, { count: number; avgError: number; settled: number }> = {};
+const OverviewPanel: React.FC<{
+  metrics: Record<string, MetricsData>;
+  wind: WindData | null;
+  status: SystemStatus | null;
+  controllerParams: Record<string, ControllerParams>;
+}> = ({ metrics, wind, status, controllerParams }) => {
+  const agentCount = Object.keys(metrics).length;
+  const settledCount = Object.values(metrics).filter((m) => m.is_settled).length;
+  const avgError = agentCount > 0
+    ? Object.values(metrics).reduce((sum, m) => sum + m.error_magnitude, 0) / agentCount
+    : 0;
+  const avgRmse = agentCount > 0
+    ? Object.values(metrics).reduce((sum, m) => sum + (m.rmse_total || 0), 0) / agentCount
+    : 0;
 
-        Object.entries(metrics).forEach(([agentId, m]) => {
-            const params = controllerParams[agentId];
-            const type = params?.controller_type || 'unknown';
+  const windSpeed = wind ? Math.sqrt(wind.velocity.x ** 2 + wind.velocity.y ** 2) : 0;
+  const windDirection = wind ? (Math.atan2(wind.velocity.y, wind.velocity.x) * 180 / Math.PI + 360) % 360 : 0;
 
-            if (!groups[type]) {
-                groups[type] = { count: 0, avgError: 0, settled: 0 };
-            }
-            groups[type].count++;
-            groups[type].avgError += m.error_magnitude;
-            if (m.is_settled) groups[type].settled++;
-        });
+  const groupStats = useMemo(() => {
+    const groups: Record<string, { count: number; avgError: number; avgRmse: number; settled: number }> = {};
+    Object.entries(metrics).forEach(([agentId, m]) => {
+      const params = controllerParams[agentId];
+      const type = params?.controller_type || 'unknown';
+      if (!groups[type]) groups[type] = { count: 0, avgError: 0, avgRmse: 0, settled: 0 };
+      groups[type].count++;
+      groups[type].avgError += m.error_magnitude;
+      groups[type].avgRmse += m.rmse_total || 0;
+      if (m.is_settled) groups[type].settled++;
+    });
+    Object.keys(groups).forEach((type) => {
+      if (groups[type].count > 0) {
+        groups[type].avgError /= groups[type].count;
+        groups[type].avgRmse /= groups[type].count;
+      }
+    });
+    return groups;
+  }, [metrics, controllerParams]);
 
-        // Calculate averages
-        Object.keys(groups).forEach(type => {
-            if (groups[type].count > 0) {
-                groups[type].avgError /= groups[type].count;
-            }
-        });
+  return (
+    <div className="space-y-4">
+      {/* Key Metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        <MetricCard
+          label="Agents"
+          value={agentCount}
+          subValue={`${settledCount} settled`}
+          icon={<Users className="w-4 h-4" />}
+          color="blue"
+        />
+        <MetricCard
+          label="Avg Error"
+          value={`${avgError.toFixed(4)}`}
+          subValue="meters"
+          icon={avgError < 0.1 ? <TrendingDown className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
+          color={avgError < 0.1 ? 'green' : avgError < 0.3 ? 'yellow' : 'red'}
+        />
+        <MetricCard
+          label="Avg RMSE"
+          value={`${avgRmse.toFixed(4)}`}
+          subValue="meters"
+          icon={<Gauge className="w-4 h-4" />}
+          color={avgRmse < 0.05 ? 'green' : avgRmse < 0.15 ? 'yellow' : 'red'}
+        />
+        <MetricCard
+          label="Wind"
+          value={`${windSpeed.toFixed(2)}`}
+          subValue={`${windDirection.toFixed(0)}° m/s`}
+          icon={<Navigation className="w-4 h-4" style={{ transform: `rotate(${windDirection}deg)` }} />}
+          color="cyan"
+        />
+      </div>
 
-        return groups;
-    }, [metrics, controllerParams]);
-
-    // Topic stats
-    const topicStats = useMemo(() => {
-        if (!rosGraph) return { total: 0, active: 0, nodes: 0 };
-        const topics = rosGraph.edges?.length || 0;
-        const nodes = rosGraph.nodes?.length || 0;
-        return { total: topics, active: topics, nodes };
-    }, [rosGraph]);
-
-    // Error stats
-    const errorStats = useMemo(() => {
-        const errors = Object.values(metrics);
-        if (errors.length === 0) return { max: 0, min: 0, maxAgent: '-' };
-
-        let max = 0;
-        let maxAgent = '-';
-        let min = Infinity;
-
-        Object.entries(metrics).forEach(([id, m]) => {
-            if (m.error_magnitude > max) {
-                max = m.error_magnitude;
-                maxAgent = id;
-            }
-            if (m.error_magnitude < min) {
-                min = m.error_magnitude;
-            }
-        });
-
-        return { max, min: min === Infinity ? 0 : min, maxAgent };
-    }, [metrics]);
-
-    return (
-        <div className="space-y-4">
-            {/* System Status Row */}
-            <div className="grid grid-cols-4 gap-3">
-                <StatusCard
-                    label="System"
-                    value={status?.ros_ok ? 'Online' : 'Offline'}
-                    icon={status?.ros_ok ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                    color={status?.ros_ok ? 'green' : 'red'}
-                />
-                <StatusCard
-                    label="Formation"
-                    value={status?.formation_active ? 'Active' : 'Idle'}
-                    icon={<Activity className="w-4 h-4" />}
-                    color={status?.formation_active ? 'blue' : 'gray'}
-                />
-                <StatusCard
-                    label="Agents"
-                    value={`${settledCount}/${agentCount}`}
-                    subtext="settled"
-                    icon={<Users className="w-4 h-4" />}
-                    color="purple"
-                />
-                <StatusCard
-                    label="Topics"
-                    value={topicStats.total.toString()}
-                    subtext={`${topicStats.nodes} nodes`}
-                    icon={<Radio className="w-4 h-4" />}
-                    color="cyan"
-                />
-            </div>
-
-            {/* Controller Groups Comparison */}
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-                <h3 className="text-sm font-semibold text-gray-200 mb-3">Controller Groups Performance</h3>
-                <div className="grid grid-cols-2 gap-4">
-                    {Object.entries(groupStats).map(([type, stats]) => (
-                        <div key={type} className="bg-gray-900 rounded-lg p-3">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded ${type === 'hybrid' ? 'bg-emerald-900 text-emerald-300' :
-                                    type === 'pid' ? 'bg-blue-900 text-blue-300' :
-                                        'bg-gray-700 text-gray-300'
-                                    }`}>
-                                    {type === 'hybrid' ? 'PID + Fuzzy' : type.toUpperCase()}
-                                </span>
-                                <span className="text-xs text-gray-500">{stats.count} agents</span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div>
-                                    <div className="text-xs text-gray-500">Avg Error</div>
-                                    <div className={`font-mono font-bold ${stats.avgError < 0.3 ? 'text-green-400' :
-                                        stats.avgError < 0.7 ? 'text-yellow-400' : 'text-red-400'
-                                        }`}>
-                                        {stats.avgError.toFixed(3)}m
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="text-xs text-gray-500">Settled</div>
-                                    <div className="font-mono font-bold text-gray-200">
-                                        {stats.settled}/{stats.count}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                    {Object.keys(groupStats).length === 0 && (
-                        <div className="col-span-2 text-center text-gray-500 py-4">
-                            No controller data available
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Error Summary */}
-            <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-                    <h3 className="text-sm font-semibold text-gray-200 mb-3 flex items-center">
-                        <AlertTriangle className="w-4 h-4 mr-2 text-yellow-400" />
-                        Error Summary
-                    </h3>
-                    <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                            <span className="text-xs text-gray-400">Average Error</span>
-                            <span className={`font-mono font-bold ${avgError < 0.3 ? 'text-green-400' : avgError < 0.7 ? 'text-yellow-400' : 'text-red-400'
-                                }`}>
-                                {avgError.toFixed(3)} m
-                            </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-xs text-gray-400">Max Error</span>
-                            <span className="font-mono text-red-400">{errorStats.max.toFixed(3)} m</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-xs text-gray-400">Max Error Agent</span>
-                            <span className="font-mono text-gray-300">{errorStats.maxAgent}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-xs text-gray-400">Min Error</span>
-                            <span className="font-mono text-green-400">{errorStats.min.toFixed(3)} m</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Wind Conditions */}
-                <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-                    <h3 className="text-sm font-semibold text-gray-200 mb-3 flex items-center">
-                        <Wind className="w-4 h-4 mr-2 text-cyan-400" />
-                        Wind Conditions
-                    </h3>
-                    {wind ? (
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs text-gray-400">Speed</span>
-                                <span className="font-mono text-cyan-300">
-                                    {Math.sqrt(wind.velocity.x ** 2 + wind.velocity.y ** 2).toFixed(2)} m/s
-                                </span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs text-gray-400">Direction</span>
-                                <span className="font-mono text-orange-300">
-                                    {((Math.atan2(wind.velocity.y, wind.velocity.x) * 180 / Math.PI + 360) % 360).toFixed(0)}°
-                                </span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs text-gray-400">Force X</span>
-                                <span className="font-mono text-gray-300">{(wind.force?.x || 0).toFixed(2)} N</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs text-gray-400">Force Y</span>
-                                <span className="font-mono text-gray-300">{(wind.force?.y || 0).toFixed(2)} N</span>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="text-gray-500 text-sm">No wind data</div>
-                    )}
-                </div>
-            </div>
-
-            {/* Topic Health */}
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-                <h3 className="text-sm font-semibold text-gray-200 mb-3 flex items-center">
-                    <Radio className="w-4 h-4 mr-2 text-purple-400" />
-                    ROS2 Topics Health
-                </h3>
-                <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center">
-                        <div className="text-2xl font-bold text-purple-400">{topicStats.nodes}</div>
-                        <div className="text-xs text-gray-500">Active Nodes</div>
-                    </div>
-                    <div className="text-center">
-                        <div className="text-2xl font-bold text-cyan-400">{topicStats.total}</div>
-                        <div className="text-xs text-gray-500">Topic Connections</div>
-                    </div>
-                    <div className="text-center">
-                        <div className="text-2xl font-bold text-green-400">{agentCount * 3}</div>
-                        <div className="text-xs text-gray-500">Est. Messages/s</div>
-                    </div>
-                </div>
-            </div>
+      {/* Controller Comparison */}
+      <div className="panel">
+        <div className="panel-header">
+          <span className="panel-title">Controller Performance</span>
         </div>
-    );
-};
-
-// Status Card Component
-const StatusCard: React.FC<{
-    label: string;
-    value: string;
-    subtext?: string;
-    icon: React.ReactNode;
-    color: 'green' | 'red' | 'blue' | 'gray' | 'purple' | 'cyan' | 'yellow';
-}> = ({ label, value, subtext, icon, color }) => {
-    const colorClasses = {
-        green: 'text-green-400 bg-green-900/30 border-green-800',
-        red: 'text-red-400 bg-red-900/30 border-red-800',
-        blue: 'text-blue-400 bg-blue-900/30 border-blue-800',
-        gray: 'text-gray-400 bg-gray-800/50 border-gray-700',
-        purple: 'text-purple-400 bg-purple-900/30 border-purple-800',
-        cyan: 'text-cyan-400 bg-cyan-900/30 border-cyan-800',
-        yellow: 'text-yellow-400 bg-yellow-900/30 border-yellow-800',
-    };
-
-    return (
-        <div className={`rounded-lg border p-3 ${colorClasses[color]}`}>
-            <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-400 uppercase">{label}</span>
-                {icon}
+        <div className="panel-content">
+          {Object.keys(groupStats).length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {Object.entries(groupStats).map(([type, stats]) => (
+                <ControllerCard key={type} type={type} stats={stats} />
+              ))}
             </div>
-            <div className="text-lg font-bold">{value}</div>
-            {subtext && <div className="text-xs text-gray-500">{subtext}</div>}
+          ) : (
+            <div className="py-8 text-center text-zinc-500 text-sm">No controller data</div>
+          )}
         </div>
-    );
-};
+      </div>
 
-const OverviewSection: React.FC<{
-    metrics: Record<string, MetricsData>;
-    wind: WindData | null;
-    status: SystemStatus | null;
-}> = ({ metrics, wind, status }) => {
-    const agentCount = Object.keys(metrics).length;
-    const settledCount = Object.values(metrics).filter(m => m.is_settled).length;
-    const avgError = agentCount > 0
-        ? Object.values(metrics).reduce((sum, m) => sum + m.error_magnitude, 0) / agentCount
-        : 0;
-
-    return (
-        <div className="space-y-4">
-            {/* Status Cards */}
-            <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gray-800 p-3 rounded-lg border border-gray-700">
-                    <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Run State</div>
-                    <div className="text-lg font-bold text-white">
-                        {status?.formation_active ? 'Running' : 'Idle'}
-                    </div>
+      {/* Wind & System Status */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {/* Wind Panel */}
+        <div className="panel">
+          <div className="panel-header">
+            <span className="panel-title">Wind Disturbance</span>
+          </div>
+          <div className="panel-content">
+            {wind ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-center py-3 rounded" style={{ background: 'var(--color-bg-tertiary)' }}>
+                  <div className="text-2xl font-mono font-semibold text-cyan-400">{windSpeed.toFixed(2)}</div>
+                  <div className="data-label mt-1">Speed (m/s)</div>
                 </div>
-                <div className="bg-gray-800 p-3 rounded-lg border border-gray-700">
-                    <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Settled Agents</div>
-                    <div className="text-lg font-bold text-white">
-                        {settledCount} <span className="text-gray-500 text-sm">/ {agentCount}</span>
-                    </div>
+                <div className="text-center py-3 rounded" style={{ background: 'var(--color-bg-tertiary)' }}>
+                  <div className="flex items-center justify-center gap-1">
+                    <Navigation className="w-5 h-5 text-amber-400" style={{ transform: `rotate(${windDirection}deg)` }} />
+                    <span className="text-2xl font-mono font-semibold text-amber-400">{windDirection.toFixed(0)}°</span>
+                  </div>
+                  <div className="data-label mt-1">Direction</div>
                 </div>
-            </div>
-
-            {/* Error Summary */}
-            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-                <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-semibold text-gray-200">Avg Formation Error</h3>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${avgError < 0.5 ? 'bg-green-900 text-green-300' : 'bg-yellow-900 text-yellow-300'
-                        }`}>
-                        {avgError.toFixed(3)} m
-                    </span>
-                </div>
-                <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
-                    <div
-                        className="bg-blue-500 h-full transition-all duration-500"
-                        style={{ width: `${Math.min(avgError * 20, 100)}%` }}
-                    />
-                </div>
-            </div>
-
-            {/* Wind Summary */}
-            {wind && (
-                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-                    <h3 className="text-sm font-semibold text-gray-200 mb-3 flex items-center">
-                        <Wind className="w-4 h-4 mr-2 text-gray-400" />
-                        Wind Conditions
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <div className="text-xs text-gray-400">Speed</div>
-                            <div className="text-xl font-mono text-blue-300">
-                                {Math.sqrt(wind.velocity.x ** 2 + wind.velocity.y ** 2).toFixed(2)}
-                                <span className="text-xs text-gray-500 ml-1">m/s</span>
-                            </div>
-                        </div>
-                        <div>
-                            <div className="text-xs text-gray-400">Direction</div>
-                            <div className="text-xl font-mono text-orange-300">
-                                {((Math.atan2(wind.velocity.y, wind.velocity.x) * 180 / Math.PI + 360) % 360).toFixed(0)}°
-                            </div>
-                        </div>
-                    </div>
-                </div>
+              </div>
+            ) : (
+              <div className="py-6 text-center text-zinc-500 text-sm">No wind disturbance</div>
             )}
+          </div>
         </div>
-    );
-};
 
-const ChartsSection: React.FC<{
-    metricsHistory: Record<string, MetricsData[]>;
-    windHistory: WindData[];
-    controllerParams?: Record<string, ControllerParams>;
-}> = ({ metricsHistory, windHistory, controllerParams = {} }) => {
-    const [chartType, setChartType] = useState<'error' | 'metrics' | 'wind' | 'overshoot'>('error');
-    const [timeWindow, setTimeWindow] = useState<number>(60);
-    const [viewMode, setViewMode] = useState<'individual' | 'aggregated'>('individual');
-    const [selectedControllers, setSelectedControllers] = useState<Set<string>>(new Set(['pid', 'pid_fuzzy', 'pd']));
-
-    const toggleController = (controller: string) => {
-        const newSet = new Set(selectedControllers);
-        if (newSet.has(controller)) {
-            newSet.delete(controller);
-        } else {
-            newSet.add(controller);
-        }
-        setSelectedControllers(newSet);
-    };
-
-    return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between gap-3">
-                <div className="flex flex-col gap-2">
-                    <div className="flex space-x-2 overflow-x-auto pb-2">
-                        {(['error', 'metrics', 'wind', 'overshoot'] as const).map((type) => (
-                            <button
-                                key={type}
-                                onClick={() => setChartType(type)}
-                                className={`px-3 py-1 rounded text-xs font-medium transition-all whitespace-nowrap ${chartType === type
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                                    }`}
-                            >
-                                {type === 'error' && 'Position Error'}
-                                {type === 'metrics' && 'IAE/ITAE'}
-                                {type === 'wind' && 'Wind Velocity'}
-                                {type === 'overshoot' && 'Overshoot'}
-                            </button>
-                        ))}
-                    </div>
-                    {viewMode === 'aggregated' && chartType !== 'wind' && (
-                        <div className="flex space-x-2 overflow-x-auto">
-                            {(['pid', 'pid_fuzzy', 'pd'] as const).map((controller) => (
-                                <button
-                                    key={controller}
-                                    onClick={() => toggleController(controller)}
-                                    className={`px-2.5 py-1 rounded text-xs font-medium transition-all whitespace-nowrap border ${selectedControllers.has(controller)
-                                        ? 'bg-cyan-600 border-cyan-500 text-white shadow-sm'
-                                        : 'bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700'
-                                        }`}
-                                >
-                                    {controller === 'pid_fuzzy' ? 'Hybrid (PID+Fuzzy)' : controller.toUpperCase()}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-                <div className="flex items-center gap-2">
-                    {chartType !== 'wind' && (
-                        <button
-                            onClick={() => setViewMode(viewMode === 'individual' ? 'aggregated' : 'individual')}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all whitespace-nowrap ${viewMode === 'aggregated'
-                                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/50'
-                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                }`}
-                            title="Toggle between individual agents and controller group averages"
-                        >
-                            {viewMode === 'aggregated' ? (
-                                <>
-                                    <Users className="w-3.5 h-3.5" />
-                                    <span>Controller Groups</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Users className="w-3.5 h-3.5" />
-                                    <span>Individual Agents</span>
-                                </>
-                            )}
-                        </button>
-                    )}
-                    <div className="flex items-center gap-1 relative group">
-                        <select
-                            value={timeWindow}
-                            onChange={(e) => setTimeWindow(Number(e.target.value))}
-                            className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs"
-                        >
-                            <option value={30}>Last 30s</option>
-                            <option value={60}>Last 60s</option>
-                            <option value={120}>Last 2min</option>
-                            <option value={0}>Full Run</option>
-                        </select>
-                        <Info className="w-3.5 h-3.5 text-gray-500 cursor-help" />
-
-                        {/* Tooltip */}
-                        <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-56 p-2 bg-gray-900 text-xs text-gray-300 rounded shadow-lg border border-gray-700 z-50">
-                            <p className="font-semibold mb-1 text-blue-400">Zooming Tips:</p>
-                            <p>Select <strong>Full Run</strong> to enable stable zooming and panning. Live windows (30s/60s) reset the view as new data arrives.</p>
-                        </div>
-                    </div>
-                </div>
+        {/* System Status */}
+        <div className="panel">
+          <div className="panel-header">
+            <span className="panel-title">System Status</span>
+          </div>
+          <div className="panel-content space-y-2">
+            <StatusRow label="ROS2 Bridge" active={status?.ros_ok} />
+            <StatusRow label="Formation" active={status?.formation_active} />
+            <StatusRow label="Wind Publisher" active={status?.wind_active} />
+            <div className="pt-2 mt-2 grid grid-cols-2 gap-2" style={{ borderTop: '1px solid var(--color-border-subtle)' }}>
+              <div className="flex justify-between text-xs">
+                <span className="text-zinc-500">Topics</span>
+                <span className="font-mono text-zinc-300">{status?.available_topics?.length || 0}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-zinc-500">Agents</span>
+                <span className="font-mono text-zinc-300">{status?.active_agents?.length || 0}</span>
+              </div>
             </div>
-            <div className="h-72">
-                <TimeSeries
-                    metricsHistory={metricsHistory}
-                    windHistory={windHistory}
-                    selectedAgent={null}
-                    chartType={chartType}
-                    timeWindow={timeWindow}
-                    viewMode={viewMode}
-                    controllerParams={controllerParams}
-                    selectedControllers={selectedControllers}
-                />
-            </div>
+          </div>
         </div>
-    );
-};
+      </div>
 
-const AgentsSection: React.FC<{
-    metrics: Record<string, MetricsData>;
-    controllerParams?: Record<string, ControllerParams>;
-}> = ({ metrics, controllerParams = {} }) => {
-    const [sortBy, setSortBy] = useState<'name' | 'error'>('name');
-    const [filterGroup, setFilterGroup] = useState<string>('all');
-
-    const sortedAgents = useMemo(() => {
-        let entries = Object.entries(metrics);
-
-        // Filter by group
-        if (filterGroup !== 'all') {
-            entries = entries.filter(([id]) => {
-                const params = controllerParams[id];
-                return params?.controller_type === filterGroup;
-            });
-        }
-
-        // Sort
-        if (sortBy === 'error') {
-            entries.sort((a, b) => b[1].error_magnitude - a[1].error_magnitude);
-        } else {
-            entries.sort((a, b) => a[0].localeCompare(b[0]));
-        }
-
-        return entries;
-    }, [metrics, controllerParams, sortBy, filterGroup]);
-
-    const controllerTypes = useMemo(() => {
-        const types = new Set<string>();
-        Object.values(controllerParams).forEach(p => types.add(p.controller_type));
-        return Array.from(types);
-    }, [controllerParams]);
-
-    return (
-        <div className="space-y-3">
-            {/* Filters */}
-            <div className="flex items-center space-x-3">
-                <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as 'name' | 'error')}
-                    className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs"
-                >
-                    <option value="name">Sort by Name</option>
-                    <option value="error">Sort by Error</option>
-                </select>
-                <select
-                    value={filterGroup}
-                    onChange={(e) => setFilterGroup(e.target.value)}
-                    className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs"
-                >
-                    <option value="all">All Groups</option>
-                    {controllerTypes.map(type => (
-                        <option key={type} value={type}>{type.toUpperCase()}</option>
-                    ))}
-                </select>
-            </div>
-
-            {/* Agent List */}
-            {sortedAgents.map(([id, m]) => {
-                const params = controllerParams[id];
+      {/* Agent Grid */}
+      <div className="panel">
+        <div className="panel-header">
+          <span className="panel-title">Agent Status</span>
+        </div>
+        <div className="panel-content">
+          {Object.keys(metrics).length > 0 ? (
+            <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-2">
+              {Object.entries(metrics).map(([agentId, m]) => {
+                const params = controllerParams[agentId];
+                const agentNum = parseInt(agentId.replace('agent_', ''), 10);
                 return (
-                    <div key={id} className="bg-gray-800 p-3 rounded border border-gray-700 flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <div>
-                                <div className="font-medium text-sm text-gray-200">{id}</div>
-                                <div className="text-xs text-gray-500">
-                                    Err: {m.error_magnitude.toFixed(3)}m | RMSE: {(m.rmse_total || 0).toFixed(3)}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            {params && (
-                                <span className={`px-2 py-0.5 rounded text-xs font-bold ${params.controller_type === 'hybrid'
-                                    ? 'bg-emerald-900/50 text-emerald-400'
-                                    : 'bg-blue-900/50 text-blue-400'
-                                    }`}>
-                                    {params.controller_type === 'hybrid' ? 'PID+Fuzzy' : 'PID'}
-                                </span>
-                            )}
-                            <div className={`px-2 py-1 rounded text-xs font-bold ${m.is_settled ? 'bg-green-900/50 text-green-400' : 'bg-yellow-900/50 text-yellow-400'
-                                }`}>
-                                {m.is_settled ? 'SETTLED' : 'MOVING'}
-                            </div>
-                        </div>
-                    </div>
+                  <AgentDot
+                    key={agentId}
+                    number={agentNum}
+                    error={m.error_magnitude}
+                    settled={m.is_settled}
+                    type={params?.controller_type}
+                  />
                 );
-            })}
-            {sortedAgents.length === 0 && (
-                <div className="text-center text-gray-500 py-8 text-sm">No agents active</div>
-            )}
+              })}
+            </div>
+          ) : (
+            <div className="py-6 text-center text-zinc-500 text-sm">No agents</div>
+          )}
         </div>
-    );
+      </div>
+    </div>
+  );
 };
+
+// ============================================================================
+// Charts Panel
+// ============================================================================
+
+const ChartsPanel: React.FC<{
+  metricsHistory: Record<string, MetricsData[]>;
+  windHistory: WindData[];
+  controllerParams: Record<string, ControllerParams>;
+}> = ({ metricsHistory, windHistory, controllerParams }) => {
+  const [chartType, setChartType] = useState<'error' | 'metrics' | 'wind' | 'overshoot'>('error');
+  const [timeWindow, setTimeWindow] = useState<number>(60);
+  const [viewMode, setViewMode] = useState<'individual' | 'aggregated'>('aggregated');
+  const [selectedControllers, setSelectedControllers] = useState<Set<string>>(new Set(['pid', 'pid_fuzzy', 'pd']));
+
+  const toggleController = (c: string) => {
+    const s = new Set(selectedControllers);
+    s.has(c) ? s.delete(c) : s.add(c);
+    setSelectedControllers(s);
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Controls */}
+      <div className="panel">
+        <div className="panel-content flex flex-wrap items-center gap-2">
+          {/* Chart Type */}
+          <div className="flex gap-0.5 p-0.5 rounded" style={{ background: 'var(--color-bg-tertiary)' }}>
+            {(['error', 'metrics', 'wind', 'overshoot'] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setChartType(t)}
+                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                  chartType === t
+                    ? 'bg-blue-500/20 text-blue-400'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                {t === 'error' ? 'Error' : t === 'metrics' ? 'IAE/ITAE' : t === 'wind' ? 'Wind' : 'Overshoot'}
+              </button>
+            ))}
+          </div>
+
+          {chartType !== 'wind' && (
+            <button
+              onClick={() => setViewMode(viewMode === 'individual' ? 'aggregated' : 'individual')}
+              className={`px-2.5 py-1 rounded text-xs font-medium border transition-colors ${
+                viewMode === 'aggregated'
+                  ? 'bg-green-500/10 text-green-400 border-green-500/30'
+                  : 'text-zinc-400 border-zinc-700 hover:border-zinc-600'
+              }`}
+            >
+              {viewMode === 'aggregated' ? 'By Controller' : 'Individual'}
+            </button>
+          )}
+
+          {viewMode === 'aggregated' && chartType !== 'wind' && (
+            <div className="flex gap-1">
+              {['pid', 'pid_fuzzy', 'pd'].map((c) => (
+                <button
+                  key={c}
+                  onClick={() => toggleController(c)}
+                  className={`px-2 py-1 rounded text-xs font-medium border transition-colors ${
+                    selectedControllers.has(c)
+                      ? c === 'pid_fuzzy'
+                        ? 'bg-green-500/10 text-green-400 border-green-500/30'
+                        : c === 'pid'
+                        ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+                        : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                      : 'text-zinc-600 border-zinc-800'
+                  }`}
+                >
+                  {c === 'pid_fuzzy' ? 'Hybrid' : c.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <select
+            value={timeWindow}
+            onChange={(e) => setTimeWindow(Number(e.target.value))}
+            className="ml-auto text-xs px-2 py-1 rounded"
+            style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border-subtle)', color: 'var(--color-text-secondary)' }}
+          >
+            <option value={30}>30s</option>
+            <option value={60}>60s</option>
+            <option value={120}>2min</option>
+            <option value={0}>All</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Chart */}
+      <div className="panel h-72">
+        <TimeSeries
+          metricsHistory={metricsHistory}
+          windHistory={windHistory}
+          selectedAgent={null}
+          chartType={chartType}
+          timeWindow={timeWindow}
+          viewMode={viewMode}
+          controllerParams={controllerParams}
+          selectedControllers={selectedControllers}
+        />
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// Agents Panel
+// ============================================================================
+
+const AgentsPanel: React.FC<{
+  metrics: Record<string, MetricsData>;
+  controllerParams: Record<string, ControllerParams>;
+}> = ({ metrics, controllerParams }) => {
+  const [sortBy, setSortBy] = useState<'name' | 'error' | 'rmse'>('name');
+
+  const sortedAgents = useMemo(() => {
+    const entries = Object.entries(metrics);
+    entries.sort((a, b) => {
+      if (sortBy === 'error') return a[1].error_magnitude - b[1].error_magnitude;
+      if (sortBy === 'rmse') return (a[1].rmse_total || 0) - (b[1].rmse_total || 0);
+      return a[0].localeCompare(b[0]);
+    });
+    return entries;
+  }, [metrics, sortBy]);
+
+  return (
+    <div className="space-y-3">
+      {/* Sort Controls */}
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-zinc-500">Sort:</span>
+        {(['name', 'error', 'rmse'] as const).map((f) => (
+          <button
+            key={f}
+            onClick={() => setSortBy(f)}
+            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+              sortBy === f ? 'bg-blue-500/15 text-blue-400' : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            {f === 'name' ? 'Name' : f.toUpperCase()}
+          </button>
+        ))}
+        <span className="ml-auto text-xs text-zinc-600">{sortedAgents.length} agents</span>
+      </div>
+
+      {/* Table */}
+      <div className="panel overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
+              <th className="px-3 py-2 text-left text-xs font-medium text-zinc-500">Agent</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-zinc-500">Controller</th>
+              <th className="px-3 py-2 text-right text-xs font-medium text-zinc-500">Error</th>
+              <th className="px-3 py-2 text-right text-xs font-medium text-zinc-500">RMSE</th>
+              <th className="px-3 py-2 text-right text-xs font-medium text-zinc-500">Settling</th>
+              <th className="px-3 py-2 text-center text-xs font-medium text-zinc-500">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedAgents.map(([agentId, m]) => {
+              const params = controllerParams[agentId];
+              const agentNum = parseInt(agentId.replace('agent_', ''), 10);
+              return (
+                <tr key={agentId} className="hover:bg-zinc-800/30" style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded text-xs font-mono flex items-center justify-center"
+                            style={{ background: 'var(--color-bg-tertiary)' }}>
+                        {agentNum}
+                      </span>
+                      <span className="text-zinc-300">{agentId}</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2">
+                    <ControllerBadge type={params?.controller_type} />
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    <span className={`font-mono ${getErrorColor(m.error_magnitude)}`}>
+                      {m.error_magnitude.toFixed(4)}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-right font-mono text-zinc-400">{(m.rmse_total || 0).toFixed(4)}</td>
+                  <td className="px-3 py-2 text-right font-mono text-zinc-400">{m.settling_time.toFixed(2)}s</td>
+                  <td className="px-3 py-2 text-center">
+                    {m.is_settled ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-500/10 text-green-400">
+                        <CheckCircle2 className="w-3 h-3" /> Settled
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-400">
+                        <Clock className="w-3 h-3" /> Moving
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {sortedAgents.length === 0 && (
+          <div className="py-12 text-center text-zinc-500 text-sm">No agents</div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// Sub-Components
+// ============================================================================
+
+const MetricCard: React.FC<{
+  label: string;
+  value: string | number;
+  subValue?: string;
+  icon: React.ReactNode;
+  color: 'blue' | 'green' | 'yellow' | 'red' | 'cyan';
+}> = ({ label, value, subValue, icon, color }) => {
+  const colors = {
+    blue: 'text-blue-400',
+    green: 'text-green-400',
+    yellow: 'text-amber-400',
+    red: 'text-red-400',
+    cyan: 'text-cyan-400',
+  };
+
+  return (
+    <div className="panel p-3">
+      <div className="flex items-center justify-between mb-1">
+        <span className="data-label">{label}</span>
+        <span className={`${colors[color]} opacity-60`}>{icon}</span>
+      </div>
+      <div className={`text-xl font-mono font-semibold ${colors[color]}`}>{value}</div>
+      {subValue && <div className="text-[11px] text-zinc-500 mt-0.5">{subValue}</div>}
+    </div>
+  );
+};
+
+const ControllerCard: React.FC<{
+  type: string;
+  stats: { count: number; avgError: number; avgRmse: number; settled: number };
+}> = ({ type, stats }) => {
+  const config: Record<string, { color: string; label: string }> = {
+    pid_fuzzy: { color: 'green', label: 'PID + Fuzzy' },
+    hybrid: { color: 'green', label: 'Hybrid' },
+    pid: { color: 'blue', label: 'PID' },
+    pd: { color: 'amber', label: 'PD' },
+  };
+  const { color, label } = config[type] || { color: 'zinc', label: type.toUpperCase() };
+
+  return (
+    <div className="p-3 rounded" style={{ background: 'var(--color-bg-tertiary)' }}>
+      <div className="flex items-center justify-between mb-2">
+        <span className={`text-sm font-semibold text-${color}-400`}>{label}</span>
+        <span className="text-[11px] text-zinc-500">{stats.count} agents</span>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <div className="data-label">Avg Error</div>
+          <div className={`text-base font-mono font-semibold ${getErrorColor(stats.avgError)}`}>
+            {stats.avgError.toFixed(4)}
+          </div>
+        </div>
+        <div>
+          <div className="data-label">Settled</div>
+          <div className="text-base font-mono font-semibold text-zinc-200">
+            {stats.settled}/{stats.count}
+          </div>
+        </div>
+      </div>
+      {/* Progress bar */}
+      <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-bg-primary)' }}>
+        <div
+          className={`h-full rounded-full ${stats.settled === stats.count ? 'bg-green-500' : 'bg-blue-500'}`}
+          style={{ width: `${(stats.settled / stats.count) * 100}%` }}
+        />
+      </div>
+    </div>
+  );
+};
+
+const ControllerBadge: React.FC<{ type?: string }> = ({ type }) => {
+  if (!type) return <span className="text-zinc-600">-</span>;
+  const config: Record<string, string> = {
+    pid_fuzzy: 'bg-green-500/10 text-green-400 border-green-500/30',
+    hybrid: 'bg-green-500/10 text-green-400 border-green-500/30',
+    pid: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+    pd: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
+  };
+  const label = type === 'pid_fuzzy' || type === 'hybrid' ? 'Hybrid' : type.toUpperCase();
+  return (
+    <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium border ${config[type] || 'bg-zinc-800 text-zinc-500 border-zinc-700'}`}>
+      {label}
+    </span>
+  );
+};
+
+const StatusRow: React.FC<{ label: string; active?: boolean }> = ({ label, active }) => (
+  <div className="flex justify-between items-center py-1">
+    <span className="text-sm text-zinc-400">{label}</span>
+    <span className={`flex items-center gap-1.5 text-xs font-medium ${active ? 'text-green-400' : 'text-zinc-600'}`}>
+      <span className={`status-dot ${active ? 'status-dot-success' : ''}`} style={{ background: active ? undefined : 'var(--color-border-default)' }} />
+      {active ? 'Active' : 'Inactive'}
+    </span>
+  </div>
+);
+
+const AgentDot: React.FC<{
+  number: number;
+  error: number;
+  settled: boolean;
+  type?: string;
+}> = ({ number, error, settled, type }) => {
+  const borderColors: Record<string, string> = {
+    pid_fuzzy: 'border-green-500',
+    hybrid: 'border-green-500',
+    pid: 'border-blue-500',
+    pd: 'border-amber-500',
+  };
+
+  return (
+    <div
+      className={`relative w-9 h-9 rounded border-2 flex items-center justify-center cursor-default ${borderColors[type || ''] || 'border-zinc-700'}`}
+      style={{ background: 'var(--color-bg-tertiary)' }}
+      title={`Agent ${number}: ${error.toFixed(3)}m`}
+    >
+      <span className="text-xs font-mono font-semibold text-zinc-400">{number}</span>
+      <span className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full ${getErrorBg(error)} ${!settled ? 'animate-pulse' : ''}`} />
+    </div>
+  );
+};
+
+const getErrorColor = (e: number) => e < 0.1 ? 'text-green-400' : e < 0.3 ? 'text-amber-400' : 'text-red-400';
+const getErrorBg = (e: number) => e < 0.1 ? 'bg-green-500' : e < 0.3 ? 'bg-amber-500' : 'bg-red-500';
+
+export default SimulationMetricsPanel;

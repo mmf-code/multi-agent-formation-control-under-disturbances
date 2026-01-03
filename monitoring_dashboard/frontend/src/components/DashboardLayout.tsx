@@ -1,358 +1,359 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Activity, Play, Square, Settings, Network, Terminal, ChevronDown, ChevronUp, GripVertical, Loader2 } from 'lucide-react';
+/**
+ * Dashboard Layout - Robotics Control Interface
+ * Design: Foxglove/Boston Dynamics inspired modular layout
+ * Supports: Light/Dark themes, Thesis export mode
+ */
+import React, { useState, useCallback } from 'react';
+import {
+  Play,
+  Square,
+  Terminal,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  Wifi,
+  WifiOff,
+  Radio,
+} from 'lucide-react';
+import { useSimulation } from '../hooks';
+import { ThemeControls } from './ThemeToggle';
 
-interface SimulationStatus {
-    running: boolean;
-    pid: number | null;
-    script: string | null;
-}
-
-interface ScriptInfo {
-    name: string;
-    path: string;
-}
+// ============================================================================
+// Types
+// ============================================================================
 
 interface DashboardLayoutProps {
-    connected: boolean;
-    systemStatus: {
-        ros_ok: boolean;
-        active_agents: string[];
-        active_topics?: string[];
-    } | null;
-    simulationEnded?: boolean;
-    simulationEndReason?: string;
-    leftPanel: React.ReactNode;
-    rightPanel: React.ReactNode;
-    bottomPanel: React.ReactNode;
+  connected: boolean;
+  systemStatus: {
+    ros_ok: boolean;
+    active_agents: string[];
+    available_topics?: string[];
+  } | null;
+  simulationEnded?: boolean;
+  simulationEndReason?: string;
+  leftPanel: React.ReactNode;
+  rightPanel: React.ReactNode;
+  bottomPanel: React.ReactNode;
 }
 
+// ============================================================================
+// Main Component
+// ============================================================================
+
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
-    connected,
-    systemStatus,
-    simulationEnded = false,
-    simulationEndReason = '',
-    leftPanel,
-    rightPanel,
-    bottomPanel,
+  connected,
+  systemStatus,
+  simulationEnded = false,
+  simulationEndReason = '',
+  leftPanel,
+  rightPanel,
+  bottomPanel,
 }) => {
-    const [leftWidth, setLeftWidth] = useState(50); // percentage
-    const [bottomHeight, setBottomHeight] = useState(180); // pixels
-    const [bottomCollapsed, setBottomCollapsed] = useState(false);
-    const [isResizingH, setIsResizingH] = useState(false);
-    const [isResizingV, setIsResizingV] = useState(false);
+  const [leftWidth, setLeftWidth] = useState(55);
+  const [bottomHeight, setBottomHeight] = useState(160);
+  const [bottomCollapsed, setBottomCollapsed] = useState(false);
+  const [isResizingH, setIsResizingH] = useState(false);
+  const [isResizingV, setIsResizingV] = useState(false);
+  const [showScriptDropdown, setShowScriptDropdown] = useState(false);
 
-    // Simulation control state
-    const [simStatus, setSimStatus] = useState<SimulationStatus>({ running: false, pid: null, script: null });
-    const [availableScripts, setAvailableScripts] = useState<ScriptInfo[]>([]);
-    const [selectedScript, setSelectedScript] = useState<string>('run_formation_demo.sh');
-    const [simLoading, setSimLoading] = useState(false);
-    const [showScriptDropdown, setShowScriptDropdown] = useState(false);
+  const {
+    simStatus,
+    availableScripts,
+    selectedScript,
+    simLoading,
+    setSelectedScript,
+    startSimulation,
+    stopSimulation,
+  } = useSimulation();
 
-    // API base URL (handle both dev proxy and production)
-    const getApiUrl = (path: string) => {
-        // In production, we're served from /ui/, but API is at root
-        if (window.location.pathname.startsWith('/ui')) {
-            return path; // Backend serves API at root
-        }
-        return path;
+  const handleHorizontalResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizingH(true);
+    const startX = e.clientX;
+    const startWidth = leftWidth;
+
+    const onMouseMove = (e: MouseEvent) => {
+      const delta = e.clientX - startX;
+      const containerWidth = window.innerWidth;
+      const newWidth = startWidth + (delta / containerWidth) * 100;
+      setLeftWidth(Math.max(30, Math.min(70, newWidth)));
     };
 
-    // Fetch simulation status and available scripts
-    useEffect(() => {
-        const fetchSimData = async () => {
-            try {
-                const [statusRes, scriptsRes] = await Promise.all([
-                    fetch(getApiUrl('/api/simulation/status')),
-                    fetch(getApiUrl('/api/simulation/scripts'))
-                ]);
-                if (statusRes.ok) {
-                    const status = await statusRes.json();
-                    setSimStatus(status);
-                }
-                if (scriptsRes.ok) {
-                    const data = await scriptsRes.json();
-                    setAvailableScripts(data.scripts || []);
-                }
-            } catch (e) {
-                console.error('Failed to fetch simulation data:', e);
-            }
-        };
-
-        fetchSimData();
-        const interval = setInterval(fetchSimData, 3000); // Poll every 3s
-        return () => clearInterval(interval);
-    }, []);
-
-    const startSimulation = async () => {
-        setSimLoading(true);
-        try {
-            const url = getApiUrl(`/api/simulation/start?script=${encodeURIComponent(selectedScript)}`);
-            console.log('Starting simulation:', url, selectedScript);
-            const res = await fetch(url, {
-                method: 'POST'
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setSimStatus({ running: true, pid: data.pid, script: data.script });
-            } else {
-                const err = await res.json();
-                alert(`Failed to start: ${err.error}`);
-            }
-        } catch (e) {
-            console.error('Start simulation error:', e);
-        } finally {
-            setSimLoading(false);
-        }
+    const onMouseUp = () => {
+      setIsResizingH(false);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
     };
 
-    const stopSimulation = async () => {
-        setSimLoading(true);
-        try {
-            const res = await fetch(getApiUrl('/api/simulation/stop'), { method: 'POST' });
-            if (res.ok) {
-                setSimStatus({ running: false, pid: null, script: null });
-            }
-        } catch (e) {
-            console.error('Stop simulation error:', e);
-        } finally {
-            setSimLoading(false);
-        }
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }, [leftWidth]);
+
+  const handleVerticalResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizingV(true);
+    const startY = e.clientY;
+    const startHeight = bottomHeight;
+
+    const onMouseMove = (e: MouseEvent) => {
+      const delta = startY - e.clientY;
+      setBottomHeight(Math.max(80, Math.min(350, startHeight + delta)));
     };
 
-    const handleHorizontalResize = useCallback((e: React.MouseEvent) => {
-        e.preventDefault();
-        setIsResizingH(true);
-        const startX = e.clientX;
-        const startWidth = leftWidth;
+    const onMouseUp = () => {
+      setIsResizingV(false);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
 
-        const onMouseMove = (e: MouseEvent) => {
-            const delta = e.clientX - startX;
-            const containerWidth = window.innerWidth;
-            const newWidth = startWidth + (delta / containerWidth) * 100;
-            setLeftWidth(Math.max(25, Math.min(75, newWidth)));
-        };
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }, [bottomHeight]);
 
-        const onMouseUp = () => {
-            setIsResizingH(false);
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-        };
+  const agentCount = systemStatus?.active_agents?.length || 0;
+  const topicCount = systemStatus?.available_topics?.length || 0;
 
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-    }, [leftWidth]);
+  return (
+    <div className={`flex flex-col h-screen overflow-hidden ${isResizingH || isResizingV ? 'select-none cursor-col-resize' : ''}`}
+         style={{ background: 'var(--color-bg-primary)' }}>
 
-    const handleVerticalResize = useCallback((e: React.MouseEvent) => {
-        e.preventDefault();
-        setIsResizingV(true);
-        const startY = e.clientY;
-        const startHeight = bottomHeight;
+      {/* Background Grid */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-40 pointer-events-none" />
 
-        const onMouseMove = (e: MouseEvent) => {
-            const delta = startY - e.clientY;
-            setBottomHeight(Math.max(100, Math.min(400, startHeight + delta)));
-        };
-
-        const onMouseUp = () => {
-            setIsResizingV(false);
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-        };
-
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-    }, [bottomHeight]);
-
-    const topicCount = systemStatus?.active_topics?.length || 0;
-
-    return (
-        <div className={`flex flex-col h-screen bg-space-950 text-gray-100 overflow-hidden font-sans selection:bg-neon-blue/30 ${isResizingH || isResizingV ? 'select-none' : ''}`}>
-            {/* Background Grid */}
-            <div className="absolute inset-0 bg-grid-pattern opacity-20 pointer-events-none z-0" />
-
-            {/* Global Header */}
-            <header className="h-14 glass-panel border-b border-gray-800 flex items-center justify-between px-4 shrink-0 z-10 shadow-[0_4px_20px_rgba(0,0,0,0.5)] relative">
-                <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2 text-neon-blue animate-pulse-slow">
-                        <Activity className="w-5 h-5" />
-                        <span className="font-bold text-lg tracking-tight text-gray-100 drop-shadow-[0_0_10px_rgba(0,243,255,0.3)]">Formation Control Dashboard</span>
-                    </div>
-                    <div className="h-6 w-px bg-gray-700 mx-2" />
-
-                    {/* Simulation Controls */}
-                    <div className="flex items-center space-x-2">
-                        {/* Script Selector */}
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowScriptDropdown(!showScriptDropdown)}
-                                className="bg-space-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 hover:bg-space-700 hover:border-neon-blue/50 transition-all flex items-center space-x-1 max-w-40"
-                                disabled={simStatus.running}
-                            >
-                                <span className="truncate">{selectedScript}</span>
-                                <ChevronDown className="w-3 h-3 flex-shrink-0" />
-                            </button>
-                            {showScriptDropdown && (
-                                <div className="absolute top-full left-0 mt-1 bg-space-900 border border-gray-700 rounded shadow-[0_0_15px_rgba(0,0,0,0.5)] z-50 max-h-48 overflow-y-auto min-w-48 animate-fade-in">
-                                    {availableScripts.map(script => (
-                                        <button
-                                            key={script.name}
-                                            onClick={() => {
-                                                setSelectedScript(script.name);
-                                                setShowScriptDropdown(false);
-                                            }}
-                                            className={`w-full text-left px-3 py-1.5 text-xs hover:bg-space-800 transition-colors ${selectedScript === script.name ? 'text-neon-blue bg-neon-blue/10' : 'text-gray-300'
-                                                }`}
-                                        >
-                                            {script.name}
-                                        </button>
-                                    ))}
-                                    {availableScripts.length === 0 && (
-                                        <div className="px-3 py-2 text-xs text-gray-500">No scripts found</div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Control Buttons */}
-                        <div className="flex items-center space-x-1 bg-space-800 rounded-md p-1 border border-gray-700">
-                            {simLoading ? (
-                                <div className="p-1.5">
-                                    <Loader2 className="w-4 h-4 animate-spin text-neon-blue" />
-                                </div>
-                            ) : simStatus.running ? (
-                                <button
-                                    onClick={stopSimulation}
-                                    className="p-1.5 hover:bg-red-900/30 rounded text-neon-red transition-all duration-300 hover:shadow-[0_0_10px_rgba(255,0,60,0.5)]"
-                                    title="Stop Simulation"
-                                >
-                                    <Square className="w-4 h-4 fill-current" />
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={startSimulation}
-                                    className="p-1.5 hover:bg-green-900/30 rounded text-neon-green transition-all duration-300 hover:shadow-[0_0_10px_rgba(10,255,104,0.5)]"
-                                    title={`Start ${selectedScript}`}
-                                >
-                                    <Play className="w-4 h-4 fill-current" />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Running indicator */}
-                        {simStatus.running && (
-                            <div className="flex items-center space-x-1 text-xs text-neon-green animate-fade-in">
-                                <div className="w-2 h-2 bg-neon-green rounded-full animate-pulse shadow-[0_0_8px_#0aff68]" />
-                                <span className="hidden sm:inline font-mono">RUNNING</span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <div className="flex items-center space-x-6">
-                    {/* Status Indicators */}
-                    <div className="flex items-center space-x-4 text-xs font-medium text-gray-400">
-                        <div className="flex items-center space-x-2">
-                            <Network className="w-3.5 h-3.5" />
-                            <span>ROS2:</span>
-                            <span className={systemStatus?.ros_ok ? 'text-neon-green drop-shadow-[0_0_5px_rgba(10,255,104,0.5)]' : 'text-neon-red'}>
-                                {systemStatus?.ros_ok ? 'OK' : 'ERR'}
-                            </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <Settings className="w-3.5 h-3.5" />
-                            <span>Agents:</span>
-                            <span className="text-gray-200 font-mono">{systemStatus?.active_agents.length || 0}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <span>Topics:</span>
-                            <span className="text-gray-200 font-mono">{topicCount}</span>
-                        </div>
-                    </div>
-
-                    {/* Connection Status */}
-                    <div className={`flex items-center space-x-2 px-2 py-1 rounded border transition-all duration-500 ${connected
-                        ? 'bg-neon-green/10 border-neon-green/30 text-neon-green shadow-[0_0_10px_rgba(10,255,104,0.2)]'
-                        : 'bg-neon-red/10 border-neon-red/30 text-neon-red'
-                        }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-neon-green animate-pulse shadow-[0_0_5px_#0aff68]' : 'bg-neon-red'}`} />
-                        <span className="text-xs font-semibold uppercase tracking-wider">
-                            {connected ? 'Live' : 'Offline'}
-                        </span>
-                    </div>
-                </div>
-            </header>
-
-            {/* Simulation Ended Banner */}
-            {simulationEnded && (
-                <div className="bg-yellow-900/30 border-b border-yellow-700/50 px-4 py-2 flex items-center justify-between z-10">
-                    <div className="flex items-center space-x-3">
-                        <Terminal className="w-4 h-4 text-yellow-500" />
-                        <span className="text-sm text-yellow-200">
-                            Simulation ended: <span className="font-mono text-yellow-400">{simulationEndReason || 'unknown'}</span>
-                        </span>
-                    </div>
-                    <span className="text-xs text-yellow-500/70">Historical data preserved</span>
-                </div>
-            )}
-
-            {/* Main Content Area - Resizable 2-Column Layout */}
-            <div className="flex-1 flex overflow-hidden z-10 relative">
-                {/* Left Column: Simulation & Metrics */}
-                <div
-                    className="flex flex-col border-r border-gray-800 bg-space-900/30 backdrop-blur-sm"
-                    style={{ width: `${leftWidth}%` }}
-                >
-                    <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent p-4">
-                        {leftPanel}
-                    </div>
-                </div>
-
-                {/* Horizontal Resize Handle */}
-                <div
-                    className={`w-1 bg-gray-800 hover:bg-neon-blue cursor-col-resize flex items-center justify-center transition-all duration-300 ${isResizingH ? 'bg-neon-blue shadow-[0_0_10px_#00f3ff]' : ''}`}
-                    onMouseDown={handleHorizontalResize}
-                >
-                    <GripVertical className="w-3 h-3 text-gray-600" />
-                </div>
-
-                {/* Right Column: ROS2 Graph */}
-                <div
-                    className="flex flex-col bg-space-950 relative"
-                    style={{ width: `${100 - leftWidth}%` }}
-                >
-                    <div className="absolute inset-0 overflow-hidden">
-                        {rightPanel}
-                    </div>
-                </div>
-            </div>
-
-            {/* Vertical Resize Handle */}
-            {!bottomCollapsed && (
-                <div
-                    className={`h-1 bg-gray-800 hover:bg-neon-blue cursor-row-resize transition-all duration-300 z-20 ${isResizingV ? 'bg-neon-blue shadow-[0_0_10px_#00f3ff]' : ''}`}
-                    onMouseDown={handleVerticalResize}
-                />
-            )}
-
-            {/* Bottom Strip: Diagnostics */}
+      {/* Header Bar */}
+      <header className="h-11 glass-panel border-b flex items-center justify-between px-3 shrink-0 z-20">
+        {/* Left: Logo & Controls */}
+        <div className="flex items-center gap-3">
+          {/* Logo - Foxglove inspired */}
+          <div className="flex items-center gap-2">
             <div
-                className="bg-space-900 border-t border-gray-800 flex flex-col shrink-0 z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]"
-                style={{ height: bottomCollapsed ? '32px' : `${bottomHeight}px` }}
+              className="w-7 h-7 rounded-md flex items-center justify-center"
+              style={{ background: 'var(--color-accent-primary)' }}
             >
-                <div
-                    className="flex items-center px-4 py-1 bg-space-800/80 border-b border-gray-800 cursor-pointer hover:bg-space-800 transition-colors backdrop-blur-md"
-                    onClick={() => setBottomCollapsed(!bottomCollapsed)}
-                >
-                    <Terminal className="w-3.5 h-3.5 mr-2 text-neon-blue" />
-                    <span className="text-xs font-medium text-gray-300 uppercase tracking-wider flex-1">System Diagnostics & Logs</span>
-                    {bottomCollapsed ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-                </div>
-                {!bottomCollapsed && (
-                    <div className="flex-1 overflow-y-auto p-0 bg-space-950/50">
-                        {bottomPanel}
-                    </div>
-                )}
+              {/* 3D axes symbol inspired by Foxglove */}
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-white">
+                <path d="M8 2V14M2 8H14M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
             </div>
+            <div className="flex flex-col">
+              <span
+                className="text-sm font-semibold tracking-tight leading-none"
+                style={{ color: 'var(--color-text-primary)' }}
+              >
+                Formation Control
+              </span>
+              <span
+                className="text-[10px] tracking-wide"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                Multi-Agent Dashboard
+              </span>
+            </div>
+          </div>
+
+          <div className="w-px h-5" style={{ background: 'var(--color-border-subtle)' }} />
+
+          {/* Simulation Controls */}
+          <div className="flex items-center gap-2">
+            {/* Script Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowScriptDropdown(!showScriptDropdown)}
+                disabled={simStatus.running}
+                className="h-7 px-2.5 text-xs font-medium rounded flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                style={{
+                  background: 'var(--color-bg-tertiary)',
+                  border: '1px solid var(--color-border-subtle)',
+                  color: 'var(--color-text-secondary)',
+                }}
+              >
+                <span className="max-w-32 truncate">{selectedScript}</span>
+                <ChevronDown className="w-3 h-3 text-zinc-500" />
+              </button>
+
+              {showScriptDropdown && (
+                <div className="absolute top-full left-0 mt-1 min-w-48 max-h-52 overflow-y-auto rounded-lg shadow-xl z-50 animate-slide-in"
+                     style={{ background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border-subtle)' }}>
+                  {availableScripts.map((script) => (
+                    <button
+                      key={script.name}
+                      onClick={() => {
+                        setSelectedScript(script.name);
+                        setShowScriptDropdown(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                        selectedScript === script.name
+                          ? 'text-blue-400 bg-blue-500/10'
+                          : 'text-zinc-300 hover:bg-zinc-800'
+                      }`}
+                    >
+                      {script.name}
+                    </button>
+                  ))}
+                  {availableScripts.length === 0 && (
+                    <div className="px-3 py-4 text-xs text-zinc-500 text-center">No scripts available</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Play/Stop Button */}
+            {simLoading ? (
+              <div className="w-7 h-7 flex items-center justify-center">
+                <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+              </div>
+            ) : simStatus.running ? (
+              <button
+                onClick={stopSimulation}
+                className="w-7 h-7 rounded flex items-center justify-center transition-colors bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/30"
+              >
+                <Square className="w-3 h-3 fill-current" />
+              </button>
+            ) : (
+              <button
+                onClick={startSimulation}
+                className="w-7 h-7 rounded flex items-center justify-center transition-colors bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 border border-blue-500/30"
+              >
+                <Play className="w-3 h-3 fill-current" />
+              </button>
+            )}
+
+            {/* Running Status */}
+            {simStatus.running && (
+              <div className="flex items-center gap-1.5 px-2">
+                <span className="status-dot status-dot-success animate-pulse" />
+                <span className="text-xs font-medium text-green-400">Running</span>
+              </div>
+            )}
+          </div>
         </div>
-    );
+
+        {/* Right: Status Indicators */}
+        <div className="flex items-center gap-4">
+          {/* System Stats */}
+          <div className="flex items-center gap-3 text-xs">
+            <div className="flex items-center gap-1.5">
+              <Radio className="w-3 h-3" style={{ color: 'var(--color-text-muted)' }} />
+              <span style={{ color: 'var(--color-text-muted)' }}>ROS:</span>
+              <span style={{ color: systemStatus?.ros_ok ? 'var(--color-success)' : 'var(--color-error)' }}>
+                {systemStatus?.ros_ok ? 'OK' : 'ERR'}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span style={{ color: 'var(--color-text-muted)' }}>Agents:</span>
+              <span className="font-mono" style={{ color: 'var(--color-text-primary)' }}>{agentCount}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span style={{ color: 'var(--color-text-muted)' }}>Topics:</span>
+              <span className="font-mono" style={{ color: 'var(--color-text-primary)' }}>{topicCount}</span>
+            </div>
+          </div>
+
+          <div className="w-px h-4" style={{ background: 'var(--color-border-subtle)' }} />
+
+          {/* Theme Controls */}
+          <ThemeControls />
+
+          <div className="w-px h-4" style={{ background: 'var(--color-border-subtle)' }} />
+
+          {/* Connection Status */}
+          <div className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
+            connected
+              ? 'border'
+              : 'border'
+          }`}
+          style={{
+            background: connected ? 'var(--color-success-bg)' : 'var(--color-error-bg)',
+            borderColor: connected ? 'var(--color-success-border)' : 'var(--color-error-border)',
+            color: connected ? 'var(--color-success)' : 'var(--color-error)',
+          }}>
+            {connected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+            <span>{connected ? 'Live' : 'Offline'}</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Simulation Ended Banner */}
+      {simulationEnded && (
+        <div className="h-8 flex items-center justify-between px-3 text-xs border-b animate-fade-in"
+             style={{ background: 'rgba(245, 158, 11, 0.1)', borderColor: 'rgba(245, 158, 11, 0.2)' }}>
+          <div className="flex items-center gap-2">
+            <Terminal className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-amber-200">Simulation ended:</span>
+            <span className="font-mono text-amber-400">{simulationEndReason || 'completed'}</span>
+          </div>
+          <span className="text-amber-500/70">Data preserved</span>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden relative z-10">
+        {/* Left Panel */}
+        <div className="flex flex-col" style={{ width: `${leftWidth}%`, borderRight: '1px solid var(--color-border-subtle)' }}>
+          <div className="flex-1 overflow-y-auto scrollbar-thin p-3" style={{ background: 'var(--color-bg-secondary)' }}>
+            {leftPanel}
+          </div>
+        </div>
+
+        {/* Resize Handle - Horizontal */}
+        <div
+          className={`w-1 cursor-col-resize flex items-center justify-center transition-colors ${
+            isResizingH ? 'bg-blue-500' : 'bg-transparent hover:bg-zinc-700'
+          }`}
+          onMouseDown={handleHorizontalResize}
+        />
+
+        {/* Right Panel */}
+        <div className="flex-1 flex flex-col min-w-0" style={{ background: 'var(--color-bg-primary)' }}>
+          <div className="flex-1 overflow-hidden">{rightPanel}</div>
+        </div>
+      </div>
+
+      {/* Resize Handle - Vertical */}
+      {!bottomCollapsed && (
+        <div
+          className={`h-1 cursor-row-resize transition-colors z-20 ${
+            isResizingV ? 'bg-blue-500' : 'bg-transparent hover:bg-zinc-700'
+          }`}
+          onMouseDown={handleVerticalResize}
+        />
+      )}
+
+      {/* Bottom Panel */}
+      <div
+        className="shrink-0 z-20 flex flex-col"
+        style={{
+          height: bottomCollapsed ? '28px' : `${bottomHeight}px`,
+          background: 'var(--color-bg-secondary)',
+          borderTop: '1px solid var(--color-border-subtle)',
+        }}
+      >
+        {/* Bottom Panel Header */}
+        <div
+          className="h-7 flex items-center px-3 cursor-pointer shrink-0 transition-colors hover:bg-zinc-800/50"
+          style={{ borderBottom: bottomCollapsed ? 'none' : '1px solid var(--color-border-subtle)' }}
+          onClick={() => setBottomCollapsed(!bottomCollapsed)}
+        >
+          <Terminal className="w-3.5 h-3.5 mr-2 text-zinc-500" />
+          <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex-1">
+            Diagnostics
+          </span>
+          {bottomCollapsed ? (
+            <ChevronUp className="w-3.5 h-3.5 text-zinc-500" />
+          ) : (
+            <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
+          )}
+        </div>
+
+        {/* Bottom Panel Content */}
+        {!bottomCollapsed && (
+          <div className="flex-1 overflow-y-auto" style={{ background: 'var(--color-bg-primary)' }}>
+            {bottomPanel}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
+
+export default DashboardLayout;

@@ -1,6 +1,7 @@
 /**
  * Time Series Component
  * Real-time charts for metrics, errors, and performance indicators
+ * Theme-aware: adapts colors for light/dark mode
  */
 import React, { useMemo, useState, useCallback } from 'react';
 // @ts-ignore - plotly.js-basic-dist-min has no types
@@ -8,6 +9,7 @@ import Plotly from 'plotly.js-basic-dist-min';
 // @ts-ignore - react-plotly.js/factory has no types
 import createPlotlyComponent from 'react-plotly.js/factory';
 import { MetricsData, WindData, ControllerParams } from '../api/ws';
+import { useThesisMode } from '../store/theme';
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -28,38 +30,62 @@ interface ZoomState {
   yaxis2?: { range: [number, number]; autorange?: boolean };
 }
 
-// Professional Color Palette for Reports (white background)
-const COLORS = {
-  primary: '#2563eb',    // Blue 600 (darker for white bg)
+// ============================================================================
+// Theme-aware color palettes
+// ============================================================================
+
+// Light mode colors (for thesis/print)
+const LIGHT_COLORS = {
+  primary: '#0891b2',    // Cyan 600
   secondary: '#7c3aed',  // Violet 600
-  success: '#059669',    // Emerald 600
-  warning: '#d97706',    // Amber 600
+  success: '#16a34a',    // Green 600
+  warning: '#c2410c',    // Orange 700
   danger: '#dc2626',     // Red 600
-  text: '#1f2937',       // Gray 800 (dark for white bg)
-  grid: '#e5e7eb',       // Gray 200 (light grid)
-  bg: '#ffffff',         // White background for reports
+  text: '#1e293b',       // Slate 800
+  grid: '#e2e8f0',       // Slate 200
+  bg: '#ffffff',
 };
 
-// Controller type colors (darker shades for white background)
-const CONTROLLER_COLORS: Record<string, string> = {
-  pid: '#2563eb', // Blue 600
-  pid_fuzzy: '#059669', // Emerald 600 (Hybrid PID+Fuzzy)
-  hybrid: '#059669', // Emerald 600 (alias for pid_fuzzy)
-  fuzzy: '#9333ea', // Purple 600
-  pd: '#ea580c', // Orange 600
-  unknown: '#4b5563', // Gray 600
+// Dark mode colors (for development)
+const DARK_COLORS = {
+  primary: '#06b6d4',    // Cyan 400
+  secondary: '#a855f7',  // Purple 400
+  success: '#22c55e',    // Green 400
+  warning: '#fb923c',    // Orange 400
+  danger: '#f87171',     // Red 400
+  text: '#e2e8f0',       // Slate 200
+  grid: '#334155',       // Slate 700
+  bg: '#0f172a',         // Slate 900
 };
 
-// Individual agent colors (darker shades for white background)
-const AGENT_COLORS = [
-  '#2563eb', // Blue 600
-  '#059669', // Emerald 600
-  '#9333ea', // Purple 600
-  '#d97706', // Amber 600
-  '#dc2626', // Red 600
-  '#0891b2', // Cyan 600
-  '#db2777', // Pink 600
-  '#65a30d', // Lime 600
+// Controller colors - Robotics palette (Cyan, Purple, Orange)
+const LIGHT_CONTROLLER_COLORS: Record<string, string> = {
+  pid_fuzzy: '#0891b2', // Cyan 600 (Best - Hybrid)
+  hybrid: '#0891b2',
+  pid: '#7c3aed',       // Violet 600 (Standard)
+  pd: '#c2410c',        // Orange 700 (Basic)
+  fuzzy: '#7c3aed',
+  unknown: '#64748b',
+};
+
+const DARK_CONTROLLER_COLORS: Record<string, string> = {
+  pid_fuzzy: '#06b6d4', // Cyan 400 (Best - Hybrid)
+  hybrid: '#06b6d4',
+  pid: '#a855f7',       // Purple 400 (Standard)
+  pd: '#fb923c',        // Orange 400 (Basic)
+  fuzzy: '#a855f7',
+  unknown: '#94a3b8',
+};
+
+// Agent colors for individual view
+const LIGHT_AGENT_COLORS = [
+  '#0891b2', '#7c3aed', '#c2410c', '#16a34a',
+  '#dc2626', '#0369a1', '#be185d', '#4d7c0f',
+];
+
+const DARK_AGENT_COLORS = [
+  '#06b6d4', '#a855f7', '#fb923c', '#22c55e',
+  '#f87171', '#38bdf8', '#f472b6', '#84cc16',
 ];
 
 export const TimeSeries: React.FC<TimeSeriesProps> = ({
@@ -72,6 +98,12 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
   controllerParams = {},
   selectedControllers = new Set(['pid', 'pid_fuzzy', 'pd']),
 }) => {
+  // Theme state
+  const thesisMode = useThesisMode();
+  const COLORS = thesisMode ? LIGHT_COLORS : DARK_COLORS;
+  const CONTROLLER_COLORS = thesisMode ? LIGHT_CONTROLLER_COLORS : DARK_CONTROLLER_COLORS;
+  const AGENT_COLORS = thesisMode ? LIGHT_AGENT_COLORS : DARK_AGENT_COLORS;
+
   // Helper function to filter data by time window
   const filterByTimeWindow = useCallback((data: any[], timeWindow: number) => {
     if (timeWindow === 0) return data; // Full run
@@ -575,7 +607,7 @@ export const TimeSeries: React.FC<TimeSeriesProps> = ({
     }
 
     return { data: [], layout: {} };
-  }, [metricsHistory, windHistory, selectedAgent, chartType, zoomState, viewMode, controllerParams, selectedControllers, timeWindow, filterByTimeWindow, aggregateByControllerType]);
+  }, [metricsHistory, windHistory, selectedAgent, chartType, zoomState, viewMode, controllerParams, selectedControllers, timeWindow, filterByTimeWindow, aggregateByControllerType, thesisMode, COLORS, CONTROLLER_COLORS, AGENT_COLORS]);
 
   return (
     <div className="glass-panel rounded-lg p-4 transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,243,255,0.1)]">

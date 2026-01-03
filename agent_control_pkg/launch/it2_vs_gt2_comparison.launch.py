@@ -31,11 +31,11 @@ def generate_launch_description():
     pkg_agent_control = get_package_share_directory('agent_control_pkg')
     pkg_formation_coordinator = get_package_share_directory('formation_coordinator_pkg')
 
-    # World file
+    # World file (6-drone IT2 vs GT2 comparison)
     world_file = PathJoinSubstitution([
         FindPackageShare('agent_control_pkg'),
         'worlds',
-        'crazyflie_it2_vs_gt2.world'
+        'it2_vs_gt2_6drone.world'
     ])
 
     # Gazebo paths
@@ -79,18 +79,22 @@ def generate_launch_description():
         condition=conditions.IfCondition(gazebo_gui)
     )
 
-    # Wind publisher
+    # Wind publisher - von Kármán turbulence for realistic atmospheric wind
     wind_publisher = Node(
         package='agent_control_pkg',
         executable='wind_publisher.py',
         name='wind_publisher',
         output='screen',
         parameters=[{
-            'profile': 'gust',
-            'magnitude': 3.5,
-            'direction': 90.0,
-            'gust_duration': 1.5,
-            'gust_interval': 8.0,
+            'profile': 'vonkarman',  # Scientifically-grounded turbulence model
+            'magnitude': 2.5,         # Mean wind speed [m/s]
+            'direction': 45.0,        # Wind direction [deg] - diagonal for X+Y disturbance
+            'turbulence_intensity': 0.20,  # 20% TI - moderate turbulence
+            'mean_wind_speed': 2.5,   # For turbulence scaling
+            'integral_length_u': 30.0,  # Longitudinal scale [m] - smaller for low altitude
+            'integral_length_v': 15.0,  # Lateral scale [m]
+            'integral_length_w': 5.0,   # Vertical scale [m]
+            'publish_rate': 20.0,     # Higher rate for smoother turbulence
         }]
     )
 

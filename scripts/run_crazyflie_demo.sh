@@ -3,6 +3,11 @@
 # Crazyflie Formation Demo
 # Runs Crazyswarm2 sim + TF bridge + our controller
 #
+# WARNING: This script requires ros-humble-crazyflie package (Crazyswarm2).
+#          Install with: sudo apt install ros-humble-crazyflie
+#          For Gazebo simulation without Crazyswarm2, use:
+#            ros2 launch agent_control_pkg formation_comparison_demo.launch.py
+#
 # Usage:
 #   ./scripts/run_crazyflie_demo.sh           # 1 drone (default)
 #   ./scripts/run_crazyflie_demo.sh 3         # 3 drones
@@ -10,6 +15,18 @@
 #
 
 set -e
+
+# Check if Crazyswarm2 is installed
+if ! ros2 pkg list 2>/dev/null | grep -q "crazyflie"; then
+    echo "ERROR: ros-humble-crazyflie (Crazyswarm2) is not installed!"
+    echo ""
+    echo "Options:"
+    echo "  1. Install Crazyswarm2: sudo apt install ros-humble-crazyflie"
+    echo "  2. Use Gazebo simulation instead:"
+    echo "     ros2 launch agent_control_pkg formation_comparison_demo.launch.py"
+    echo ""
+    exit 1
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WS_DIR="$(dirname "$SCRIPT_DIR")"
