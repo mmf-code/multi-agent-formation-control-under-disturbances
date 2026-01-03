@@ -133,8 +133,15 @@ class PhaseMetricsLogger(Node):
         # Initialize storage
         self.agent_metrics: Dict[str, AgentMetrics] = {}
         self.wind_data: List[Dict[str, float]] = []
-        self.start_time: Optional[float] = None
+        self.start_time_ns: Optional[int] = None  # Simulation time in nanoseconds
         self.end_time: Optional[float] = None
+
+        # Check if using simulation time (already declared by ROS2)
+        # Use get_parameter_or to avoid duplicate declaration
+        try:
+            self.use_sim_time = self.get_parameter("use_sim_time").value
+        except Exception:
+            self.use_sim_time = True
 
         # QoS profile for reliable data
         qos = QoSProfile(
@@ -178,8 +185,8 @@ class PhaseMetricsLogger(Node):
         # Status timer (1 Hz)
         self.status_timer = self.create_timer(1.0, self.status_callback)
 
-        # Record start time
-        self.start_time = time.time()
+        # Record start time using simulation time
+        self.start_time_ns = self.get_clock().now().nanoseconds
 
         self.get_logger().info(
             f"Phase {self.phase_id} Run {self.run_index} - "
@@ -187,13 +194,20 @@ class PhaseMetricsLogger(Node):
         )
         self.get_logger().info(f"Output directory: {self.run_dir}")
 
+    def _get_elapsed_sim_time(self) -> float:
+        """Get elapsed simulation time in seconds."""
+        if self.start_time_ns is None:
+            return 0.0
+        current_ns = self.get_clock().now().nanoseconds
+        return (current_ns - self.start_time_ns) / 1e9
+
     def metrics_callback(self, msg: MetricsData, agent_id: str):
         """Handle incoming metrics data."""
         if agent_id not in self.agent_metrics:
             return
 
         am = self.agent_metrics[agent_id]
-        elapsed = time.time() - self.start_time if self.start_time else 0.0
+        elapsed = self._get_elapsed_sim_time()
 
         # Store time series data
         am.timestamps.append(elapsed)
@@ -214,7 +228,7 @@ class PhaseMetricsLogger(Node):
 
     def wind_callback(self, msg: Vector3):
         """Handle wind velocity data."""
-        elapsed = time.time() - self.start_time if self.start_time else 0.0
+        elapsed = self._get_elapsed_sim_time()
         magnitude = (msg.x**2 + msg.y**2 + msg.z**2)**0.5
         self.wind_data.append({
             "timestamp": elapsed,
@@ -226,10 +240,10 @@ class PhaseMetricsLogger(Node):
 
     def status_callback(self):
         """Print status and check for completion."""
-        if self.start_time is None:
+        if self.start_time_ns is None:
             return
 
-        elapsed = time.time() - self.start_time
+        elapsed = self._get_elapsed_sim_time()
         remaining = max(0, self.duration_sec - elapsed)
 
         # Count samples per group
@@ -393,15 +407,20 @@ class PhaseMetricsLogger(Node):
         """Export phase metadata to JSON."""
         filename = os.path.join(self.run_dir, "phase_metadata.json")
 
+        # Calculate actual sim time elapsed
+        actual_sim_duration = self._get_elapsed_sim_time()
+
         metadata = {
             "phase_id": self.phase_id,
             "run_index": self.run_index,
             "duration_sec": self.duration_sec,
-            "start_time": datetime.fromtimestamp(self.start_time).isoformat(),
+            "actual_sim_duration_sec": actual_sim_duration,
+            "start_time": datetime.now().isoformat(),  # Wall clock for reference
             "end_time": datetime.now().isoformat(),
             "num_agents": self.num_agents,
             "total_samples": sum(am.samples for am in self.agent_metrics.values()),
             "wind_samples": len(self.wind_data),
+            "timing_source": "simulation_time",
             "group_summaries": {
                 k: asdict(v) for k, v in summaries.items()
             },
