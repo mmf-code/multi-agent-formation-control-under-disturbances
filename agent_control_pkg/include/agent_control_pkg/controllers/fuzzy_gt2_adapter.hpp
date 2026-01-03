@@ -17,6 +17,7 @@
 
 #include "agent_control_pkg/controllers/controller_base.hpp"
 #include "agent_control_pkg/gt2_fuzzy_logic_system.hpp"
+#include "agent_control_pkg/config_reader.hpp"  // For FuzzyParams
 #include <memory>
 #include <string>
 #include <map>
@@ -39,6 +40,7 @@ public:
         double umax{12.0};          ///< Output upper limit
         double wind_scalar{0.0};    ///< Wind disturbance scalar for fuzzy input
         int num_alpha_levels{5};    ///< Number of alpha-planes for GT2
+        double secondary_spread{0.3}; ///< Secondary MF spread (for Gaussian/Triangular)
         GT2FuzzyLogicSystem::SecondaryMFShape secondary_shape{
             GT2FuzzyLogicSystem::SecondaryMFShape::TRIANGULAR
         };  ///< Secondary MF shape
@@ -63,6 +65,15 @@ public:
      * @param include_wind Whether to include wind input
      */
     void configureDefault(bool include_wind = true);
+
+    /**
+     * @brief Configure from FuzzyParams (same format as IT2)
+     * @param fp Parsed fuzzy parameters from YAML
+     * @param include_wind Whether to include wind as fuzzy input
+     *
+     * Converts FuzzyParams FOU format to GT2TriangularFS with secondary MF
+     */
+    void configureFromFuzzyParams(const FuzzyParams &fp, bool include_wind);
 
     /**
      * @brief Compute control output

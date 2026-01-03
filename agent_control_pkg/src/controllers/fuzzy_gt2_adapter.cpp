@@ -26,7 +26,7 @@ FuzzyGT2Adapter::FuzzyGT2Adapter(const Options &opt)
     config.num_alpha_levels = opt_.num_alpha_levels;
     config.use_uniform_alpha = true;
     config.default_secondary_shape = opt_.secondary_shape;
-    config.secondary_spread = 0.3;  // For Gaussian
+    config.secondary_spread = opt_.secondary_spread;
 
     fls_.setConfig(config);
     reset();
@@ -43,7 +43,7 @@ void FuzzyGT2Adapter::configureFromParams(
     config.num_alpha_levels = opt_.num_alpha_levels;
     config.use_uniform_alpha = true;
     config.default_secondary_shape = opt_.secondary_shape;
-    config.secondary_spread = 0.3;
+    config.secondary_spread = opt_.secondary_spread;
 
     fls_ = GT2FuzzyLogicSystem(config);
     include_wind_ = include_wind;
@@ -114,6 +114,78 @@ void FuzzyGT2Adapter::configureDefault(bool include_wind)
     initialized_ = true;
 }
 
+void FuzzyGT2Adapter::configureFromFuzzyParams(const FuzzyParams &fp, bool include_wind)
+{
+    include_wind_ = include_wind;
+
+    // Reinitialize GT2 system with current config
+    GT2FuzzyLogicSystem::GT2Config config;
+    config.num_alpha_levels = opt_.num_alpha_levels;
+    config.use_uniform_alpha = true;
+    config.default_secondary_shape = opt_.secondary_shape;
+    config.secondary_spread = opt_.secondary_spread;
+
+    fls_ = GT2FuzzyLogicSystem(config);
+
+    // Helper to convert FuzzySetFOU to GT2TriangularFS
+    // FOU format: {l1, l2, l3, u1, u2, u3} -> {lmf_left, lmf_peak, lmf_right, umf_left, umf_peak, umf_right}
+    auto fouToGT2 = [this](const FuzzySetFOU &fou) -> GT2FuzzyLogicSystem::GT2TriangularFS {
+        GT2FuzzyLogicSystem::GT2TriangularFS fs;
+        fs.lmf_left_base = fou.l1;
+        fs.lmf_peak = fou.l2;
+        fs.lmf_right_base = fou.l3;
+        fs.umf_left_base = fou.u1;
+        fs.umf_peak = fou.u2;
+        fs.umf_right_base = fou.u3;
+        fs.secondary_shape = opt_.secondary_shape;
+        fs.secondary_spread = opt_.secondary_spread;
+        fs.secondary_peak_location = 0.5;  // Center of FOU
+        return fs;
+    };
+
+    // Detect output variable name
+    std::string output_var = "output";
+    for (const auto &kv : fp.sets) {
+        if (kv.first != "error" && kv.first != "dError" && kv.first != "wind") {
+            output_var = kv.first;
+            break;
+        }
+    }
+
+    // Declare variables
+    fls_.addInputVariable("error");
+    fls_.addInputVariable("dError");
+    if (include_wind_) {
+        fls_.addInputVariable("wind");
+    }
+    fls_.addOutputVariable(output_var);
+
+    // Load fuzzy sets - convert FOU to GT2TriangularFS
+    for (const auto &var_entry : fp.sets) {
+        const std::string &var_name = var_entry.first;
+        for (const auto &set_entry : var_entry.second) {
+            const std::string &set_name = set_entry.first;
+            const auto &fou = set_entry.second;
+            GT2FuzzyLogicSystem::GT2TriangularFS gt2_fs = fouToGT2(fou);
+            fls_.addFuzzySetToVariable(var_name, set_name, gt2_fs);
+        }
+    }
+
+    // Add rules
+    for (const auto &r : fp.rules) {
+        GT2FuzzyLogicSystem::FuzzyRule rule;
+        rule.antecedents["error"] = r[0];
+        rule.antecedents["dError"] = r[1];
+        if (include_wind_) {
+            rule.antecedents["wind"] = r[2];
+        }
+        rule.consequent = {output_var, r[3]};
+        fls_.addRule(rule);
+    }
+
+    initialized_ = true;
+}
+
 double FuzzyGT2Adapter::compute(double y, double yref, double dt)
 {
     if (!initialized_) {
@@ -167,7 +239,7 @@ void FuzzyGT2Adapter::setNumAlphaLevels(int n)
         config.num_alpha_levels = n;
         config.use_uniform_alpha = true;
         config.default_secondary_shape = opt_.secondary_shape;
-        config.secondary_spread = 0.3;
+        config.secondary_spread = opt_.secondary_spread;
         fls_.setConfig(config);
     }
 }

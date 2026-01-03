@@ -89,6 +89,8 @@ private:
   // GT2 Fuzzy specific parameters
   int gt2_num_alpha_levels_{5};  // Number of alpha-planes for GT2
   std::string gt2_secondary_shape_{"triangular"};  // "triangular", "gaussian", "trapezoidal", "uniform"
+  double gt2_secondary_spread_{0.3};  // Secondary MF spread parameter
+  std::string gt2_params_file_{"gt2_fuzzy_params_crazyflie.yaml"};  // GT2-specific params file
 
   double pid_kp_{0.6};
   double pid_ki_{0.0};
@@ -104,6 +106,7 @@ private:
   double target_stale_threshold_sec_{2.0}; // Target pose older than this is stale
 
   std::optional<agent_control_pkg::FuzzyParams> fuzzy_params_;
+  std::optional<agent_control_pkg::FuzzyParams> gt2_fuzzy_params_;  // GT2 fuzzy parameters
 
   // Feed-forward control parameters
   core::FeedForwardParams ff_params_;

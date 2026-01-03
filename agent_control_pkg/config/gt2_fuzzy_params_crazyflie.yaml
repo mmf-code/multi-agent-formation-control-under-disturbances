@@ -1,0 +1,158 @@
+# GT2-FLS Crazyflie-Optimized Parameters
+#
+# General Type-2 Fuzzy Logic System with alpha-plane decomposition
+# Scaled for Crazyflie 2.1 nano quadrotor (~27g)
+#
+# Key differences from IT2:
+# - Secondary MF shape defines uncertainty distribution within FOU
+# - Alpha-plane method computes multiple IT2 slices for richer output
+# - Better uncertainty handling under wind disturbances
+#
+# Scale factor: Same as IT2 for fair comparison
+# Error range: ±0.5m (Crazyflie typical tracking errors)
+# dError range: ±0.5 m/s (Crazyflie velocity errors)
+#
+# GT2 config (set via ROS params): num_alpha_levels=5, secondary_shape=triangular
+#
+# Author: Multi-Agent Formation Control Research
+# Date: 2026-01-03
+
+# Membership functions with GT2 FOU bounds
+# Format: [lmf_left, lmf_peak, lmf_right, umf_left, umf_peak, umf_right]
+# The secondary MF is defined over the vertical slice between LMF and UMF
+membership_functions:
+  # Error: Scaled for Crazyflie (±0.5m typical range)
+  error:
+    NB: [-0.50, -0.40, -0.30, -0.55, -0.425, -0.275]   # Large negative
+    NS: [-0.35, -0.20, -0.05, -0.40, -0.225, 0.0]      # Small negative
+    ZE: [-0.05, 0.0, 0.05, -0.10, 0.0, 0.10]           # Zero
+    PS: [0.05, 0.20, 0.35, 0.0, 0.225, 0.40]           # Small positive
+    PB: [0.30, 0.40, 0.50, 0.275, 0.425, 0.55]         # Large positive
+
+  # dError (error derivative): Scaled for Crazyflie velocities
+  dError:
+    NB: [-0.50, -0.40, -0.20, -0.60, -0.45, -0.15]     # Fast decreasing
+    NS: [-0.30, -0.15, 0.0, -0.35, -0.18, 0.05]        # Slow decreasing
+    ZE: [-0.08, 0.0, 0.08, -0.12, 0.0, 0.12]           # Stationary
+    PS: [0.0, 0.15, 0.30, -0.05, 0.18, 0.35]           # Slow increasing
+    PB: [0.20, 0.40, 0.50, 0.15, 0.45, 0.60]           # Fast increasing
+
+  # Wind: Normalized [0, 1] for disturbance magnitude
+  # 0 = no wind, 1 = maximum expected wind (~5 m/s for Crazyflie)
+  wind:
+    LOW:    [0.0, 0.0, 0.25, 0.0, 0.0, 0.35]           # Calm conditions
+    MEDIUM: [0.15, 0.40, 0.65, 0.10, 0.40, 0.75]       # Moderate wind
+    HIGH:   [0.55, 0.80, 1.0, 0.45, 0.85, 1.0]         # Strong wind
+
+  # Correction output: Acceleration adjustment (m/s²)
+  # Scaled for Crazyflie max acceleration (~10 m/s²)
+  correction:
+    NB: [-5.0, -4.0, -2.5, -5.5, -4.25, -2.0]          # Strong negative
+    NS: [-3.0, -1.5, -0.3, -3.5, -1.75, 0.0]           # Weak negative
+    ZE: [-0.5, 0.0, 0.5, -0.8, 0.0, 0.8]               # No correction
+    PS: [0.3, 1.5, 3.0, 0.0, 1.75, 3.5]                # Weak positive
+    PB: [2.5, 4.0, 5.0, 2.0, 4.25, 5.5]                # Strong positive
+
+# Rule base: 75 rules (5 error × 5 dError × 3 wind levels)
+# Format: [error_label, dError_label, wind_label, correction_label]
+#
+# Rule design philosophy:
+# - Low wind: Standard PD-like response
+# - Medium wind: More aggressive correction to counter disturbances
+# - High wind: Maximum response to maintain position
+rules:
+  # ===== LOW WIND RULES (25 rules) =====
+  # Calm conditions - normal tracking behavior
+  - [NB, NB, LOW, NB]    # Large negative error + fast decreasing -> strong negative
+  - [NB, NS, LOW, NB]
+  - [NB, ZE, LOW, NS]
+  - [NB, PS, LOW, NS]
+  - [NB, PB, LOW, ZE]
+
+  - [NS, NB, LOW, NB]
+  - [NS, NS, LOW, NS]
+  - [NS, ZE, LOW, NS]
+  - [NS, PS, LOW, ZE]
+  - [NS, PB, LOW, PS]
+
+  - [ZE, NB, LOW, NS]
+  - [ZE, NS, LOW, NS]
+  - [ZE, ZE, LOW, ZE]    # No error, no change -> no correction
+  - [ZE, PS, LOW, PS]
+  - [ZE, PB, LOW, PS]
+
+  - [PS, NB, LOW, NS]
+  - [PS, NS, LOW, ZE]
+  - [PS, ZE, LOW, PS]
+  - [PS, PS, LOW, PS]
+  - [PS, PB, LOW, PB]
+
+  - [PB, NB, LOW, ZE]
+  - [PB, NS, LOW, PS]
+  - [PB, ZE, LOW, PS]
+  - [PB, PS, LOW, PB]
+  - [PB, PB, LOW, PB]
+
+  # ===== MEDIUM WIND RULES (25 rules) =====
+  # Moderate disturbance - more aggressive response
+  - [NB, NB, MEDIUM, NB]
+  - [NB, NS, MEDIUM, NB]
+  - [NB, ZE, MEDIUM, NB]   # Stronger response under wind
+  - [NB, PS, MEDIUM, NS]
+  - [NB, PB, MEDIUM, NS]
+
+  - [NS, NB, MEDIUM, NB]
+  - [NS, NS, MEDIUM, NB]
+  - [NS, ZE, MEDIUM, NS]
+  - [NS, PS, MEDIUM, NS]
+  - [NS, PB, MEDIUM, ZE]
+
+  - [ZE, NB, MEDIUM, NS]
+  - [ZE, NS, MEDIUM, NS]
+  - [ZE, ZE, MEDIUM, ZE]
+  - [ZE, PS, MEDIUM, PS]
+  - [ZE, PB, MEDIUM, PS]
+
+  - [PS, NB, MEDIUM, ZE]
+  - [PS, NS, MEDIUM, PS]
+  - [PS, ZE, MEDIUM, PS]
+  - [PS, PS, MEDIUM, PB]
+  - [PS, PB, MEDIUM, PB]
+
+  - [PB, NB, MEDIUM, NS]
+  - [PB, NS, MEDIUM, PS]
+  - [PB, ZE, MEDIUM, PB]   # Stronger response under wind
+  - [PB, PS, MEDIUM, PB]
+  - [PB, PB, MEDIUM, PB]
+
+  # ===== HIGH WIND RULES (25 rules) =====
+  # Strong disturbance - maximum response to maintain stability
+  - [NB, NB, HIGH, NB]
+  - [NB, NS, HIGH, NB]
+  - [NB, ZE, HIGH, NB]
+  - [NB, PS, HIGH, NB]
+  - [NB, PB, HIGH, NS]
+
+  - [NS, NB, HIGH, NB]
+  - [NS, NS, HIGH, NB]
+  - [NS, ZE, HIGH, NB]
+  - [NS, PS, HIGH, NS]
+  - [NS, PB, HIGH, ZE]
+
+  - [ZE, NB, HIGH, NB]
+  - [ZE, NS, HIGH, NS]
+  - [ZE, ZE, HIGH, ZE]
+  - [ZE, PS, HIGH, PS]
+  - [ZE, PB, HIGH, PB]
+
+  - [PS, NB, HIGH, ZE]
+  - [PS, NS, HIGH, PS]
+  - [PS, ZE, HIGH, PB]
+  - [PS, PS, HIGH, PB]
+  - [PS, PB, HIGH, PB]
+
+  - [PB, NB, HIGH, NS]
+  - [PB, NS, HIGH, PB]
+  - [PB, ZE, HIGH, PB]
+  - [PB, PS, HIGH, PB]
+  - [PB, PB, HIGH, PB]

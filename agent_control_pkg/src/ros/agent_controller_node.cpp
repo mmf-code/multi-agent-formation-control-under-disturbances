@@ -140,6 +140,8 @@ void AgentControllerNode::declareParameters()
   // GT2 Fuzzy specific parameters
   declare_parameter<int>("gt2.num_alpha_levels", 5);
   declare_parameter<std::string>("gt2.secondary_shape", "triangular");
+  declare_parameter<double>("gt2.secondary_spread", 0.3);
+  declare_parameter<std::string>("gt2.params_file", "gt2_fuzzy_params_crazyflie.yaml");
 
   declare_parameter<bool>("diagnostics.enable", publish_diagnostics_);
 
@@ -221,6 +223,8 @@ void AgentControllerNode::loadParameters()
   // Load GT2 parameters
   gt2_num_alpha_levels_ = get_parameter("gt2.num_alpha_levels").as_int();
   gt2_secondary_shape_ = to_lower(get_parameter("gt2.secondary_shape").as_string());
+  gt2_secondary_spread_ = get_parameter("gt2.secondary_spread").as_double();
+  gt2_params_file_ = get_parameter("gt2.params_file").as_string();
 
   publish_diagnostics_ = get_parameter("diagnostics.enable").as_bool();
 
@@ -258,47 +262,77 @@ void AgentControllerNode::loadParameters()
 
 void AgentControllerNode::ensureFuzzyParamsLoaded()
 {
-  const bool needs_fuzzy = controller_type_ == "fuzzy" || controller_type_ == "pid_fuzzy";
-  if (!(needs_fuzzy || fuzzy_enable_)) {
-    return;
-  }
-  if (fuzzy_params_) {
-    return;
-  }
+  const bool needs_it2_fuzzy = controller_type_ == "fuzzy" || controller_type_ == "pid_fuzzy";
+  const bool needs_gt2_fuzzy = controller_type_ == "gt2_fuzzy" || controller_type_ == "pid_gt2_fuzzy";
 
-  std::string resolved_path = fuzzy_params_file_;
-  try {
-    if (!fs::path(resolved_path).is_absolute()) {
-      const auto share_dir = ament_index_cpp::get_package_share_directory("agent_control_pkg");
-      fs::path candidate = fs::path(share_dir) / "config" / resolved_path;
-      if (fs::exists(candidate)) {
-        resolved_path = candidate.string();
+  // Load IT2 fuzzy params if needed
+  if ((needs_it2_fuzzy || fuzzy_enable_) && !fuzzy_params_) {
+    std::string resolved_path = fuzzy_params_file_;
+    try {
+      if (!fs::path(resolved_path).is_absolute()) {
+        const auto share_dir = ament_index_cpp::get_package_share_directory("agent_control_pkg");
+        fs::path candidate = fs::path(share_dir) / "config" / resolved_path;
+        if (fs::exists(candidate)) {
+          resolved_path = candidate.string();
+        }
       }
+    } catch (const std::exception & ex) {
+      RCLCPP_DEBUG(get_logger(), "Could not resolve package share directory: %s", ex.what());
     }
-  } catch (const std::exception & ex) {
-    RCLCPP_DEBUG(get_logger(), "Could not resolve package share directory: %s", ex.what());
-  }
 
-  if (!fs::exists(resolved_path)) {
-    resolved_path = agent_control_pkg::findConfigFilePath(fuzzy_params_file_);
-  }
-
-  FuzzyParams params;
-  if (!agent_control_pkg::loadFuzzyParamsYAML(resolved_path, params)) {
-    RCLCPP_WARN(
-      get_logger(),
-      "Failed to load fuzzy parameters from '%s'. Fuzzy controllers will be disabled.",
-      resolved_path.c_str());
-    fuzzy_enable_ = false;
-    fuzzy_params_.reset();
-    if (controller_type_ == "fuzzy" || controller_type_ == "pid_fuzzy") {
-      controller_type_ = "pid";
+    if (!fs::exists(resolved_path)) {
+      resolved_path = agent_control_pkg::findConfigFilePath(fuzzy_params_file_);
     }
-    return;
+
+    FuzzyParams params;
+    if (!agent_control_pkg::loadFuzzyParamsYAML(resolved_path, params)) {
+      RCLCPP_WARN(
+        get_logger(),
+        "Failed to load IT2 fuzzy parameters from '%s'. Fuzzy controllers will be disabled.",
+        resolved_path.c_str());
+      fuzzy_enable_ = false;
+      fuzzy_params_.reset();
+      if (controller_type_ == "fuzzy" || controller_type_ == "pid_fuzzy") {
+        controller_type_ = "pid";
+      }
+    } else {
+      fuzzy_params_ = std::move(params);
+      RCLCPP_INFO(get_logger(), "Loaded IT2 fuzzy parameters from '%s'", resolved_path.c_str());
+    }
   }
 
-  fuzzy_params_ = std::move(params);
-  RCLCPP_INFO(get_logger(), "Loaded fuzzy parameters from '%s'", resolved_path.c_str());
+  // Load GT2 fuzzy params if needed
+  if (needs_gt2_fuzzy && !gt2_fuzzy_params_) {
+    std::string resolved_path = gt2_params_file_;
+    try {
+      if (!fs::path(resolved_path).is_absolute()) {
+        const auto share_dir = ament_index_cpp::get_package_share_directory("agent_control_pkg");
+        fs::path candidate = fs::path(share_dir) / "config" / resolved_path;
+        if (fs::exists(candidate)) {
+          resolved_path = candidate.string();
+        }
+      }
+    } catch (const std::exception & ex) {
+      RCLCPP_DEBUG(get_logger(), "Could not resolve GT2 package share directory: %s", ex.what());
+    }
+
+    if (!fs::exists(resolved_path)) {
+      resolved_path = agent_control_pkg::findConfigFilePath(gt2_params_file_);
+    }
+
+    FuzzyParams params;
+    if (!agent_control_pkg::loadFuzzyParamsYAML(resolved_path, params)) {
+      RCLCPP_WARN(
+        get_logger(),
+        "Failed to load GT2 fuzzy parameters from '%s'. Using factory defaults.",
+        resolved_path.c_str());
+      // GT2 can still use factory defaults, so don't disable
+    } else {
+      gt2_fuzzy_params_ = std::move(params);
+      RCLCPP_INFO(get_logger(), "Loaded GT2 fuzzy parameters from '%s' (%zu sets, %zu rules)",
+                  resolved_path.c_str(), gt2_fuzzy_params_->sets.size(), gt2_fuzzy_params_->rules.size());
+    }
+  }
 }
 
 void AgentControllerNode::configureControllers()
@@ -433,16 +467,23 @@ AgentControllerNode::AxisController AgentControllerNode::createAxisController(
     gt2_opt.umax = limits.umax;
     gt2_opt.wind_scalar = fuzzy_wind_scalar_;
     gt2_opt.num_alpha_levels = gt2_num_alpha_levels_;
+    gt2_opt.secondary_spread = gt2_secondary_spread_;
     gt2_opt.secondary_shape = parse_secondary_shape(gt2_secondary_shape_);
 
     if (type == "gt2_fuzzy") {
       // Pure GT2 fuzzy controller (no PID)
       auto gt2_fuzzy = std::make_unique<controllers::FuzzyGT2Adapter>(gt2_opt);
-      gt2_fuzzy->configureDefault(fuzzy_include_wind_);
+      if (gt2_fuzzy_params_) {
+        gt2_fuzzy->configureFromFuzzyParams(*gt2_fuzzy_params_, fuzzy_include_wind_);
+        RCLCPP_INFO(get_logger(), "Created GT2-FLS controller with custom params: alpha_levels=%d, shape=%s",
+                    gt2_num_alpha_levels_, gt2_secondary_shape_.c_str());
+      } else {
+        gt2_fuzzy->configureDefault(fuzzy_include_wind_);
+        RCLCPP_INFO(get_logger(), "Created GT2-FLS controller with factory defaults: alpha_levels=%d, shape=%s",
+                    gt2_num_alpha_levels_, gt2_secondary_shape_.c_str());
+      }
       result.gt2_fuzzy = gt2_fuzzy.get();
       result.controller = std::move(gt2_fuzzy);
-      RCLCPP_INFO(get_logger(), "Created GT2-FLS controller: alpha_levels=%d, shape=%s",
-                  gt2_num_alpha_levels_, gt2_secondary_shape_.c_str());
       return result;
     }
 
@@ -456,7 +497,11 @@ AgentControllerNode::AxisController AgentControllerNode::createAxisController(
     auto raw_pid = pid.get();
 
     auto gt2_fuzzy = std::make_unique<controllers::FuzzyGT2Adapter>(gt2_opt);
-    gt2_fuzzy->configureDefault(fuzzy_include_wind_);
+    if (gt2_fuzzy_params_) {
+      gt2_fuzzy->configureFromFuzzyParams(*gt2_fuzzy_params_, fuzzy_include_wind_);
+    } else {
+      gt2_fuzzy->configureDefault(fuzzy_include_wind_);
+    }
     auto raw_gt2_fuzzy = gt2_fuzzy.get();
 
     // Create IT2 adapter wrapper for combined controller (GT2 adapter is IController1D compatible)
@@ -516,8 +561,9 @@ AgentControllerNode::AxisController AgentControllerNode::createAxisController(
     result.gt2_fuzzy = combined->gt2();
     result.controller = std::move(combined);
 
-    RCLCPP_INFO(get_logger(), "Created hybrid PID+GT2-FLS controller: alpha_levels=%d, shape=%s, mix=[%.2f, %.2f]",
-                gt2_num_alpha_levels_, gt2_secondary_shape_.c_str(), mix_k_pid_, mix_k_fuzzy_);
+    RCLCPP_INFO(get_logger(), "Created hybrid PID+GT2-FLS controller: alpha_levels=%d, shape=%s, mix=[%.2f, %.2f], params=%s",
+                gt2_num_alpha_levels_, gt2_secondary_shape_.c_str(), mix_k_pid_, mix_k_fuzzy_,
+                gt2_fuzzy_params_ ? "custom" : "factory");
     return result;
   }
 

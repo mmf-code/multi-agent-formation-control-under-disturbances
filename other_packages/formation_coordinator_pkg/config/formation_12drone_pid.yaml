@@ -1,0 +1,42 @@
+/formation_2/formation_coordinator_pid:
+  ros__parameters:
+    # GROUP 2: Pure PID Controllers
+    # 4 agents for 12-drone comparison
+    agent_ids:
+      - agent_8
+      - agent_9
+      - agent_10
+      - agent_11
+
+    # Formation shape: square (4 drones)
+    formation.shape: square
+    formation.spacing: 4.0
+
+    # Formation center position
+    formation.center.x: 0.0
+    formation.center.y: 15.0
+    formation.center.z: 0.5
+    formation.yaw_deg: 0.0
+    frame_id: odom
+
+    # Update rate (Hz)
+    publish_frequency_hz: 10.0
+
+    # PSO parameters
+    pso.enable: true
+    pso.num_particles: 20
+    pso.max_iterations: 50
+    pso.inertia_weight: 0.7
+    pso.cognitive_coeff: 1.5
+    pso.social_coeff: 1.5
+
+    # Legacy motion (disabled)
+    motion.enable: false
+    motion.vx: 0.0
+
+    # Simple waypoint trajectory (60s mission) - Same as IT2/GT2 for fair comparison
+    waypoints.enable: true
+    waypoints.times: [15.0, 30.0, 45.0, 60.0]
+    waypoints.x: [-5.0, 0.0, 5.0, 10.0]
+    waypoints.y: [15.0, 15.0, 15.0, 15.0]
+    waypoints.z: [0.5, 0.8, 0.8, 0.5]
