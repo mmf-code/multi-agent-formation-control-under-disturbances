@@ -195,3 +195,7 @@ agent_control_pkg/config/experiments/auto_*.yaml
 !outputs/simulations/dynamics2d/*_summary_*.csv
 !outputs/simulations/dynamics2d/20251015/compare_positions_*.png
 
+
+# Test results and external tool configs
+results/
+.gemini/
