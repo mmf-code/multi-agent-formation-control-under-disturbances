@@ -304,6 +304,9 @@ install(PROGRAMS
   scripts/metrics_summary.py
   scripts/wind_publisher.py
   scripts/tf_to_odom_bridge.py
+  scripts/wind_scenarios.py
+  scripts/phase_metrics_logger.py
+  scripts/phased_report.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

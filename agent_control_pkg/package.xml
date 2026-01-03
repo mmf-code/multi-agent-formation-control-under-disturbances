@@ -21,6 +21,10 @@
   <!-- Crazyflie/Crazyswarm2 support - always available, activated with -DENABLE_CRAZYFLIE=ON -->
   <exec_depend>crazyflie_interfaces</exec_depend>
 
+  <!-- Python dependencies for wind_turbulence_models.py (vonkarman/dryden) -->
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-scipy</exec_depend>
+
   <test_depend>ament_cmake_gtest</test_depend>
 
   <test_depend>ament_lint_auto</test_depend>

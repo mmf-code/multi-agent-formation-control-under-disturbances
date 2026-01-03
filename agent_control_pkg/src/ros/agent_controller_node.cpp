@@ -643,11 +643,25 @@ void AgentControllerNode::windCallback(const geometry_msgs::msg::Vector3::Shared
 
   // Feed to fuzzy controllers when enabled.
   if (fuzzy_enable_ && fuzzy_include_wind_) {
+    // IT2 expects signed wind in [-10, 10] m/s range
     if (axis_x_.fuzzy) {
       axis_x_.fuzzy->setWindScalar(fuzzy_x);
     }
     if (axis_y_.fuzzy) {
       axis_y_.fuzzy->setWindScalar(fuzzy_y);
+    }
+
+    // GT2 expects normalized wind magnitude in [0, 1] range
+    // Normalize: |wind| / max_wind, where max_wind = 5 m/s for Crazyflie
+    const double wind_magnitude = std::sqrt(fuzzy_x * fuzzy_x + fuzzy_y * fuzzy_y);
+    const double max_wind_speed = 5.0;  // From gt2_fuzzy_params_crazyflie.yaml comment
+    const double gt2_wind_normalized = std::min(1.0, wind_magnitude / max_wind_speed);
+
+    if (axis_x_.gt2_fuzzy) {
+      axis_x_.gt2_fuzzy->setWindScalar(gt2_wind_normalized);
+    }
+    if (axis_y_.gt2_fuzzy) {
+      axis_y_.gt2_fuzzy->setWindScalar(gt2_wind_normalized);
     }
   }
 }
