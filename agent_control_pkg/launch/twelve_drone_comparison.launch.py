@@ -114,9 +114,10 @@ def generate_launch_description():
 
     # Fuzzy mix ratios - ADDITIVE mode
     # Keep full PID, add fuzzy correction on top
-    # Formula: u = 1.0*PID + 0.5*Fuzzy
+    # Formula: u = 1.0*PID + k_fuzzy*Fuzzy
+    # TEST: Increasing fuzzy authority for better transient rejection
     MIX_K_PID = 1.0
-    MIX_K_FUZZY = 0.5
+    MIX_K_FUZZY = 0.5  # Reverted - 0.6 and 0.7 cause instability
 
     common_base = {
         'dt': 0.005,
@@ -183,7 +184,7 @@ def generate_launch_description():
         'gt2.params_file': gt2_params_file,
         'gt2.num_alpha_levels': 5,
         'gt2.secondary_shape': 'triangular',
-        'gt2.secondary_spread': 0.3,
+        'gt2.secondary_spread': 0.2,  # Reduced from 0.3 to decrease noise amplification
         'mix.k_pid': MIX_K_PID,
         'mix.k_fuzzy': MIX_K_FUZZY,
     }

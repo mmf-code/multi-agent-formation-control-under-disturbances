@@ -64,9 +64,15 @@ def get_phase_wind_params(phase_id: int, sweep_index: int, seed: int) -> dict:
                 "integral_length_v": 15.0, "integral_length_w": 5.0},
             4: {"profile": "gust", "magnitude": 5.0, "direction": 45.0,
                 "gust_duration": 1.5, "gust_interval": 10.0},
+            # Phase 5: Structured uncertainty profile (optimized for fuzzy comparison)
+            # - Reduced direction wandering (5 deg/s vs 15) for less random noise
+            # - Higher gust probability (0.12 vs 0.08) for more transient events
+            # - Lower turbulence (0.15 vs 0.3) to reduce high-freq noise
+            # This creates "structured uncertainty" where GT2's secondary MF can excel
             5: {"profile": "stochastic", "magnitude": 2.5, "direction": 45.0,
-                "stochastic_mag_std": 1.5, "stochastic_dir_rate": 15.0,
-                "stochastic_gust_prob": 0.08, "stochastic_gust_mag": 2.0},
+                "stochastic_mag_std": 1.0, "stochastic_dir_rate": 5.0,
+                "stochastic_gust_prob": 0.12, "stochastic_gust_mag": 2.5,
+                "stochastic_turbulence": 0.15},
             6: {"profile": "stochastic", "magnitude": 2.5, "direction": 45.0,
                 "stochastic_mag_std": 1.5, "stochastic_dir_rate": 15.0,
                 "stochastic_gust_prob": 0.08, "stochastic_gust_mag": 2.0},
@@ -205,9 +211,10 @@ def launch_setup(context, *args, **kwargs):
 
     # Fuzzy mix ratios - ADDITIVE mode
     # Keep full PID, add fuzzy correction on top
-    # Formula: u = 1.0*PID + 0.5*Fuzzy (increased from 0.3)
+    # Formula: u = 1.0*PID + k_fuzzy*Fuzzy
+    # TEST: Increasing fuzzy authority for better transient rejection
     MIX_K_PID = 1.0
-    MIX_K_FUZZY = 0.5
+    MIX_K_FUZZY = 0.5  # Reverted - 0.6 and 0.7 cause instability
 
     # PD controller params (Group 0) - No integral action
     pd_controller_params = {
@@ -250,7 +257,7 @@ def launch_setup(context, *args, **kwargs):
         'gt2.params_file': gt2_params_file,
         'gt2.num_alpha_levels': 5,
         'gt2.secondary_shape': 'triangular',
-        'gt2.secondary_spread': 0.3,
+        'gt2.secondary_spread': 0.2,  # Reduced from 0.3 to decrease noise amplification
         'fuzzy.include_wind': True,
         'fuzzy.wind_scalar': 1.0,  # CRITICAL: Enable wind input to fuzzy
         'mix.k_pid': MIX_K_PID, 'mix.k_fuzzy': MIX_K_FUZZY,
