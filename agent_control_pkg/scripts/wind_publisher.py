@@ -81,6 +81,7 @@ class WindPublisher(Node):
         self.declare_parameter('gust_duration', 2.0)  # seconds
         self.declare_parameter('gust_interval', 15.0)  # seconds
         self.declare_parameter('publish_rate', 10.0)  # Hz
+        self.declare_parameter('start_delay_sec', 0.0)  # Delay before wind starts (for formation stabilization)
 
         # Stochastic profile parameters
         self.declare_parameter('stochastic_mag_std', 1.0)  # magnitude std dev
@@ -106,6 +107,7 @@ class WindPublisher(Node):
         self.gust_duration = self.get_parameter('gust_duration').get_parameter_value().double_value
         self.gust_interval = self.get_parameter('gust_interval').get_parameter_value().double_value
         publish_rate = self.get_parameter('publish_rate').get_parameter_value().double_value
+        self.start_delay_sec = self.get_parameter('start_delay_sec').get_parameter_value().double_value
 
         # Get stochastic parameters
         self.stoch_mag_std = self.get_parameter('stochastic_mag_std').get_parameter_value().double_value
@@ -196,15 +198,42 @@ class WindPublisher(Node):
         self.start_time = self.get_clock().now()
         self.last_gust_time = self.start_time
 
+        # Track if delay has passed
+        self.wind_started = (self.start_delay_sec <= 0)
+        self.delay_logged = False
+
+        delay_info = f', start_delay={self.start_delay_sec:.1f}s' if self.start_delay_sec > 0 else ''
         self.get_logger().info(
             f'Wind Publisher started: profile={self.profile}, '
-            f'magnitude={self.magnitude:.2f} m/s, direction={self.direction_deg:.1f} deg'
+            f'magnitude={self.magnitude:.2f} m/s, direction={self.direction_deg:.1f} deg{delay_info}'
         )
 
     def publish_wind(self):
         """Compute and publish wind velocity based on selected profile."""
         now = self.get_clock().now()
         elapsed = (now - self.start_time).nanoseconds / 1e9  # seconds
+
+        # Handle start delay (allows formation stabilization before wind disturbance)
+        if not self.wind_started:
+            if elapsed < self.start_delay_sec:
+                # During delay: publish zero wind
+                msg = Vector3()
+                msg.x = 0.0
+                msg.y = 0.0
+                msg.z = 0.0
+                self.wind_pub.publish(msg)
+                self.wind_force_pub.publish(msg)
+                return
+            else:
+                # Delay complete, start wind
+                self.wind_started = True
+                self.start_time = now  # Reset start time for profile timing
+                self.last_gust_time = now
+                self.get_logger().info(
+                    f'🌬️ Wind delay complete ({self.start_delay_sec:.1f}s). '
+                    f'Starting {self.profile} wind profile now!'
+                )
+                elapsed = 0.0  # Reset elapsed for profile
 
         # Compute magnitude based on profile
         if self.profile == 'constant':

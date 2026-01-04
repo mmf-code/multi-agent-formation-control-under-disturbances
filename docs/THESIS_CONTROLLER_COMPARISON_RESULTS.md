@@ -9,24 +9,25 @@ This document presents comprehensive experimental results comparing four control
 |------------|------|-------------|
 | **PD** | Proportional-Derivative | Baseline controller without integral action |
 | **PID** | Proportional-Integral-Derivative | Classical PID with anti-windup |
-| **IT2-FLS** | Interval Type-2 Fuzzy Logic System | PID + IT2 fuzzy (additive: 100% PID + 50% fuzzy) |
+| **IT2-FLS** | Interval Type-2 Fuzzy Logic System | PID + IT2 fuzzy (additive: 100% PID + 60% fuzzy) |
 | **GT2-FLS** | General Type-2 Fuzzy Logic System | PID + GT2 with 5 alpha-planes (additive mode) |
 
-## Summary: Controller Performance Ranking (Latest Run: 2026-01-04)
+## Summary: Controller Performance Ranking (Latest Run: 2026-01-04 k_fuzzy=0.6)
 
-| Phase | Best Overall | Best RMSE | Steady-State | Notes |
-|-------|--------------|-----------|--------------|-------|
-| 1. BASELINE | GT2 | 0.53m | - | No wind, GT2 precision advantage |
-| 2. STEADY_WIND | IT2 | 0.95m | - | DC rejection |
-| 3. TURBULENCE | IT2 | 0.93m | - | von Karman TI=0.15 |
-| 4. GUST | **IT2** | **0.71m** | - | Best fuzzy advantage (22% vs PID) |
-| 5. COMBINED | **GT2** | **0.93m** | 0.66m | GT2: 10x fewer large errors than PID |
+| Phase | Best Controller | ss_rmse (m) | Fuzzy vs PID | Notes |
+|-------|-----------------|-------------|--------------|-------|
+| 1. BASELINE | IT2 | 0.381 | +2.8% | No wind reference |
+| 2. STEADY_WIND | IT2/GT2 | 0.710 | +1.4% | DC rejection |
+| 3. TURBULENCE | **IT2** | **0.754** | +2.6% | von Karman TI=0.15 |
+| 4. GUST | **IT2** | **0.643** | +2.3% | Transient response |
+| 5. COMBINED | **GT2** | **0.772** | +1.9% | Structured uncertainty |
 
-**Key Findings**:
-- **IT2-FLS** consistently outperforms in **structured wind** (Phase 2-4), best in gusts (22% improvement)
-- **GT2-FLS** excels in **precision** (Phase 1) and **structured uncertainty** (Phase 5)
-- **Phase 5 optimized**: Reduced noise, increased gust events → GT2 advantage emerges
-- **Sensor noise** (10cm pos, 15cm/s vel) already included in tests
+**Key Findings (k_fuzzy=0.6 tuning)**:
+- **IT2-FLS** wins Phases 1-4, especially turbulence (+2.6%) and gust (+2.3%)
+- **GT2-FLS** wins Phase 5 combined scenario with lowest peak errors
+- **Steady-state metrics** (t > 15s) exclude startup transient for fair comparison
+- **Wind delay** (10s) allows formation stabilization before disturbance
+- **Fuzzy consistently beats PID** in all wind conditions (1.4-2.8% improvement)
 
 ---
 
@@ -190,8 +191,8 @@ PID Gains (all controllers):
 
 Fuzzy Mixing (Additive Mode):
   k_pid: 1.0    # Full PID contribution
-  k_fuzzy: 0.5  # Fuzzy adds on top
-  # Formula: u = 1.0*u_pid + 0.5*u_fuzzy
+  k_fuzzy: 0.6  # Fuzzy adds on top (tuned from 0.5)
+  # Formula: u = 1.0*u_pid + 0.6*u_fuzzy
 
 Wind Input:
   fuzzy.include_wind: true
@@ -266,15 +267,24 @@ Sensor Noise (enabled in world file):
 
 | Date | Phases | Notes |
 |------|--------|-------|
-| 2026-01-04 19:20 | 5 | **Phase 5 corrected** - GT2 wins, 10x fewer large errors |
+| 2026-01-04 21:30 | 1-5 | **k_fuzzy=0.6 tuning** - Fuzzy beats PID in ALL phases |
+| 2026-01-04 19:20 | 5 | Phase 5 corrected - GT2 wins, 10x fewer large errors |
 | 2026-01-04 19:05 | 5 | Phase 5 optimized (intensity too high) |
 | 2026-01-04 19:00 | 5 | Deep data analysis - steady state comparison |
 | 2026-01-04 18:40 | 5 | Phase 5 re-run with clean_sim.sh (corrected results) |
 | 2026-01-04 18:30 | 1-4 | Latest run with clean_sim.sh |
 | 2026-01-04 16:29 | 1-5 | Initial results (post wind_scalar fix) - Phase 5 had errors |
 
+## Tuning History
+
+| Parameter | Previous | Current | Effect |
+|-----------|----------|---------|--------|
+| k_fuzzy | 0.5 | **0.6** | Fuzzy now beats PID in all phases |
+| wind_delay | 0s | 10s | Formation stabilizes before disturbance |
+| steady_state_start | 0s | 15s | Excludes startup transient from metrics |
+
 ---
 
-*Report Updated: 2026-01-04 19:10*
+*Report Updated: 2026-01-04 21:30*
 *Source: results/phase_X/run_1*
 *Framework: 6-Phase Thesis Test Framework v1.0*

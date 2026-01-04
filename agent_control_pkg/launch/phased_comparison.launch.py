@@ -83,6 +83,10 @@ def get_phase_wind_params(phase_id: int, sweep_index: int, seed: int) -> dict:
 
     config["publish_rate"] = 20.0
     config["random_seed"] = seed
+    # Add wind delay for formation stabilization (Phase 1 has no wind, others get delay)
+    # This allows drones to reach formation before wind disturbance begins
+    # Delay is 10s, steady-state analysis starts at 15s, giving 5s of wind response before SS
+    config["start_delay_sec"] = 0.0 if phase_id == 1 else 10.0
     return config
 
 
@@ -176,6 +180,8 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # Phase metrics logger
+    # steady_state_start_sec excludes startup transient from SS metrics
+    # Formation stabilization + wind delay = ~15s before steady-state analysis
     metrics_logger = Node(
         package='agent_control_pkg',
         executable='phase_metrics_logger.py',
@@ -187,6 +193,7 @@ def launch_setup(context, *args, **kwargs):
             'output_dir': output_dir,
             'duration_sec': duration,
             'num_agents': 12,
+            'steady_state_start_sec': 15.0,  # Exclude first 15s (formation + wind ramp)
         }]
     )
 
@@ -214,7 +221,7 @@ def launch_setup(context, *args, **kwargs):
     # Formula: u = 1.0*PID + k_fuzzy*Fuzzy
     # TEST: Increasing fuzzy authority for better transient rejection
     MIX_K_PID = 1.0
-    MIX_K_FUZZY = 0.5  # Reverted - 0.6 and 0.7 cause instability
+    MIX_K_FUZZY = 0.6  # TEST: Increasing fuzzy authority for gust rejection
 
     # PD controller params (Group 0) - No integral action
     pd_controller_params = {

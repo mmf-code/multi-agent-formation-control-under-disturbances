@@ -85,6 +85,13 @@ class AgentMetrics:
     last_violation_time: float = 0.0  # last t where |e| > threshold (settling-like)
     mean_absolute_error: float = 0.0  # MAE over mission
 
+    # STEADY-STATE metrics (computed for t > steady_state_start_sec)
+    # These exclude startup transient for fair controller comparison
+    ss_rmse: float = 0.0              # RMSE for t > t_ss
+    ss_mae: float = 0.0               # MAE for t > t_ss
+    ss_peak_error: float = 0.0        # Peak error for t > t_ss
+    ss_large_errors: int = 0          # Count of errors > 2m in steady-state
+
 
 @dataclass
 class GroupSummary:
@@ -105,6 +112,12 @@ class GroupSummary:
     mean_peak_error: float = 0.0          # max(|e|) over mission
     mean_last_violation: float = 0.0      # last t where |e| > threshold
     mean_mae: float = 0.0                 # Mean Absolute Error
+    # STEADY-STATE metrics (t > steady_state_start_sec, excludes startup transient)
+    mean_ss_rmse: float = 0.0             # Steady-state RMSE
+    std_ss_rmse: float = 0.0              # Std dev of SS-RMSE
+    mean_ss_mae: float = 0.0              # Steady-state MAE
+    mean_ss_peak: float = 0.0             # Steady-state peak error
+    total_ss_large_errors: int = 0        # Total large errors (>2m) in steady-state
 
 
 # Agent to controller type mapping for 12-drone 4-group setup
@@ -128,6 +141,7 @@ class PhaseMetricsLogger(Node):
         self.declare_parameter("output_dir", "results")
         self.declare_parameter("duration_sec", 60)
         self.declare_parameter("num_agents", 12)
+        self.declare_parameter("steady_state_start_sec", 15.0)  # Exclude startup transient
 
         # Get parameters
         self.phase_id = self.get_parameter("phase_id").value
@@ -135,6 +149,7 @@ class PhaseMetricsLogger(Node):
         self.output_dir = self.get_parameter("output_dir").value
         self.duration_sec = self.get_parameter("duration_sec").value
         self.num_agents = self.get_parameter("num_agents").value
+        self.steady_state_start_sec = self.get_parameter("steady_state_start_sec").value
 
         # Setup output directory
         self.run_dir = os.path.join(
@@ -368,6 +383,41 @@ class PhaseMetricsLogger(Node):
         # 6. Control Effort IAE (integral of |u| dt)
         am.control_effort_iae = self._compute_control_effort_iae(am.agent_id)
 
+        # 7. STEADY-STATE metrics (exclude startup transient t < steady_state_start_sec)
+        # This provides fair controller comparison by excluding formation acquisition phase
+        ss_indices = [
+            i for i, t in enumerate(am.timestamps)
+            if t >= self.steady_state_start_sec
+        ]
+
+        if ss_indices:
+            ss_errors_x = [am.errors_x[i] for i in ss_indices]
+            ss_errors_y = [am.errors_y[i] for i in ss_indices]
+            ss_error_mags = [
+                math.sqrt(ex**2 + ey**2)
+                for ex, ey in zip(ss_errors_x, ss_errors_y)
+            ]
+
+            # Steady-state RMSE
+            ss_sum_sq = sum(ex**2 + ey**2 for ex, ey in zip(ss_errors_x, ss_errors_y))
+            am.ss_rmse = math.sqrt(ss_sum_sq / len(ss_indices))
+
+            # Steady-state MAE
+            am.ss_mae = sum(ss_error_mags) / len(ss_error_mags)
+
+            # Steady-state Peak Error
+            am.ss_peak_error = max(ss_error_mags)
+
+            # Large errors (>2m) in steady-state - robustness metric
+            LARGE_ERROR_THRESHOLD = 2.0
+            am.ss_large_errors = sum(1 for e in ss_error_mags if e > LARGE_ERROR_THRESHOLD)
+        else:
+            # Not enough data for steady-state analysis
+            am.ss_rmse = am.final_rmse
+            am.ss_mae = am.mean_absolute_error
+            am.ss_peak_error = am.peak_error
+            am.ss_large_errors = 0
+
     def _compute_control_effort_iae(self, agent_id: str) -> float:
         """Compute IAE of control effort (integral of |u| dt)."""
         data = self.cmd_data.get(agent_id, [])
@@ -408,6 +458,12 @@ class PhaseMetricsLogger(Node):
             maes = [a.mean_absolute_error for a in agents]
             efforts = [a.control_effort_iae for a in agents]
 
+            # STEADY-STATE metrics
+            ss_rmses = [a.ss_rmse for a in agents]
+            ss_maes = [a.ss_mae for a in agents]
+            ss_peaks = [a.ss_peak_error for a in agents]
+            ss_large = [a.ss_large_errors for a in agents]
+
             import statistics
             summaries[ctrl_type] = GroupSummary(
                 group_id=agents[0].group_id,
@@ -425,6 +481,12 @@ class PhaseMetricsLogger(Node):
                 mean_peak_error=statistics.mean(peak_errors) if peak_errors else 0.0,
                 mean_last_violation=statistics.mean(last_violations) if last_violations else 0.0,
                 mean_mae=statistics.mean(maes) if maes else 0.0,
+                # STEADY-STATE metrics (t > steady_state_start_sec)
+                mean_ss_rmse=statistics.mean(ss_rmses) if ss_rmses else 0.0,
+                std_ss_rmse=statistics.stdev(ss_rmses) if len(ss_rmses) > 1 else 0.0,
+                mean_ss_mae=statistics.mean(ss_maes) if ss_maes else 0.0,
+                mean_ss_peak=statistics.mean(ss_peaks) if ss_peaks else 0.0,
+                total_ss_large_errors=sum(ss_large),
             )
             summaries[ctrl_type].settled_ratio = (
                 summaries[ctrl_type].agents_settled / n if n > 0 else 0.0
@@ -501,7 +563,9 @@ class PhaseMetricsLogger(Node):
                 "control_effort_iae",  # Integral of |u| dt
                 "agents_settled", "settled_ratio",
                 # OFFLINE computed metrics
-                "mean_peak_error", "mean_last_violation", "mean_mae"
+                "mean_peak_error", "mean_last_violation", "mean_mae",
+                # STEADY-STATE metrics (t > steady_state_start_sec)
+                "ss_rmse", "std_ss_rmse", "ss_mae", "ss_peak", "ss_large_errors"
             ])
 
             for ctrl_type in ["PD", "PID", "IT2", "GT2"]:
@@ -516,7 +580,11 @@ class PhaseMetricsLogger(Node):
                         s.agents_settled, f"{s.settled_ratio:.2f}",
                         # OFFLINE computed metrics
                         f"{s.mean_peak_error:.6f}", f"{s.mean_last_violation:.3f}",
-                        f"{s.mean_mae:.6f}"
+                        f"{s.mean_mae:.6f}",
+                        # STEADY-STATE metrics
+                        f"{s.mean_ss_rmse:.6f}", f"{s.std_ss_rmse:.6f}",
+                        f"{s.mean_ss_mae:.6f}", f"{s.mean_ss_peak:.6f}",
+                        s.total_ss_large_errors
                     ])
 
         self.get_logger().info(f"Exported group summary to {filename}")
@@ -559,6 +627,8 @@ class PhaseMetricsLogger(Node):
                 "k_fuzzy": 0.5,      # Fuzzy contribution factor
                 "k_pid": 1.0,        # PID contribution factor
                 "settling_threshold_m": 0.1,  # 10cm for last_violation_time
+                "steady_state_start_sec": self.steady_state_start_sec,  # Transient exclusion
+                "large_error_threshold_m": 2.0,  # For ss_large_errors count
             },
             "metric_definitions": {
                 "peak_error": "max(|e|) over mission - maximum error magnitude",
@@ -567,6 +637,11 @@ class PhaseMetricsLogger(Node):
                 "control_effort_iae": "integral(|u|) dt - control effort IAE",
                 "rmse": "sqrt(mean(e^2)) - root mean squared error",
                 "itae": "integral(t * |e|) dt - integral of time-weighted absolute error",
+                # STEADY-STATE metrics (exclude startup transient)
+                "ss_rmse": f"RMSE for t > {self.steady_state_start_sec}s - excludes formation acquisition",
+                "ss_mae": f"MAE for t > {self.steady_state_start_sec}s - steady-state mean error",
+                "ss_peak": f"Peak error for t > {self.steady_state_start_sec}s - max steady-state error",
+                "ss_large_errors": "Count of errors > 2m in steady-state - robustness metric",
             },
             "group_summaries": {
                 k: asdict(v) for k, v in summaries.items()
