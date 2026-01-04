@@ -155,7 +155,19 @@ FormationCoordinatorNode::FormationCoordinatorNode(const rclcpp::NodeOptions & o
     get_logger(), "Formation coordinator online: shape=%s spacing=%.2f m, rate=%.1f Hz",
     formation_shape_.c_str(), spacing_, publish_rate_hz);
 
+  // Log ETC configuration
+  if (etc_enable_) {
+    RCLCPP_INFO(get_logger(),
+      "ETC enabled: epsilon_pos=%.3f m, min_period=%.3f s, max_period=%.3f s",
+      etc_epsilon_pos_, etc_min_period_sec_, etc_max_period_sec_);
+  } else {
+    RCLCPP_INFO(get_logger(), "ETC disabled: using time-triggered communication");
+  }
+
   state_pub_ = create_publisher<my_custom_interfaces_pkg::msg::FormationState>("state", 10);
+
+  // ETC metrics publisher (publishes even when ETC disabled for comparison)
+  etc_metrics_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("etc_metrics", 10);
 
   set_formation_srv_ = create_service<my_custom_interfaces_pkg::srv::UpdateFormation>(
     "set_formation",
@@ -199,6 +211,14 @@ void FormationCoordinatorNode::declareParameters()
 
   // Shape transition parameters
   declare_parameter<double>("shape_transition_duration", shape_transition_duration_);
+
+  // Event-Triggered Communication (ETC) parameters
+  // When etc.enable=false: time-triggered (original behavior)
+  // When etc.enable=true:  event-triggered (publish only when needed)
+  declare_parameter<bool>("etc.enable", etc_enable_);
+  declare_parameter<double>("etc.epsilon_pos", etc_epsilon_pos_);
+  declare_parameter<double>("etc.min_period_sec", etc_min_period_sec_);
+  declare_parameter<double>("etc.max_period_sec", etc_max_period_sec_);
 }
 
 void FormationCoordinatorNode::loadParameters()
@@ -241,6 +261,26 @@ void FormationCoordinatorNode::loadParameters()
   waypoints_enable_ = get_parameter("waypoints.enable").as_bool();
   if (waypoints_enable_) {
     loadWaypoints();
+  }
+
+  // Load ETC parameters
+  etc_enable_ = get_parameter("etc.enable").as_bool();
+  etc_epsilon_pos_ = get_parameter("etc.epsilon_pos").as_double();
+  etc_min_period_sec_ = get_parameter("etc.min_period_sec").as_double();
+  etc_max_period_sec_ = get_parameter("etc.max_period_sec").as_double();
+
+  // Validate: max_period must be less than agent controller's stale threshold (2.0s)
+  if (etc_max_period_sec_ >= 2.0) {
+    RCLCPP_WARN(get_logger(),
+      "ETC max_period_sec (%.2f) >= stale threshold (2.0s). Clamping to 1.5s.",
+      etc_max_period_sec_);
+    etc_max_period_sec_ = 1.5;
+  }
+  if (etc_min_period_sec_ >= etc_max_period_sec_) {
+    RCLCPP_WARN(get_logger(),
+      "ETC min_period_sec (%.3f) >= max_period_sec (%.3f). Setting min to max/10.",
+      etc_min_period_sec_, etc_max_period_sec_);
+    etc_min_period_sec_ = etc_max_period_sec_ / 10.0;
   }
 }
 
@@ -348,12 +388,47 @@ void FormationCoordinatorNode::timerCallback()
   }
 
   const auto offsets = computeOffsets(agent_publishers_.size());
+
+  // Track cycle for ETC metrics
+  etc_metrics_.total_cycles++;
+  bool any_event_this_cycle = false;
+
   for (std::size_t i = 0; i < agent_publishers_.size(); ++i) {
     const auto pose = makePoseFromOffset(offsets[i][0], offsets[i][1]);
-    agent_publishers_[i].publisher->publish(pose);
+    const std::string& agent_id = agent_publishers_[i].id;
+
+    if (etc_enable_) {
+      // Event-Triggered Communication
+      if (shouldTriggerEvent(agent_id, pose)) {
+        agent_publishers_[i].publisher->publish(pose);
+        any_event_this_cycle = true;
+      }
+    } else {
+      // Time-Triggered Communication (original behavior)
+      agent_publishers_[i].publisher->publish(pose);
+      any_event_this_cycle = true;
+
+      // Still track for metrics comparison
+      auto& state = etc_agent_states_[agent_id];
+      if (!state.initialized) {
+        state.last_sent_time = now();
+        state.initialized = true;
+      }
+      state.event_count++;
+    }
+  }
+
+  // Reset force flag after use
+  if (etc_force_next_publish_) {
+    etc_force_next_publish_ = false;
+  }
+
+  if (any_event_this_cycle) {
+    etc_metrics_.total_events++;
   }
 
   publishState();
+  publishETCMetrics();
 }
 
 void FormationCoordinatorNode::publishState() const
@@ -459,6 +534,9 @@ void FormationCoordinatorNode::updatePositionFromWaypoints(double elapsed_time)
   if (idx != current_waypoint_idx_) {
     current_waypoint_idx_ = idx;
 
+    // Force ETC publish on waypoint change
+    etc_force_next_publish_ = true;
+
     // Check if shape needs to change
     if (current_wp.shape != target_shape_) {
       // Start shape transition
@@ -534,6 +612,9 @@ void FormationCoordinatorNode::handleSetFormation(
       in_shape_transition_ = true;
       shape_transition_start_ = now();
 
+      // Force ETC publish on shape change
+      etc_force_next_publish_ = true;
+
       RCLCPP_INFO(get_logger(),
         "Service triggered shape transition: %s -> %s",
         formationShapeToString(current_shape_).c_str(),
@@ -577,6 +658,103 @@ void FormationCoordinatorNode::handleSetFormation(
     get_logger(),
     "Formation updated via service: shape=%s spacing=%.2f center=(%.2f, %.2f, %.2f) yaw=%.1f deg",
     formation_shape_.c_str(), spacing_, center_x_, center_y_, center_z_, request->yaw_deg);
+}
+
+// =========================================================================
+// Event-Triggered Communication (ETC) Implementation
+// =========================================================================
+
+double FormationCoordinatorNode::poseDistance(
+  const geometry_msgs::msg::PoseStamped& a,
+  const geometry_msgs::msg::PoseStamped& b) const
+{
+  const double dx = a.pose.position.x - b.pose.position.x;
+  const double dy = a.pose.position.y - b.pose.position.y;
+  const double dz = a.pose.position.z - b.pose.position.z;
+  return std::sqrt(dx * dx + dy * dy + dz * dz);
+}
+
+bool FormationCoordinatorNode::shouldTriggerEvent(
+  const std::string& agent_id,
+  const geometry_msgs::msg::PoseStamped& current_pose)
+{
+  auto& state = etc_agent_states_[agent_id];
+  const rclcpp::Time current_time = now();
+
+  // First message for this agent: always trigger
+  if (!state.initialized) {
+    state.last_sent_pose = current_pose;
+    state.last_sent_time = current_time;
+    state.initialized = true;
+    state.event_count = 1;
+    return true;
+  }
+
+  const double time_since_last = (current_time - state.last_sent_time).seconds();
+
+  // Condition 1: Anti-chattering (min_period not elapsed)
+  if (time_since_last < etc_min_period_sec_) {
+    return false;
+  }
+
+  bool should_trigger = false;
+  std::string trigger_reason;
+
+  // Condition 2: Forced publish (waypoint/shape change)
+  if (etc_force_next_publish_) {
+    should_trigger = true;
+    trigger_reason = "forced";
+  }
+
+  // Condition 3: Position change exceeds threshold
+  if (!should_trigger) {
+    const double distance = poseDistance(current_pose, state.last_sent_pose);
+    if (distance > etc_epsilon_pos_) {
+      should_trigger = true;
+      trigger_reason = "position";
+    }
+  }
+
+  // Condition 4: Heartbeat (max_period exceeded)
+  if (!should_trigger && time_since_last >= etc_max_period_sec_) {
+    should_trigger = true;
+    trigger_reason = "heartbeat";
+  }
+
+  if (should_trigger) {
+    // Update inter-event time metrics
+    etc_metrics_.sum_inter_event_time += time_since_last;
+    etc_metrics_.inter_event_count++;
+
+    // Update state
+    state.last_sent_pose = current_pose;
+    state.last_sent_time = current_time;
+    state.event_count++;
+
+    RCLCPP_DEBUG(get_logger(), "ETC event [%s]: %s (dt=%.3fs, total=%lu)",
+      agent_id.c_str(), trigger_reason.c_str(), time_since_last, state.event_count);
+  }
+
+  return should_trigger;
+}
+
+void FormationCoordinatorNode::publishETCMetrics()
+{
+  if (!etc_metrics_pub_) {
+    return;
+  }
+
+  std_msgs::msg::Float64MultiArray msg;
+  // Data format: [etc_enable, total_events, total_cycles, event_rate, avg_inter_event_time, bandwidth_reduction]
+  msg.data = {
+    etc_enable_ ? 1.0 : 0.0,
+    static_cast<double>(etc_metrics_.total_events),
+    static_cast<double>(etc_metrics_.total_cycles),
+    etc_metrics_.eventRate(),
+    etc_metrics_.avgInterEventTime(),
+    etc_metrics_.bandwidthReduction()
+  };
+  etc_metrics_pub_->publish(msg);
 }
 
 }  // namespace formation_coordinator_pkg

@@ -4,10 +4,12 @@
 #include <array>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "my_custom_interfaces_pkg/msg/formation_state.hpp"
 #include "my_custom_interfaces_pkg/srv/update_formation.hpp"
+#include "std_msgs/msg/float64_multi_array.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 namespace formation_coordinator_pkg
@@ -102,6 +104,54 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<my_custom_interfaces_pkg::msg::FormationState>::SharedPtr state_pub_;
   rclcpp::Service<my_custom_interfaces_pkg::srv::UpdateFormation>::SharedPtr set_formation_srv_;
+
+  // =========================================================================
+  // Event-Triggered Communication (ETC)
+  // =========================================================================
+  // When etc_enable_=false: time-triggered (original behavior, publish every cycle)
+  // When etc_enable_=true:  event-triggered (publish only when conditions met)
+
+  struct ETCState {
+    geometry_msgs::msg::PoseStamped last_sent_pose;
+    rclcpp::Time last_sent_time;
+    bool initialized{false};
+    uint64_t event_count{0};
+  };
+
+  struct ETCMetrics {
+    uint64_t total_events{0};
+    uint64_t total_cycles{0};
+    double sum_inter_event_time{0.0};
+    uint64_t inter_event_count{0};
+
+    double eventRate() const {
+      return total_cycles > 0 ? static_cast<double>(total_events) / static_cast<double>(total_cycles) : 0.0;
+    }
+    double avgInterEventTime() const {
+      return inter_event_count > 0 ? sum_inter_event_time / static_cast<double>(inter_event_count) : 0.0;
+    }
+    double bandwidthReduction() const {
+      return total_cycles > 0 ? 1.0 - eventRate() : 0.0;
+    }
+  };
+
+  bool etc_enable_{false};          // DEFAULT false = time-triggered (original)
+  double etc_epsilon_pos_{0.05};    // Position threshold [m]
+  double etc_min_period_sec_{0.02}; // Anti-chattering min interval [s]
+  double etc_max_period_sec_{0.5};  // Heartbeat max interval [s] (< stale threshold)
+
+  std::unordered_map<std::string, ETCState> etc_agent_states_;
+  ETCMetrics etc_metrics_;
+  bool etc_force_next_publish_{false};  // Force publish on waypoint/shape change
+
+  // ETC helper methods
+  bool shouldTriggerEvent(const std::string& agent_id,
+                          const geometry_msgs::msg::PoseStamped& current_pose);
+  void publishETCMetrics();
+  double poseDistance(const geometry_msgs::msg::PoseStamped& a,
+                      const geometry_msgs::msg::PoseStamped& b) const;
+
+  rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr etc_metrics_pub_;
 };
 
 }  // namespace formation_coordinator_pkg
