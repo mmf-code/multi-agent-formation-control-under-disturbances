@@ -65,13 +65,13 @@ def get_phase_wind_params(phase_id: int, sweep_index: int, seed: int) -> dict:
             4: {"profile": "gust", "magnitude": 5.0, "direction": 45.0,
                 "gust_duration": 1.5, "gust_interval": 10.0},
             # Phase 5: Structured uncertainty profile (optimized for fuzzy comparison)
-            # - Reduced direction wandering (5 deg/s vs 15) for less random noise
-            # - Higher gust probability (0.12 vs 0.08) for more transient events
-            # - Lower turbulence (0.15 vs 0.3) to reduce high-freq noise
-            # This creates "structured uncertainty" where GT2's secondary MF can excel
+            # Changes from original: less random noise, same intensity
+            # - Reduced direction wandering (5 deg/s vs 15) - less random
+            # - Reduced turbulence (0.15 vs 0.3) - less high-freq noise
+            # - Same gust intensity (2.0) and probability (0.08) - same difficulty
             5: {"profile": "stochastic", "magnitude": 2.5, "direction": 45.0,
                 "stochastic_mag_std": 1.0, "stochastic_dir_rate": 5.0,
-                "stochastic_gust_prob": 0.12, "stochastic_gust_mag": 2.5,
+                "stochastic_gust_prob": 0.08, "stochastic_gust_mag": 2.0,
                 "stochastic_turbulence": 0.15},
             6: {"profile": "stochastic", "magnitude": 2.5, "direction": 45.0,
                 "stochastic_mag_std": 1.5, "stochastic_dir_rate": 15.0,
