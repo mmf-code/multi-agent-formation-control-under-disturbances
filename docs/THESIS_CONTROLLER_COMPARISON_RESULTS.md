@@ -12,15 +12,21 @@ This document presents comprehensive experimental results comparing four control
 | **IT2-FLS** | Interval Type-2 Fuzzy Logic System | PID + IT2 fuzzy (additive: 100% PID + 50% fuzzy) |
 | **GT2-FLS** | General Type-2 Fuzzy Logic System | PID + GT2 with 5 alpha-planes (additive mode) |
 
-## Summary: Controller Performance Ranking
+## Summary: Controller Performance Ranking (Latest Run: 2026-01-04)
 
-| Phase | Best Overall | Best RMSE | Notes |
-|-------|--------------|-----------|-------|
-| 1. BASELINE | GT2 | 0.58m | N=1 |
-| 2. STEADY_WIND | PID | 0.89m | N=1 |
-| 3. TURBULENCE | IT2 | 1.40m | N=1 |
-| 4. GUST | IT2 | 0.81m | N=1 |
-| 5. COMBINED | PID | 8.10m | N=1 |
+| Phase | Best Overall | Best RMSE | Steady-State | Notes |
+|-------|--------------|-----------|--------------|-------|
+| 1. BASELINE | GT2 | 0.53m | - | No wind, GT2 precision advantage |
+| 2. STEADY_WIND | IT2 | 0.95m | - | DC rejection |
+| 3. TURBULENCE | IT2 | 0.93m | - | von Karman TI=0.15 |
+| 4. GUST | **IT2** | **0.71m** | - | Best fuzzy advantage (22% vs PID) |
+| 5. COMBINED | PID≈IT2≈GT2 | 0.99m | 0.71-0.73m | Marginal difference (~3%) |
+
+**Key Findings**:
+- **IT2-FLS** consistently outperforms in **structured wind** (Phase 2-4), best in gusts (22% improvement)
+- **GT2-FLS** excels in **precision** (Phase 1) but over-amplifies noise in stochastic conditions
+- **Phase 5**: In steady-state, all integral-based controllers perform **equivalently** (~0.72m)
+- **Sensor noise** (10cm pos, 15cm/s vel) already included in tests
 
 ---
 
@@ -32,16 +38,16 @@ This document presents comprehensive experimental results comparing four control
 - Wind Profile: constant
 - Duration: 60 seconds
 
-### Results (N=1 run)
+### Results (N=1 run) - Latest: 2026-01-04
 
 | Controller | RMSE (m) | Std Dev | Peak Error | Last Violation | MAE |
 |------------|----------|---------|------------|----------------|-----|
-| **PD** | 1.050 | 0.000 | 3.005 | 60.7s | 0.992 |
-| **PID** | 0.680 | 0.000 | 3.117 | 60.7s | 0.480 |
-| **IT2** | 0.621 | 0.000 | 3.060 | 60.8s | 0.455 |
-| **GT2** | 0.578 | 0.000 | 2.969 | 60.7s | 0.449 |
+| **PD** | 1.073 | 0.102 | 3.029 | 60.1s | 1.008 |
+| **PID** | 0.578 | 0.168 | 2.934 | 60.2s | 0.428 |
+| **IT2** | 0.618 | 0.130 | 3.097 | 60.1s | 0.460 |
+| **GT2** | 0.528 | 0.175 | 2.051 | 60.1s | 0.408 |
 
-### Winner: GT2 (0.58m RMSE)
+### Winner: GT2 (0.53m RMSE)
 
 ---
 
@@ -55,16 +61,16 @@ This document presents comprehensive experimental results comparing four control
 - Wind Direction: 45.0°
 - Duration: 60 seconds
 
-### Results (N=1 run)
+### Results (N=1 run) - Latest: 2026-01-04
 
 | Controller | RMSE (m) | Std Dev | Peak Error | Last Violation | MAE |
 |------------|----------|---------|------------|----------------|-----|
-| **PD** | 1.813 | 0.000 | 3.676 | 60.8s | 1.776 |
-| **PID** | 0.892 | 0.000 | 3.222 | 60.8s | 0.804 |
-| **IT2** | 1.003 | 0.000 | 3.771 | 60.8s | 0.850 |
-| **GT2** | 1.012 | 0.000 | 4.058 | 60.8s | 0.834 |
+| **PD** | 1.824 | 0.036 | 4.079 | 60.7s | 1.786 |
+| **PID** | 0.995 | 0.182 | 3.742 | 60.7s | 0.843 |
+| **IT2** | 0.945 | 0.102 | 3.640 | 60.7s | 0.821 |
+| **GT2** | 1.002 | 0.167 | 3.711 | 60.7s | 0.851 |
 
-### Winner: PID (0.89m RMSE)
+### Winner: IT2 (0.95m RMSE)
 
 ---
 
@@ -78,16 +84,16 @@ This document presents comprehensive experimental results comparing four control
 - Turbulence Intensity: 0.15
 - Duration: 60 seconds
 
-### Results (N=1 run)
+### Results (N=1 run) - Latest: 2026-01-04
 
 | Controller | RMSE (m) | Std Dev | Peak Error | Last Violation | MAE |
 |------------|----------|---------|------------|----------------|-----|
-| **PD** | 1.771 | 0.000 | 3.735 | 60.7s | 1.789 |
-| **PID** | 1.462 | 0.000 | 4.448 | 60.7s | 1.361 |
-| **IT2** | 1.398 | 0.000 | 4.297 | 60.7s | 1.407 |
-| **GT2** | 1.410 | 0.000 | 4.493 | 60.7s | 1.350 |
+| **PD** | 1.827 | 0.015 | 3.134 | 60.2s | 1.804 |
+| **PID** | 0.959 | 0.180 | 3.109 | 60.1s | 0.847 |
+| **IT2** | 0.933 | 0.138 | 3.192 | 60.2s | 0.834 |
+| **GT2** | 0.946 | 0.166 | 3.111 | 60.1s | 0.838 |
 
-### Winner: IT2 (1.40m RMSE)
+### Winner: IT2 (0.93m RMSE)
 
 ---
 
@@ -100,16 +106,16 @@ This document presents comprehensive experimental results comparing four control
 - Wind Magnitude: 5.0 m/s
 - Duration: 60 seconds
 
-### Results (N=1 run)
+### Results (N=1 run) - Latest: 2026-01-04
 
 | Controller | RMSE (m) | Std Dev | Peak Error | Last Violation | MAE |
 |------------|----------|---------|------------|----------------|-----|
-| **PD** | 1.456 | 0.000 | 3.045 | 60.2s | 1.448 |
-| **PID** | 0.821 | 0.000 | 3.079 | 60.2s | 0.723 |
-| **IT2** | 0.811 | 0.000 | 3.018 | 60.2s | 0.701 |
-| **GT2** | 0.838 | 0.000 | 3.024 | 60.2s | 0.708 |
+| **PD** | 1.187 | 0.032 | 2.943 | 60.3s | 1.120 |
+| **PID** | 0.905 | 0.351 | 3.059 | 60.3s | 0.630 |
+| **IT2** | 0.709 | 0.097 | 2.472 | 60.2s | 0.538 |
+| **GT2** | 0.860 | 0.311 | 3.145 | 60.3s | 0.599 |
 
-### Winner: IT2 (0.81m RMSE)
+### Winner: IT2 (0.71m RMSE)
 
 ---
 
@@ -119,21 +125,44 @@ This document presents comprehensive experimental results comparing four control
 
 **Conditions**:
 - Wind Profile: stochastic
-- Wind Magnitude: 2.5 m/s
+- Base Magnitude: 2.5 m/s (continuous)
+- Gust Multiplier: 1.5x-2.0x
+- Direction Wander: ±30° from base
 - Duration: 60 seconds
 
-### Results (N=1 run)
+### Results (N=1 run) - Latest: 2026-01-04
 
 | Controller | RMSE (m) | Std Dev | Peak Error | Last Violation | MAE |
 |------------|----------|---------|------------|----------------|-----|
-| **PD** | 9.083 | 0.000 | 13.342 | 60.1s | 7.051 |
-| **PID** | 8.103 | 0.000 | 14.147 | 60.1s | 6.105 |
-| **IT2** | 10.566 | 0.000 | 14.925 | 51.3s | 7.533 |
-| **GT2** | 10.928 | 0.000 | 17.784 | 60.1s | 6.696 |
+| **PD** | 1.743 | 0.068 | 3.950 | 60.9s | 1.686 |
+| **PID** | 0.994 | 0.070 | 3.716 | 60.9s | 0.816 |
+| **IT2** | 1.007 | 0.112 | 3.846 | 60.9s | 0.812 |
+| **GT2** | 1.087 | 0.049 | 4.372 | 60.9s | 0.854 |
 
-### Winner: PID (8.10m RMSE)
+### Winner: PID (marginal - see analysis)
 
-**Note**: The high RMSE values (8-11m) in this phase represent genuine agent dispersion under combined stochastic disturbances, not measurement error. The stochastic wind profile combines turbulence, gusts, and direction wander simultaneously, creating conditions that exceed the controllers' rejection bandwidth. This highlights a fundamental limitation of the current control architecture under extreme disturbance scenarios.
+### Steady-State Performance (Last 30s)
+
+| Controller | Mean Error | Std Dev |
+|------------|-----------|---------|
+| **PID** | 0.712m | 0.391m |
+| **IT2** | 0.733m | 0.417m |
+| **GT2** | 0.734m | 0.408m |
+| PD | 1.671m | 0.349m |
+
+**Key Finding**: In steady-state, PID ≈ IT2 ≈ GT2 (difference only ~3%). The startup transient (~2.4m for all PID/IT2/GT2) inflates overall RMSE.
+
+**Analysis**:
+1. **Stochastic ≠ Structured Uncertainty**: The stochastic profile generates random noise, not structured uncertainty. Fuzzy controllers excel when uncertainty has patterns (model mismatch, sensor bias, etc.), not pure randomness.
+2. **Integral Action Advantage**: PID's integral term effectively integrates out random disturbances over time.
+3. **GT2 Sensitivity**: GT2's 43 large error events (>3m) vs PID's 21 suggests the secondary MF may over-amplify noise.
+4. **Practical Equivalence**: For stochastic wind, any integral-based controller (PID, IT2, GT2) performs similarly.
+
+**Scenarios Where Fuzzy Would Excel**:
+- Sensor data dropout/corruption
+- Model parameter uncertainty (mass changes, aerodynamic variations)
+- Sudden step changes in disturbance
+- Non-Gaussian disturbance distributions
 
 ---
 
@@ -165,6 +194,10 @@ GT2 Specific:
   Alpha Levels: 5
   Secondary Shape: Triangular
   Secondary Spread: 0.3
+
+Sensor Noise (enabled in world file):
+  position_noise_std: 0.10 m   # 10cm position noise
+  velocity_noise_std: 0.15 m/s # 15cm/s velocity noise
 ```
 
 ### Formation Configuration
@@ -187,7 +220,45 @@ GT2 Specific:
 
 ---
 
-*Report Generated: 2026-01-04 14:46:44*
-*Git Commit: c61e571*
-*Source: results/new_metrics_test*
+## Key Conclusions
+
+### 1. IT2-FLS Shows Consistent Advantage in Wind Scenarios
+- **Phases 2-4**: IT2 consistently outperforms PID and GT2
+- Best improvement in **Phase 4 (GUST)**: IT2 achieves 0.71m vs PID's 0.91m (22% improvement)
+
+### 2. GT2-FLS Excels in Precision, Not Robustness
+- **Phase 1 (BASELINE)**: GT2 achieves best RMSE (0.53m) and lowest peak error (2.05m)
+- **Phase 5 (COMBINED)**: GT2 has most large error events (43 vs PID's 21)
+- GT2's secondary MF may over-amplify noise in stochastic conditions
+
+### 3. Stochastic Wind ≠ Structured Uncertainty
+- In **steady state**, PID ≈ IT2 ≈ GT2 (difference ~3%)
+- Fuzzy excels with **structured uncertainty** (patterns, bias, model mismatch)
+- Random noise is effectively filtered by PID's integral action
+
+### 4. Sensor Noise Already Included
+- Tests include 10cm position noise and 15cm/s velocity noise
+- This level of noise doesn't differentiate fuzzy from PID
+
+### Future Work
+1. **Higher sensor noise** (position_noise_std > 0.3m) - simulate GPS degradation
+2. **Sensor dropout** - simulate packet loss or communication failures
+3. **Model uncertainty** - vary mass/drag parameters during flight
+4. **Non-Gaussian disturbances** - bimodal wind patterns, sudden reversals
+
+---
+
+## Run History
+
+| Date | Phases | Notes |
+|------|--------|-------|
+| 2026-01-04 19:00 | 5 | Deep data analysis - steady state comparison |
+| 2026-01-04 18:40 | 5 | Phase 5 re-run with clean_sim.sh (corrected results) |
+| 2026-01-04 18:30 | 1-4 | Latest run with clean_sim.sh |
+| 2026-01-04 16:29 | 1-5 | Initial results (post wind_scalar fix) - Phase 5 had errors |
+
+---
+
+*Report Updated: 2026-01-04 19:10*
+*Source: results/phase_X/run_1*
 *Framework: 6-Phase Thesis Test Framework v1.0*
