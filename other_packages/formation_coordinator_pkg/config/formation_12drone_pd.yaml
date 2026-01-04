@@ -39,3 +39,10 @@
     waypoints.x: [-5.0, 0.0, 5.0, 5.0]
     waypoints.y: [-12.0, -12.0, -12.0, -12.0]
     waypoints.z: [0.5, 0.8, 0.8, 0.5]
+
+    # Event-Triggered Communication (ETC)
+    # Set etc.enable: false for event-triggered, false for time-triggered
+    etc.enable: false
+    etc.epsilon_pos: 0.05      # Position threshold [m]
+    etc.min_period_sec: 0.02   # Anti-chattering [s]
+    etc.max_period_sec: 0.5    # Heartbeat interval [s]
