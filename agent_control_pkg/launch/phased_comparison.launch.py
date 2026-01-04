@@ -221,7 +221,7 @@ def launch_setup(context, *args, **kwargs):
     # Formula: u = 1.0*PID + k_fuzzy*Fuzzy
     # TEST: Increasing fuzzy authority for better transient rejection
     MIX_K_PID = 1.0
-    MIX_K_FUZZY = 0.6  # TEST: Increasing fuzzy authority for gust rejection
+    MIX_K_FUZZY = 0.8  # TEST: Higher fuzzy authority
 
     # PD controller params (Group 0) - No integral action
     pd_controller_params = {

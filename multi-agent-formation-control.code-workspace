@@ -34,7 +34,8 @@
         "files.associations": {
             "string": "cpp"
         },
-        "ros.distro": "humble"
+        "ros.distro": "humble",
+        "ROS2.distro": "humble"
     },
     "extensions": {
         "recommendations": [
