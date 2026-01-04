@@ -20,6 +20,8 @@ RUNS=1             # Number of runs per phase
 OUTPUT_DIR="results"
 REPORT_ONLY=false
 SEED=-1            # -1 = random
+SEED_SWEEP=false   # Use deterministic seed sweep (for statistical robustness)
+SEED_SWEEP_START=1000  # Base seed for sweep mode
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -40,6 +42,16 @@ while [[ $# -gt 0 ]]; do
             SEED="$2"
             shift 2
             ;;
+        --seed-sweep)
+            SEED_SWEEP=true
+            SEED_SWEEP_START="${2:-1000}"
+            shift
+            # Check if next arg is a number (optional seed start)
+            if [[ $1 =~ ^[0-9]+$ ]]; then
+                SEED_SWEEP_START="$1"
+                shift
+            fi
+            ;;
         --report)
             REPORT_ONLY=true
             shift
@@ -52,6 +64,10 @@ while [[ $# -gt 0 ]]; do
             echo "  --runs, -r N      Number of runs per phase (default: 1)"
             echo "  --output, -o DIR  Output directory (default: results)"
             echo "  --seed, -s N      Random seed (-1 for random)"
+            echo "  --seed-sweep [N]  Deterministic seed sweep starting at N (default: 1000)"
+            echo "                    Run k gets seed = N + (k-1), SAME seed across all phases"
+            echo "                    Example: --runs 5 --seed-sweep 1000 → seeds 1000,1001,1002,1003,1004"
+            echo "                    This ensures reproducibility for thesis validation"
             echo "  --report          Only generate report from existing results"
             echo "  --help, -h        Show this help"
             echo ""
@@ -62,6 +78,11 @@ while [[ $# -gt 0 ]]; do
             echo "  4: GUST          - Periodic gusts"
             echo "  5: COMBINED      - Stochastic (turbulence + gusts)"
             echo "  6: ENDURANCE     - Long-run 300s"
+            echo ""
+            echo "Examples:"
+            echo "  $0 --runs 5 --seed-sweep          # 5 runs with seeds 1000-1004"
+            echo "  $0 --runs 5 --seed-sweep 2000     # 5 runs with seeds 2000-2004"
+            echo "  $0 --phase 1 --runs 3 --seed 42   # Phase 1, 3 runs, base seed 42"
             exit 0
             ;;
         *)
@@ -70,6 +91,12 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# Apply seed sweep mode
+if [ "$SEED_SWEEP" = true ]; then
+    SEED=$SEED_SWEEP_START
+    echo "Seed sweep mode: seeds $SEED_SWEEP_START to $((SEED_SWEEP_START + RUNS - 1))"
+fi
 
 # Source ROS2 if not already sourced
 if [ -z "$ROS_DISTRO" ]; then
@@ -100,11 +127,11 @@ echo "=============================================="
 if [ "$REPORT_ONLY" = true ]; then
     echo ""
     echo "Generating report from existing results..."
-    python3 "$WS_DIR/agent_control_pkg/scripts/phased_report.py" \
-        --input "$OUTPUT_DIR" \
-        --output docs/PHASED_TEST_RESULTS.md
+    python3 "$WS_DIR/scripts/generate_thesis_md.py" \
+        --results-dir "$OUTPUT_DIR" \
+        --output docs/THESIS_CONTROLLER_COMPARISON_RESULTS.md
     echo ""
-    echo "Report complete: docs/PHASED_TEST_RESULTS.md"
+    echo "Report complete: docs/THESIS_CONTROLLER_COMPARISON_RESULTS.md"
     exit 0
 fi
 
@@ -135,8 +162,13 @@ for phase_id in "${PHASES[@]}"; do
                 # Calculate seed for this run
                 if [ "$SEED" -eq -1 ]; then
                     RUN_SEED=$((RANDOM))
+                elif [ "$SEED_SWEEP" = true ]; then
+                    # Seed sweep mode: same seed for same run_index across all phases
+                    # This ensures reproducibility: run_1 always uses seed START+0, etc.
+                    RUN_SEED=$((SEED_SWEEP_START + run - 1))
                 else
-                    RUN_SEED=$((SEED + run + sweep_idx * 100))
+                    # Normal mode: phase/sweep offset for variety
+                    RUN_SEED=$((SEED + run - 1 + sweep_idx * 100))
                 fi
 
                 # Run the phase
@@ -164,8 +196,13 @@ for phase_id in "${PHASES[@]}"; do
             # Calculate seed
             if [ "$SEED" -eq -1 ]; then
                 RUN_SEED=$((RANDOM))
+            elif [ "$SEED_SWEEP" = true ]; then
+                # Seed sweep mode: same seed for same run_index across all phases
+                # This ensures reproducibility: run_1 always uses seed START+0, etc.
+                RUN_SEED=$((SEED_SWEEP_START + run - 1))
             else
-                RUN_SEED=$((SEED + run + phase_id * 1000))
+                # Normal mode: phase offset for variety
+                RUN_SEED=$((SEED + run - 1 + phase_id * 1000))
             fi
 
             # Determine timeout based on phase duration
@@ -200,14 +237,14 @@ echo "=============================================="
 # Generate final report
 echo ""
 echo "Generating consolidated report..."
-python3 "$WS_DIR/agent_control_pkg/scripts/phased_report.py" \
-    --input "$OUTPUT_DIR" \
-    --output docs/PHASED_TEST_RESULTS.md
+python3 "$WS_DIR/scripts/generate_thesis_md.py" \
+    --results-dir "$OUTPUT_DIR" \
+    --output docs/THESIS_CONTROLLER_COMPARISON_RESULTS.md
 
 echo ""
 echo "=============================================="
 echo " RESULTS"
 echo "=============================================="
 echo " Data:   $OUTPUT_DIR/"
-echo " Report: docs/PHASED_TEST_RESULTS.md"
+echo " Report: docs/THESIS_CONTROLLER_COMPARISON_RESULTS.md"
 echo "=============================================="

@@ -33,7 +33,7 @@ import csv
 import time
 from datetime import datetime
 from dataclasses import dataclass, field, asdict
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 from collections import defaultdict
 
 import rclpy
@@ -76,9 +76,14 @@ class AgentMetrics:
     # Final summary metrics
     final_rmse: float = 0.0  # Will use mission_rmse, not per-waypoint rmse_total
     final_itae: float = 0.0
-    final_settling_time: float = 0.0
-    final_max_overshoot: float = 0.0
-    mean_control_effort: float = 0.0
+    final_settling_time: float = 0.0  # Uses last_violation_time (OFFLINE)
+    final_max_overshoot: float = 0.0  # Uses peak_error (OFFLINE) - NOT true overshoot
+    control_effort_iae: float = 0.0   # Integral of |u| dt
+
+    # OFFLINE computed metrics (from error time-series, not from publisher)
+    peak_error: float = 0.0           # max(|e|) over mission (NOT overshoot!)
+    last_violation_time: float = 0.0  # last t where |e| > threshold (settling-like)
+    mean_absolute_error: float = 0.0  # MAE over mission
 
 
 @dataclass
@@ -91,11 +96,15 @@ class GroupSummary:
     std_rmse: float = 0.0
     mean_itae: float = 0.0
     std_itae: float = 0.0
-    mean_settling_time: float = 0.0
-    mean_max_overshoot: float = 0.0
-    mean_control_effort: float = 0.0
+    mean_settling_time: float = 0.0      # Uses last_violation_time
+    mean_max_overshoot: float = 0.0      # Uses peak_error (NOT true overshoot)
+    mean_control_effort_iae: float = 0.0  # Integral of |u| dt
     agents_settled: int = 0
     settled_ratio: float = 0.0
+    # OFFLINE computed metrics (aggregated from agents)
+    mean_peak_error: float = 0.0          # max(|e|) over mission
+    mean_last_violation: float = 0.0      # last t where |e| > threshold
+    mean_mae: float = 0.0                 # Mean Absolute Error
 
 
 # Agent to controller type mapping for 12-drone 4-group setup
@@ -138,11 +147,15 @@ class PhaseMetricsLogger(Node):
         # Initialize storage
         self.agent_metrics: Dict[str, AgentMetrics] = {}
         self.wind_data: List[Dict[str, float]] = []
-        self.start_time_ns: Optional[int] = None  # Simulation time in nanoseconds
+        self.start_time_ns: Optional[int] = None  # Will be set on first message
         self.end_time: Optional[float] = None
+        self.first_message_received: bool = False  # Phase 5 fix: start on first msg
+
+        # Control effort tracking (subscribe to cmd_accel topics)
+        self.cmd_data: Dict[str, List[Tuple[float, float]]] = defaultdict(list)
+        self.cmd_subs = []
 
         # Check if using simulation time (already declared by ROS2)
-        # Use get_parameter_or to avoid duplicate declaration
         try:
             self.use_sim_time = self.get_parameter("use_sim_time").value
         except Exception:
@@ -187,17 +200,27 @@ class PhaseMetricsLogger(Node):
             qos
         )
 
+        # Subscribe to cmd_accel for control effort tracking
+        for i in range(self.num_agents):
+            agent_id = f"agent_{i}"
+            cmd_sub = self.create_subscription(
+                Vector3,
+                f"/{agent_id}/cmd_accel",
+                lambda msg, aid=agent_id: self.cmd_callback(msg, aid),
+                qos
+            )
+            self.cmd_subs.append(cmd_sub)
+
         # Status timer (1 Hz)
         self.status_timer = self.create_timer(1.0, self.status_callback)
 
-        # Record start time using simulation time
-        self.start_time_ns = self.get_clock().now().nanoseconds
-
+        # Note: start_time_ns will be set on first metrics message (Phase 5 fix)
         self.get_logger().info(
             f"Phase {self.phase_id} Run {self.run_index} - "
             f"Logging {self.num_agents} agents for {self.duration_sec}s"
         )
         self.get_logger().info(f"Output directory: {self.run_dir}")
+        self.get_logger().info("Waiting for first metrics message to start timer...")
 
     def _get_elapsed_sim_time(self) -> float:
         """Get elapsed simulation time in seconds."""
@@ -210,6 +233,14 @@ class PhaseMetricsLogger(Node):
         """Handle incoming metrics data."""
         if agent_id not in self.agent_metrics:
             return
+
+        # Phase 5 fix: Start timer on first message from ANY agent
+        if not self.first_message_received:
+            self.start_time_ns = self.get_clock().now().nanoseconds
+            self.first_message_received = True
+            self.get_logger().info(
+                f"First metrics received from {agent_id}, starting timer"
+            )
 
         am = self.agent_metrics[agent_id]
         elapsed = self._get_elapsed_sim_time()
@@ -249,6 +280,13 @@ class PhaseMetricsLogger(Node):
             "wind_magnitude": magnitude,
         })
 
+    def cmd_callback(self, msg: Vector3, agent_id: str):
+        """Handle control command data for control effort tracking."""
+        elapsed = self._get_elapsed_sim_time()
+        import math
+        mag = math.sqrt(msg.x**2 + msg.y**2)  # XY control effort
+        self.cmd_data[agent_id].append((elapsed, mag))
+
     def status_callback(self):
         """Print status and check for completion."""
         if self.start_time_ns is None:
@@ -281,16 +319,36 @@ class PhaseMetricsLogger(Node):
         if am.samples == 0:
             return
 
-        # Use MISSION-WIDE RMSE (not per-waypoint rmse_total)
-        # mission_rmse accumulates across all waypoints for true mission performance
-        # Fall back to computing from error time series if mission_rmse not available
+        import math
+
+        # OFFLINE computation from stored error time-series
+        # 1. Compute error magnitudes
+        error_mags = [
+            math.sqrt(ex**2 + ey**2)
+            for ex, ey in zip(am.errors_x, am.errors_y)
+        ]
+
+        # 2. Peak Error (max error magnitude over mission)
+        am.peak_error = max(error_mags) if error_mags else 0.0
+
+        # 3. Last Violation Time (settling-like: last time error exceeded threshold)
+        THRESHOLD = 0.1  # 10cm threshold for "settled"
+        violations = [
+            (t, e) for t, e in zip(am.timestamps, error_mags) if e > THRESHOLD
+        ]
+        am.last_violation_time = violations[-1][0] if violations else 0.0
+
+        # 4. Mean Absolute Error (MAE)
+        am.mean_absolute_error = (
+            sum(error_mags) / len(error_mags) if error_mags else 0.0
+        )
+
+        # 5. RMSE (from time-series, not publisher's per-waypoint value)
         if am.mission_rmse and am.mission_rmse[-1] > 0:
             am.final_rmse = am.mission_rmse[-1]
-        elif am.errors_x and am.errors_y:
-            # Compute time-weighted RMSE from error time series
-            import numpy as np
-            errors_sq = np.array(am.errors_x)**2 + np.array(am.errors_y)**2
-            am.final_rmse = float(np.sqrt(np.mean(errors_sq)))
+        elif error_mags:
+            sum_sq = sum(ex**2 + ey**2 for ex, ey in zip(am.errors_x, am.errors_y))
+            am.final_rmse = math.sqrt(sum_sq / am.samples)
         else:
             am.final_rmse = am.rmse_total[-1] if am.rmse_total else 0.0
 
@@ -303,11 +361,26 @@ class PhaseMetricsLogger(Node):
                 (am.itae_y[-1] if am.itae_y else 0.0)
             )
 
-        am.final_settling_time = am.settling_times[-1] if am.settling_times else 0.0
-        am.final_max_overshoot = max(
-            max(am.max_overshoots_x) if am.max_overshoots_x else 0.0,
-            max(am.max_overshoots_y) if am.max_overshoots_y else 0.0,
-        )
+        # Use OFFLINE computed metrics instead of publisher's (which are 0)
+        am.final_settling_time = am.last_violation_time  # last_violation_time as settling proxy
+        am.final_max_overshoot = am.peak_error  # peak_error as overshoot proxy (NOT true overshoot)
+
+        # 6. Control Effort IAE (integral of |u| dt)
+        am.control_effort_iae = self._compute_control_effort_iae(am.agent_id)
+
+    def _compute_control_effort_iae(self, agent_id: str) -> float:
+        """Compute IAE of control effort (integral of |u| dt)."""
+        data = self.cmd_data.get(agent_id, [])
+        if len(data) < 2:
+            return 0.0
+
+        effort = 0.0
+        for i in range(1, len(data)):
+            dt = data[i][0] - data[i - 1][0]
+            if dt > 0:
+                effort += data[i][1] * dt
+
+        return effort
 
     def compute_group_summaries(self) -> Dict[str, GroupSummary]:
         """Compute summary metrics per controller group."""
@@ -329,6 +402,12 @@ class PhaseMetricsLogger(Node):
             settlings = [a.final_settling_time for a in agents]
             overshoots = [a.final_max_overshoot for a in agents]
 
+            # OFFLINE computed metrics
+            peak_errors = [a.peak_error for a in agents]
+            last_violations = [a.last_violation_time for a in agents]
+            maes = [a.mean_absolute_error for a in agents]
+            efforts = [a.control_effort_iae for a in agents]
+
             import statistics
             summaries[ctrl_type] = GroupSummary(
                 group_id=agents[0].group_id,
@@ -340,7 +419,12 @@ class PhaseMetricsLogger(Node):
                 std_itae=statistics.stdev(itaes) if len(itaes) > 1 else 0.0,
                 mean_settling_time=statistics.mean(settlings) if settlings else 0.0,
                 mean_max_overshoot=statistics.mean(overshoots) if overshoots else 0.0,
+                mean_control_effort_iae=statistics.mean(efforts) if efforts else 0.0,
                 agents_settled=sum(1 for s in settlings if s < self.duration_sec * 0.8),
+                # OFFLINE metrics
+                mean_peak_error=statistics.mean(peak_errors) if peak_errors else 0.0,
+                mean_last_violation=statistics.mean(last_violations) if last_violations else 0.0,
+                mean_mae=statistics.mean(maes) if maes else 0.0,
             )
             summaries[ctrl_type].settled_ratio = (
                 summaries[ctrl_type].agents_settled / n if n > 0 else 0.0
@@ -414,7 +498,10 @@ class PhaseMetricsLogger(Node):
                 "mean_rmse", "std_rmse",
                 "mean_itae", "std_itae",
                 "mean_settling_time", "mean_max_overshoot",
-                "agents_settled", "settled_ratio"
+                "control_effort_iae",  # Integral of |u| dt
+                "agents_settled", "settled_ratio",
+                # OFFLINE computed metrics
+                "mean_peak_error", "mean_last_violation", "mean_mae"
             ])
 
             for ctrl_type in ["PD", "PID", "IT2", "GT2"]:
@@ -425,10 +512,28 @@ class PhaseMetricsLogger(Node):
                         f"{s.mean_rmse:.6f}", f"{s.std_rmse:.6f}",
                         f"{s.mean_itae:.6f}", f"{s.std_itae:.6f}",
                         f"{s.mean_settling_time:.3f}", f"{s.mean_max_overshoot:.6f}",
-                        s.agents_settled, f"{s.settled_ratio:.2f}"
+                        f"{s.mean_control_effort_iae:.6f}",
+                        s.agents_settled, f"{s.settled_ratio:.2f}",
+                        # OFFLINE computed metrics
+                        f"{s.mean_peak_error:.6f}", f"{s.mean_last_violation:.3f}",
+                        f"{s.mean_mae:.6f}"
                     ])
 
         self.get_logger().info(f"Exported group summary to {filename}")
+
+    def _get_git_commit(self) -> str:
+        """Get current git commit hash (short form)."""
+        import subprocess
+        try:
+            result = subprocess.run(
+                ["git", "rev-parse", "--short", "HEAD"],
+                capture_output=True,
+                text=True,
+                cwd=os.path.dirname(os.path.abspath(__file__)),
+            )
+            return result.stdout.strip() if result.returncode == 0 else "unknown"
+        except Exception:
+            return "unknown"
 
     def export_metadata(self, summaries: Dict[str, GroupSummary]):
         """Export phase metadata to JSON."""
@@ -448,6 +553,21 @@ class PhaseMetricsLogger(Node):
             "total_samples": sum(am.samples for am in self.agent_metrics.values()),
             "wind_samples": len(self.wind_data),
             "timing_source": "simulation_time",
+            "git_commit": self._get_git_commit(),
+            "config_snapshot": {
+                "wind_scalar": 1.0,  # From launch file
+                "k_fuzzy": 0.5,      # Fuzzy contribution factor
+                "k_pid": 1.0,        # PID contribution factor
+                "settling_threshold_m": 0.1,  # 10cm for last_violation_time
+            },
+            "metric_definitions": {
+                "peak_error": "max(|e|) over mission - maximum error magnitude",
+                "last_violation_time": "last t where |e| > 0.1m - settling-like metric",
+                "mean_absolute_error": "mean(|e|) over mission - MAE",
+                "control_effort_iae": "integral(|u|) dt - control effort IAE",
+                "rmse": "sqrt(mean(e^2)) - root mean squared error",
+                "itae": "integral(t * |e|) dt - integral of time-weighted absolute error",
+            },
             "group_summaries": {
                 k: asdict(v) for k, v in summaries.items()
             },

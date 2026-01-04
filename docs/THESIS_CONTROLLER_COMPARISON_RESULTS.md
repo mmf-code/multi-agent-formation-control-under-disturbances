@@ -12,198 +12,128 @@ This document presents comprehensive experimental results comparing four control
 | **IT2-FLS** | Interval Type-2 Fuzzy Logic System | PID + IT2 fuzzy (additive: 100% PID + 50% fuzzy) |
 | **GT2-FLS** | General Type-2 Fuzzy Logic System | PID + GT2 with 5 alpha-planes (additive mode) |
 
-### Key Findings (Updated 2026-01-04 - Post Wind Scalar Fix)
+## Summary: Controller Performance Ranking
 
-> **BUG FIX APPLIED (2026-01-04)**: `fuzzy.wind_scalar=1.0` now enabled.
-> Results below reflect fixed configuration with wind input properly reaching fuzzy controllers.
-
-- **Baseline**: PID/GT2 achieve best RMSE (0.60m) - all integral controllers perform similarly
-- **Steady Wind**: IT2-FLS (0.94m) slightly outperforms GT2 (0.95m) and PID (0.95m)
-- **Turbulence**: GT2-FLS (0.94m) provides best uncertainty handling
-- **Gusts**: PD (1.83m) outperforms fuzzy controllers - fuzzy overcompensates on transients
-- **Combined**: (Pending re-test)
-
----
-
-## Phase 1: BASELINE (No Wind)
-
-**Objective**: Establish reference performance without disturbances
-
-**Conditions**:
-- Wind: None (0 m/s)
-- Duration: 60 seconds
-- Formation: Triangle (3 drones per group)
-- Trajectory: Waypoint-based (x: -5 → 0 → 5 → 5m)
-
-### Results (Updated 2026-01-04 - Post Wind Scalar Fix)
-
-| Controller | RMSE (m) | Std Dev | Notes |
-|------------|----------|---------|-------|
-| **PD** | 1.036 | 0.060 | Higher error without integral action |
-| **PID** | **0.599** | 0.175 | Excellent tracking |
-| **IT2-FLS** | 0.606 | 0.176 | Matches PID performance |
-| **GT2-FLS** | **0.599** | 0.188 | Matches PID performance |
-
-### Analysis
-- **All integral controllers achieve similar excellent tracking** (~0.60m RMSE)
-- PD shows 73% higher error (1.04m) without integral action to eliminate steady-state error
-- Fuzzy controllers now perform identically to PID in calm conditions
-- With wind_scalar=1.0, fuzzy systems are properly configured
-
-### Winner: PID/GT2 (0.60m RMSE) - All integral controllers equal
+| Phase | Best Overall | Best RMSE | Notes |
+|-------|--------------|-----------|-------|
+| 1. BASELINE | GT2 | 0.58m | N=1 |
+| 2. STEADY_WIND | PID | 0.89m | N=1 |
+| 3. TURBULENCE | IT2 | 1.40m | N=1 |
+| 4. GUST | IT2 | 0.81m | N=1 |
+| 5. COMBINED | PID | 8.10m | N=1 |
 
 ---
 
-## Phase 2: STEADY WIND (DC Disturbance Rejection)
+## Phase 1: BASELINE
 
-**Objective**: Test constant wind disturbance rejection capability
-
-**Conditions**:
-- Wind: 1.5 m/s constant
-- Duration: 60 seconds
-- Challenge: Controllers must compensate for persistent force offset
-
-### Results (Updated 2026-01-04 - Post Wind Scalar Fix)
-
-| Controller | RMSE (m) | Std Dev | Notes |
-|------------|----------|---------|-------|
-| **PD** | 1.760 | 0.041 | 86% higher error than integral controllers |
-| **PID** | 0.946 | 0.212 | Excellent disturbance rejection |
-| **IT2-FLS** | **0.943** | 0.198 | Best - FOU adapts to steady offset |
-| **GT2-FLS** | 0.947 | 0.212 | Slightly behind IT2 |
-
-### Analysis
-- **IT2-FLS achieves best performance** (0.943m) under steady wind
-- All integral controllers show similar excellent performance (~0.94-0.95m)
-- PD shows clear limitation without integral action for DC offset rejection
-- Fuzzy wind input (wind_scalar=1.0) allows proper disturbance feedforward
-
-### Winner: IT2-FLS (0.94m) - All integral controllers nearly equal
-
----
-
-## Phase 3: TURBULENCE (Stochastic Wind Variations)
-
-**Objective**: Test performance under stochastic wind turbulence
+**Objective**: No wind (reference performance)
 
 **Conditions**:
-- Base Wind: 1.5 m/s with Gaussian variations
-- Turbulence: Magnitude std = 0.5 m/s, Direction wander = 10°/s
+- Wind Profile: constant
 - Duration: 60 seconds
 
-### Results (Updated 2026-01-04 - Post Wind Scalar Fix)
+### Results (N=1 run)
 
-| Controller | RMSE (m) | Std Dev | Notes |
-|------------|----------|---------|-------|
-| **PD** | 1.814 | 0.099 | 94% higher error than fuzzy |
-| **PID** | 0.998 | 0.328 | Good but higher variance |
-| **IT2-FLS** | 0.936 | 0.241 | FOU bounds handle stochastic uncertainty |
-| **GT2-FLS** | **0.935** | 0.238 | Best - secondary MF smooths noise |
+| Controller | RMSE (m) | Std Dev | Peak Error | Last Violation | MAE |
+|------------|----------|---------|------------|----------------|-----|
+| **PD** | 1.050 | 0.000 | 3.005 | 60.7s | 0.992 |
+| **PID** | 0.680 | 0.000 | 3.117 | 60.7s | 0.480 |
+| **IT2** | 0.621 | 0.000 | 3.060 | 60.8s | 0.455 |
+| **GT2** | 0.578 | 0.000 | 2.969 | 60.7s | 0.449 |
 
-### Analysis
-- **GT2-FLS achieves best performance** (0.935m) under turbulence
-- IT2-FLS very close (0.936m) - both fuzzy controllers excel
-- Fuzzy controllers show ~6% improvement over PID (0.998m)
-- PD shows clear limitation (1.81m) without integral action
-- Lower std dev for fuzzy indicates more consistent tracking
-
-### Winner: GT2-FLS (0.94m) - Fuzzy controllers outperform PID
+### Winner: GT2 (0.58m RMSE)
 
 ---
 
-## Phase 4: GUST (Transient Response)
+## Phase 2: STEADY_WIND
 
-**Objective**: Test response to sudden wind gusts
+**Objective**: Constant 3 m/s @ 45 deg (DC rejection)
 
 **Conditions**:
-- Base Wind: 1.5 m/s
-- Gust Profile: Random gusts (5-15% probability)
-- Gust Magnitude: 1.5-2.0x multiplier
-- Gust Duration: 1-4 seconds
+- Wind Profile: constant
+- Wind Magnitude: 3.0 m/s
+- Wind Direction: 45.0°
+- Duration: 60 seconds
 
-### Results (Updated 2026-01-04 - Post Wind Scalar Fix)
+### Results (N=1 run)
 
-| Controller | RMSE (m) | Std Dev | Notes |
-|------------|----------|---------|-------|
-| **PD** | **1.828** | 0.555 | Best - no fuzzy overcompensation |
-| **GT2-FLS** | 2.164 | 0.367 | Overcompensates during gusts |
-| **PID** | 2.473 | 0.847 | Integral action amplifies gusts |
-| **IT2-FLS** | 3.410 | 1.415 | Worst - fuzzy wind input overreacts |
+| Controller | RMSE (m) | Std Dev | Peak Error | Last Violation | MAE |
+|------------|----------|---------|------------|----------------|-----|
+| **PD** | 1.813 | 0.000 | 3.676 | 60.8s | 1.776 |
+| **PID** | 0.892 | 0.000 | 3.222 | 60.8s | 0.804 |
+| **IT2** | 1.003 | 0.000 | 3.771 | 60.8s | 0.850 |
+| **GT2** | 1.012 | 0.000 | 4.058 | 60.8s | 0.834 |
 
-### Analysis
-- **CRITICAL FINDING**: Fuzzy controllers UNDERPERFORM during gusts
-- **PD achieves best performance** (1.83m) - simpler is better for transients
-- IT2-FLS shows 87% higher error than PD (3.41m vs 1.83m)
-- GT2-FLS performs better than IT2 (2.16m) due to smoothing from secondary MF
-- `fuzzy.wind_scalar=1.0` causes overcompensation during sudden gusts
-- **Recommendation**: Reduce wind_scalar for gust-heavy environments, or add gust detection
-
-### Winner: PD (1.83m) - Fuzzy overcompensation hurts transient response
+### Winner: PID (0.89m RMSE)
 
 ---
 
-## Phase 5: COMBINED (Stochastic Multi-Mode Disturbance)
+## Phase 3: TURBULENCE
 
-**Objective**: Test under combined realistic conditions
+**Objective**: Von Karman turbulence (stochastic wind variations)
 
 **Conditions**:
-- Base Wind: 1.5 m/s with direction wander (15°/s)
-- Turbulence: Magnitude std = 0.5 m/s
-- Random Gusts: 5-15% probability, 1.5-2.0x magnitude
+- Wind Profile: vonkarman
+- Wind Magnitude: 2.5 m/s
+- Turbulence Intensity: 0.15
+- Duration: 60 seconds
 
-### Results (2026-01-04)
+### Results (N=1 run)
 
-> **DATA COLLECTION ISSUE**: Phase 5 failed to capture metrics data due to Gazebo
-> simulation timing issues. Results pending re-test.
+| Controller | RMSE (m) | Std Dev | Peak Error | Last Violation | MAE |
+|------------|----------|---------|------------|----------------|-----|
+| **PD** | 1.771 | 0.000 | 3.735 | 60.7s | 1.789 |
+| **PID** | 1.462 | 0.000 | 4.448 | 60.7s | 1.361 |
+| **IT2** | 1.398 | 0.000 | 4.297 | 60.7s | 1.407 |
+| **GT2** | 1.410 | 0.000 | 4.493 | 60.7s | 1.350 |
 
-| Controller | RMSE (m) | Std Dev | Notes |
-|------------|----------|---------|-------|
-| **PD** | - | - | Pending |
-| **PID** | - | - | Pending |
-| **IT2-FLS** | - | - | Pending |
-| **GT2-FLS** | - | - | Pending |
-
-### Analysis
-- Phase 5 test needs to be re-run with extended timeout
-- Based on Phase 2-4 patterns, expected behavior:
-  - Fuzzy controllers should excel in steady/turbulent components
-  - PD may outperform during gust components due to overcompensation issue
-
-### Winner: (Pending re-test)
+### Winner: IT2 (1.40m RMSE)
 
 ---
 
-## Summary: Controller Performance Ranking (Updated 2026-01-04)
+## Phase 4: GUST
 
-| Phase | Best Overall | Best Fuzzy | RMSE (Best/Fuzzy) |
-|-------|--------------|------------|-------------------|
-| 1. BASELINE | PID/GT2 | GT2-FLS | 0.60 / 0.60 |
-| 2. STEADY_WIND | IT2-FLS | IT2-FLS | 0.94 / 0.94 |
-| 3. TURBULENCE | GT2-FLS | GT2-FLS | 0.94 / 0.94 |
-| 4. GUST | **PD** | GT2-FLS | 1.83 / 2.16 |
-| 5. COMBINED | (Pending) | (Pending) | - / - |
+**Objective**: Periodic gusts (transient response)
 
-## Recommendations for Thesis
+**Conditions**:
+- Wind Profile: gust
+- Wind Magnitude: 5.0 m/s
+- Duration: 60 seconds
 
-### Primary Conclusions (Updated 2026-01-04)
-1. **Fuzzy controllers excel in steady-state and turbulent conditions** (Phases 2-3)
-2. **GT2-FLS provides best turbulence handling** with secondary MF smoothing
-3. **IT2-FLS slightly edges GT2 in steady wind** conditions
-4. **CRITICAL: Fuzzy controllers UNDERPERFORM during gusts** due to wind_scalar overcompensation
-5. **PD wins in gust conditions** - simpler control avoids overcompensation
+### Results (N=1 run)
 
-### Controller Selection Guide
-| Environment | Recommended Controller | Rationale |
-|-------------|----------------------|-----------|
-| Indoor/Calm | PID/IT2/GT2 | All perform equally well (~0.60m) |
-| Outdoor/Steady Wind | IT2-FLS | Best steady-state compensation |
-| Outdoor/Turbulence | GT2-FLS | Secondary MF handles stochastic noise |
-| Outdoor/Gusty | **PD** | Fuzzy overcompensates - avoid |
-| Mixed/Unknown | GT2-FLS (with reduced wind_scalar) | Best compromise |
+| Controller | RMSE (m) | Std Dev | Peak Error | Last Violation | MAE |
+|------------|----------|---------|------------|----------------|-----|
+| **PD** | 1.456 | 0.000 | 3.045 | 60.2s | 1.448 |
+| **PID** | 0.821 | 0.000 | 3.079 | 60.2s | 0.723 |
+| **IT2** | 0.811 | 0.000 | 3.018 | 60.2s | 0.701 |
+| **GT2** | 0.838 | 0.000 | 3.024 | 60.2s | 0.708 |
 
-### Known Issues
-- **Gust Overcompensation**: `fuzzy.wind_scalar=1.0` causes fuzzy controllers to overreact to gusts
-- **Potential Fix**: Implement adaptive wind_scalar or gust detection to reduce gain during transients
+### Winner: IT2 (0.81m RMSE)
+
+---
+
+## Phase 5: COMBINED
+
+**Objective**: Stochastic: turbulence + gusts + direction wander
+
+**Conditions**:
+- Wind Profile: stochastic
+- Wind Magnitude: 2.5 m/s
+- Duration: 60 seconds
+
+### Results (N=1 run)
+
+| Controller | RMSE (m) | Std Dev | Peak Error | Last Violation | MAE |
+|------------|----------|---------|------------|----------------|-----|
+| **PD** | 9.083 | 0.000 | 13.342 | 60.1s | 7.051 |
+| **PID** | 8.103 | 0.000 | 14.147 | 60.1s | 6.105 |
+| **IT2** | 10.566 | 0.000 | 14.925 | 51.3s | 7.533 |
+| **GT2** | 10.928 | 0.000 | 17.784 | 60.1s | 6.696 |
+
+### Winner: PID (8.10m RMSE)
+
+**Note**: The high RMSE values (8-11m) in this phase represent genuine agent dispersion under combined stochastic disturbances, not measurement error. The stochastic wind profile combines turbulence, gusts, and direction wander simultaneously, creating conditions that exceed the controllers' rejection bandwidth. This highlights a fundamental limitation of the current control architecture under extreme disturbance scenarios.
 
 ---
 
@@ -243,9 +173,21 @@ GT2 Specific:
 - Groups: 4 (PD, PID, IT2, GT2)
 - Y-Lane Separation: 8 meters
 
+### Metric Definitions
+| Metric | Definition | Formula |
+|--------|------------|---------|
+| RMSE | Root Mean Squared Error | sqrt(mean(e²)) |
+| Peak Error | Maximum error magnitude | max(\|e\|) over mission |
+| Last Violation | Last time error exceeded 0.1m threshold | max(t) where \|e\| > 0.1m |
+| MAE | Mean Absolute Error | mean(\|e\|) |
+| Control Effort | Integral of control magnitude | ∫\|u\| dt (IAE) |
+
+**Note on Last Violation**: This metric uses a strict 0.1m threshold. Values near mission duration (~60s) indicate the controller never achieved sustained sub-threshold performance. This is NOT settling time in the classical control sense—it measures violation persistence, not transient response characteristics.
+
+
 ---
 
-*Report Generated: 2026-01-03*
-*Last Updated: 2026-01-04 (Post wind_scalar fix - Phase 1-4 results validated)*
+*Report Generated: 2026-01-04 14:46:44*
+*Git Commit: c61e571*
+*Source: results/new_metrics_test*
 *Framework: 6-Phase Thesis Test Framework v1.0*
-*Note: Phase 5 pending re-test due to data collection issues*
