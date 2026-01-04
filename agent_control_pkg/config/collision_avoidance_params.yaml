@@ -1,0 +1,54 @@
+# Collision Safety Layer Configuration
+# =====================================
+#
+# This layer provides APF-based collision avoidance as a safety mechanism
+# between formation coordinators and agent controllers.
+#
+# IMPORTANT: This is a SOFT CONSTRAINT approach. It reduces collision risk
+# but does NOT guarantee collision-free operation. For hard constraints,
+# consider CBF (Control Barrier Functions) or RVO (Reciprocal Velocity Obstacles).
+#
+# Modes:
+#   - disabled: Layer bypassed, no safe_target_pose published (baseline)
+#   - pass_through: Republish targets without modification (isolate republish effect)
+#   - avoidance: APF-based collision avoidance active
+#
+# Usage in launch:
+#   collision_mode:=disabled    # Baseline comparison (default)
+#   collision_mode:=pass_through # Test republish effect only
+#   collision_mode:=avoidance   # Full collision avoidance
+
+collision_safety_layer:
+  ros__parameters:
+    # Operating mode: "disabled", "pass_through", or "avoidance"
+    mode: "disabled"
+
+    # Number of agents to monitor
+    num_agents: 12
+
+    # Safety distance threshold [m]
+    # Used for near-miss detection and metrics
+    # Agents closer than this are counted as near-misses
+    safety_distance: 0.8
+
+    # APF influence distance [m]
+    # Repulsion force is applied when agents are closer than this
+    # Must be > safety_distance
+    influence_distance: 2.0
+
+    # APF repulsion gain
+    # Higher values create stronger repulsion
+    # Recommended range: 1.0 - 5.0
+    k_repulsion: 3.0
+
+    # Maximum target deviation [m]
+    # Limits how far the safe target can be from the original target
+    # Prevents excessive avoidance maneuvers
+    max_target_deviation: 0.5
+
+    # Safe target publish rate [Hz]
+    # Should match or exceed controller rate for smooth operation
+    publish_rate_hz: 20.0
+
+    # Enable metrics publishing to /collision_safety/metrics
+    publish_metrics: true

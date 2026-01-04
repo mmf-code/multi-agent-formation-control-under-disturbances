@@ -13,6 +13,11 @@ Phases:
   5. COMBINED      - Stochastic: turbulence + gusts + direction wander
   6. ENDURANCE     - Long-run combined (300s)
 
+Collision Avoidance Modes:
+  - disabled:     No collision avoidance (baseline comparison) [DEFAULT]
+  - pass_through: Republish targets without modification (isolate republish effect)
+  - avoidance:    APF-based collision avoidance active
+
 Usage:
     # Run Phase 1 (Baseline) with default settings
     ros2 launch agent_control_pkg phased_comparison.launch.py phase:=1
@@ -25,6 +30,9 @@ Usage:
 
     # With Gazebo GUI for debugging
     ros2 launch agent_control_pkg phased_comparison.launch.py phase:=1 gazebo_gui:=true
+
+    # With collision avoidance enabled
+    ros2 launch agent_control_pkg phased_comparison.launch.py phase:=5 collision_mode:=avoidance
 """
 
 import os
@@ -116,6 +124,19 @@ def launch_setup(context, *args, **kwargs):
     output_dir = LaunchConfiguration('output_dir').perform(context)
     gazebo_gui_str = LaunchConfiguration('gazebo_gui').perform(context)
     use_sim_time = LaunchConfiguration('use_sim_time').perform(context)
+    collision_mode = LaunchConfiguration('collision_mode').perform(context).lower()
+
+    # Validate collision mode
+    valid_collision_modes = ['disabled', 'pass_through', 'passthrough', 'avoidance']
+    if collision_mode not in valid_collision_modes:
+        raise ValueError(f"Invalid collision_mode: {collision_mode}. Must be one of {valid_collision_modes}")
+
+    # Normalize collision mode
+    if collision_mode == 'passthrough':
+        collision_mode = 'pass_through'
+
+    # Determine if collision avoidance is active (for remapping)
+    collision_active = collision_mode != 'disabled'
 
     # Validate phase
     if phase_id < 1 or phase_id > 6:
@@ -144,10 +165,12 @@ def launch_setup(context, *args, **kwargs):
     os.environ['GAZEBO_PLUGIN_PATH'] = merged_plugin_path
 
     # Log phase info
+    collision_info = f"Collision Mode: {collision_mode.upper()}" if collision_active else "Collision Mode: DISABLED (baseline)"
     log_phase_info = LogInfo(msg=f"\n{'='*60}\n"
                                  f"PHASE {phase_id}: {phase_name}\n"
                                  f"Duration: {duration}s | Run: {run_index} | Seed: {seed}\n"
                                  f"Wind Profile: {wind_params.get('profile', 'N/A')}\n"
+                                 f"{collision_info}\n"
                                  f"Output: {output_dir}/phase_{phase_id}/run_{run_index}\n"
                                  f"{'='*60}")
 
@@ -284,6 +307,12 @@ def launch_setup(context, *args, **kwargs):
         agent_namespace = f'agent_{i}'
         controller_params = agent_controller_map[i].copy()
 
+        # Remapping for collision avoidance: when active, listen to safe_target_pose
+        # When disabled, listen to original target_pose (no remapping needed)
+        controller_remappings = []
+        if collision_active:
+            controller_remappings = [('target_pose', 'safe_target_pose')]
+
         agent_controller = GroupAction([
             PushRosNamespace(agent_namespace),
             Node(
@@ -291,7 +320,8 @@ def launch_setup(context, *args, **kwargs):
                 executable='agent_controller_node',
                 name='agent_controller',
                 output='screen',
-                parameters=[controller_params]
+                parameters=[controller_params],
+                remappings=controller_remappings
             ),
             Node(
                 package='agent_control_pkg',
@@ -339,12 +369,35 @@ def launch_setup(context, *args, **kwargs):
         )]),
     ]
 
+    # Collision Safety Layer (only when collision_mode != 'disabled')
+    # This node subscribes to all agent odometry and target_pose,
+    # then publishes safe_target_pose with APF-based collision avoidance
+    collision_safety_nodes = []
+    if collision_active:
+        collision_params_file = os.path.join(pkg_agent_control, 'config', 'collision_avoidance_params.yaml')
+        collision_safety_layer = Node(
+            package='agent_control_pkg',
+            executable='collision_safety_layer_node',
+            name='collision_safety_layer',
+            output='screen',
+            parameters=[
+                collision_params_file,
+                {
+                    'mode': collision_mode,
+                    'num_agents': 12,
+                    'use_sim_time': True,
+                }
+            ]
+        )
+        collision_safety_nodes.append(collision_safety_layer)
+
     return [
         log_phase_info,
         gzserver,
         gzclient,
         wind_publisher,
         metrics_logger,
+        *collision_safety_nodes,
         *agent_nodes,
         *formation_coordinators,
     ]
@@ -378,6 +431,13 @@ def generate_launch_description():
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         DeclareLaunchArgument('gazebo_gui', default_value='false',
             description='Launch Gazebo GUI'),
+
+        # Collision avoidance mode
+        # 'disabled' (default): No collision avoidance - baseline comparison
+        # 'pass_through': Republish targets without modification (isolate republish effect)
+        # 'avoidance': APF-based collision avoidance active
+        DeclareLaunchArgument('collision_mode', default_value='disabled',
+            description='Collision avoidance mode: disabled, pass_through, or avoidance'),
 
         # Dynamic launch setup
         OpaqueFunction(function=launch_setup),

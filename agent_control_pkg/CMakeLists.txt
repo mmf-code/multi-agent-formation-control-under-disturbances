@@ -191,6 +191,19 @@ ament_target_dependencies(metrics_publisher_node
   my_custom_interfaces_pkg
 )
 
+add_executable(collision_safety_layer_node
+  src/ros/collision_safety_layer_node.cpp
+)
+target_include_directories(collision_safety_layer_node PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+ament_target_dependencies(collision_safety_layer_node
+  rclcpp
+  geometry_msgs
+  nav_msgs
+  std_msgs
+)
+
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
@@ -281,7 +294,7 @@ install(TARGETS ${_exported_targets}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-install(TARGETS agent_controller_node path_visualizer_node metrics_publisher_node
+install(TARGETS agent_controller_node path_visualizer_node metrics_publisher_node collision_safety_layer_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
