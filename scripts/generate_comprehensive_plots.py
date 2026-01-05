@@ -69,6 +69,7 @@ PLOT_ENABLED = {
     "altitude_hold": True,            # Yükseklik koruma Z-t
 
     # BONUS Grafikler
+    "wind_profile": True,             # Rüzgar profili zaman serisi (YENİ)
     "wind_correlation": True,         # Rüzgar-hata korelasyonu
     "phase_comparison_heatmap": True, # Faz×Kontrolcü heatmap
     "controller_ranking": True,       # Kontrolcü sıralaması
@@ -582,6 +583,55 @@ def plot_altitude_hold(phase: PhaseData, ax: plt.Axes):
     ax.grid(True, alpha=0.3)
 
 
+def plot_wind_profile(phase: PhaseData, ax: plt.Axes):
+    """Rüzgar profili zaman serisi - bozucu görselleştirme."""
+    ax.set_title(f"Wind Disturbance Profile - Phase {phase.phase_id} ({PHASE_NAMES.get(phase.phase_id, '')})",
+                 fontsize=STYLE_CONFIG['title_size'])
+
+    if phase.wind_data.empty:
+        ax.text(0.5, 0.5, "No wind data available",
+                ha='center', va='center', transform=ax.transAxes,
+                fontsize=12, color='gray')
+        return
+
+    timestamps = phase.wind_data['timestamp'].to_numpy()
+    wind_x = phase.wind_data['wind_x'].to_numpy()
+    wind_y = phase.wind_data['wind_y'].to_numpy()
+    wind_mag = phase.wind_data['wind_magnitude'].to_numpy()
+
+    # Plot wind components
+    ax.plot(timestamps, wind_x, label='Wind X', color='#E74C3C', linewidth=1, alpha=0.7)
+    ax.plot(timestamps, wind_y, label='Wind Y', color='#3498DB', linewidth=1, alpha=0.7)
+    ax.plot(timestamps, wind_mag, label='Magnitude', color='#2C3E50', linewidth=2)
+
+    # Add phase-specific annotations
+    phase_id = phase.phase_id
+    if phase_id == 1:
+        ax.axhline(y=0, color='green', linestyle='--', alpha=0.5, label='No Wind')
+    elif phase_id == 2:
+        mean_mag = np.mean(wind_mag[wind_mag > 0.1]) if np.any(wind_mag > 0.1) else 0
+        ax.axhline(y=mean_mag, color='orange', linestyle='--', alpha=0.7,
+                   label=f'Steady: {mean_mag:.1f} m/s')
+    elif phase_id == 3:
+        # Turbulence - show variation band
+        mean_mag = np.mean(wind_mag[wind_mag > 0.1])
+        std_mag = np.std(wind_mag[wind_mag > 0.1])
+        ax.axhspan(mean_mag - std_mag, mean_mag + std_mag, alpha=0.2, color='purple',
+                   label=f'TI band: {mean_mag:.1f}±{std_mag:.2f}')
+    elif phase_id == 4:
+        # Gust - mark gust peaks
+        gust_threshold = np.max(wind_mag) * 0.5
+        ax.axhline(y=gust_threshold, color='red', linestyle=':', alpha=0.5,
+                   label=f'Gust threshold')
+
+    ax.set_xlabel("Time [s]")
+    ax.set_ylabel("Wind Velocity [m/s]")
+    ax.legend(loc='upper right', fontsize=STYLE_CONFIG['legend_size'])
+    ax.grid(True, alpha=0.3)
+    ax.set_xlim(left=0)
+    ax.set_ylim(bottom=-0.5)
+
+
 def plot_wind_correlation(phase: PhaseData, ax: plt.Axes):
     """Rüzgar-hata korelasyonu."""
     ax.set_title(f"Wind vs Error Correlation - Phase {phase.phase_id}",
@@ -622,9 +672,9 @@ def generate_phase_report(phase: PhaseData, output_dir: Path, fmt: str = 'both')
     """Tek bir faz için tüm grafikleri üret."""
     print(f"\nGenerating Phase {phase.phase_id} report...")
 
-    # Setup figure with 3x3 grid
-    fig = plt.figure(figsize=(18, 16))
-    gs = gridspec.GridSpec(3, 3, figure=fig, hspace=0.3, wspace=0.3)
+    # Setup figure with 4x3 grid (expanded for wind profile)
+    fig = plt.figure(figsize=(18, 20))
+    gs = gridspec.GridSpec(4, 3, figure=fig, hspace=0.3, wspace=0.3)
 
     # Apply style
     if HAS_SEABORN:
@@ -675,6 +725,11 @@ def generate_phase_report(phase: PhaseData, output_dir: Path, fmt: str = 'both')
     if PLOT_ENABLED['wind_correlation']:
         ax9 = fig.add_subplot(gs[2, 2])
         plot_wind_correlation(phase, ax9)
+
+    # Row 4: Wind Profile (yeni eklenen - bozucu görselleştirme)
+    if PLOT_ENABLED['wind_profile']:
+        ax10 = fig.add_subplot(gs[3, :])  # Tüm satırı kullan - geniş görünüm
+        plot_wind_profile(phase, ax10)
 
     # Main title
     phase_name = PHASE_NAMES.get(phase.phase_id, 'UNKNOWN')
@@ -832,6 +887,7 @@ def generate_plot_report_md(phases: Dict[int, PhaseData], output_dir: Path):
             "jerk_analysis": "Jerk (smoothness) analysis",
             "trajectory_2d": "Top-view XY trajectory",
             "altitude_hold": "Altitude (Z) over time",
+            "wind_profile": "Wind disturbance time series (X/Y/magnitude)",
             "wind_correlation": "Wind magnitude vs error correlation",
             "phase_comparison_heatmap": "Cross-phase RMSE heatmap",
             "controller_ranking": "Controller win count",
