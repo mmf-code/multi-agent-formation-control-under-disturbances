@@ -113,7 +113,7 @@ private:
 
   struct ETCState {
     geometry_msgs::msg::PoseStamped last_sent_pose;
-    rclcpp::Time last_sent_time;
+    rclcpp::Time last_sent_time{0, 0, RCL_ROS_TIME};  // Explicit init to avoid undefined behavior
     bool initialized{false};
     uint64_t event_count{0};
   };

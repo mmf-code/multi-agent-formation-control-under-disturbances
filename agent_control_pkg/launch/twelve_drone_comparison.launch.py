@@ -117,7 +117,7 @@ def generate_launch_description():
     # Formula: u = 1.0*PID + k_fuzzy*Fuzzy
     # TEST: Increasing fuzzy authority for better transient rejection
     MIX_K_PID = 1.0
-    MIX_K_FUZZY = 0.6  # TEST: Increasing fuzzy authority for gust rejection
+    MIX_K_FUZZY = 0.8  # TEST: Increasing fuzzy authority for gust rejection
 
     common_base = {
         'dt': 0.005,

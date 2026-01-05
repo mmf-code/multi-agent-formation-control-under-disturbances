@@ -687,12 +687,37 @@ bool FormationCoordinatorNode::shouldTriggerEvent(
     state.last_sent_time = current_time;
     state.initialized = true;
     state.event_count = 1;
+    RCLCPP_DEBUG(get_logger(), "ETC init [%s]: first message", agent_id.c_str());
     return true;
   }
 
   const double time_since_last = (current_time - state.last_sent_time).seconds();
 
+  // BUG FIX: Handle clock going backwards (simulation reset, time sync issues)
+  // If time went backwards or is suspiciously large, reset and trigger
+  if (time_since_last < 0.0) {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000,
+      "ETC [%s]: Clock went backwards (dt=%.3fs), resetting state",
+      agent_id.c_str(), time_since_last);
+    state.last_sent_pose = current_pose;
+    state.last_sent_time = current_time;
+    state.event_count++;
+    return true;  // Force publish to recover
+  }
+
+  // Safety: if time_since_last is very large (>10s), something is wrong - force publish
+  if (time_since_last > 10.0) {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000,
+      "ETC [%s]: Excessive time gap (dt=%.3fs), forcing publish",
+      agent_id.c_str(), time_since_last);
+    state.last_sent_pose = current_pose;
+    state.last_sent_time = current_time;
+    state.event_count++;
+    return true;
+  }
+
   // Condition 1: Anti-chattering (min_period not elapsed)
+  // Only skip if time is valid and within min_period
   if (time_since_last < etc_min_period_sec_) {
     return false;
   }
@@ -715,16 +740,18 @@ bool FormationCoordinatorNode::shouldTriggerEvent(
     }
   }
 
-  // Condition 4: Heartbeat (max_period exceeded)
+  // Condition 4: Heartbeat (max_period exceeded) - CRITICAL for preventing stale targets
   if (!should_trigger && time_since_last >= etc_max_period_sec_) {
     should_trigger = true;
     trigger_reason = "heartbeat";
   }
 
   if (should_trigger) {
-    // Update inter-event time metrics
-    etc_metrics_.sum_inter_event_time += time_since_last;
-    etc_metrics_.inter_event_count++;
+    // Update inter-event time metrics (only for valid positive intervals)
+    if (time_since_last > 0.0) {
+      etc_metrics_.sum_inter_event_time += time_since_last;
+      etc_metrics_.inter_event_count++;
+    }
 
     // Update state
     state.last_sent_pose = current_pose;

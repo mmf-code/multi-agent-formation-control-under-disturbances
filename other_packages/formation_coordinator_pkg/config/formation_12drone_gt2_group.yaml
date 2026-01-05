@@ -41,7 +41,7 @@
     waypoints.z: [0.5, 0.8, 0.8, 0.5]
 
     # Event-Triggered Communication (ETC)
-    etc.enable: false
+    etc.enable: true
     etc.epsilon_pos: 0.05
     etc.min_period_sec: 0.02
     etc.max_period_sec: 0.5
