@@ -95,6 +95,7 @@ velocity_x, velocity_y, velocity_z    # Velocity (YENİ)
 | YÖRÜNGE | altitude_hold | Yükseklik koruma (Z vs time) |
 | BONUS | wind_correlation | Rüzgar-hata korelasyonu |
 | BONUS | phase_comparison_heatmap | Faz×Kontrolcü heatmap |
+| **BOZUCU** | **wind_profile** | **Rüzgar bozucu zaman serisi (YENİ)** |
 
 **Özellikler:**
 - Boolean flag konfigürasyonu (`PLOT_ENABLED = {...}`)
@@ -231,6 +232,7 @@ PLOT_ENABLED = {
     "jerk_analysis": True,
     "trajectory_2d": True,
     "altitude_hold": True,
+    "wind_profile": True,             # YENİ: Rüzgar bozucu zaman serisi
     "wind_correlation": True,
     "phase_comparison_heatmap": True,
     "controller_ranking": True,
@@ -245,12 +247,32 @@ PLOT_ENABLED = {
 - `seaborn` kurulu değil (matplotlib varsayılanları kullanılıyor)
 - Bazı grafikler "posx and posy should be finite values" uyarısı veriyor (görsel etkisi yok)
 
-### 7.2 Gelecek İyileştirmeler
+### 7.2 Wind Profile Görselleştirmesi (Yeni Eklenen)
+
+**Fonksiyon:** `plot_wind_profile()`
+
+Her faz için rüzgar bozucu zaman serisi grafiği:
+- **Wind X** (kırmızı): X-ekseni rüzgar hızı
+- **Wind Y** (mavi): Y-ekseni rüzgar hızı
+- **Magnitude** (siyah kalın): Toplam rüzgar büyüklüğü
+
+**Faz-Spesifik Annotasyonlar:**
+| Phase | Annotation |
+|-------|------------|
+| 1 BASELINE | Yeşil "No Wind" referans çizgisi |
+| 2 STEADY_WIND | Turuncu ortalama çizgi (örn: "Steady: 3.0 m/s") |
+| 3 TURBULENCE | Mor türbülans intensity band (mean ± std) |
+| 4 GUST | Kırmızı gust threshold marker |
+| 5 COMBINED | Tüm bileşenler birlikte |
+
+**Grid Layout:** 3x3 → 4x3 (Row 4 = wind_profile, tam genişlik)
+
+### 7.3 Gelecek İyileştirmeler
 - [ ] SciencePlots style entegrasyonu
 - [ ] LaTeX table export
 - [ ] Statistical significance testing (ANOVA)
 - [ ] Multiple run aggregation
-- [ ] Wind KPI integration
+- [x] ~~Wind KPI integration~~ → Wind Profile eklendi!
 
 ---
 
@@ -258,7 +280,16 @@ PLOT_ENABLED = {
 
 **Branch:** feature/event-triggered-communication
 **Önceki Commit:** b05ba94 (before-multi)
-**Değişiklik Sayısı:** 4 dosya güncellendi, 1 dosya oluşturuldu
+**Son Commit:** b10c6b7 (wind profile eklendi)
+
+**Commit Geçmişi:**
+1. `03201b1` - feat: Add thesis-level comprehensive plotting system + fix ETC issues
+2. `b10c6b7` - feat: Add wind disturbance profile visualization to plotting system
+
+**Değişiklik Özeti:**
+- 5 dosya güncellendi (logger, 4 config)
+- 2 dosya oluşturuldu (plotting script, session summary)
+- 12 grafik dosyası üretildi (6 PDF + 6 PNG)
 
 ---
 
