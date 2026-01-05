@@ -64,6 +64,11 @@ AgentControllerNode::AgentControllerNode(const rclcpp::NodeOptions & options)
   // Controller parameters publisher (for dashboard monitoring)
   params_pub_ = create_publisher<my_custom_interfaces_pkg::msg::ControllerParams>("controller_params", 10);
 
+  // Plan S: Passive neighbor awareness subscription (monitoring only)
+  neighbor_info_sub_ = create_subscription<my_custom_interfaces_pkg::msg::NeighborInfo>(
+    "neighbor_info", 10,
+    std::bind(&AgentControllerNode::neighborInfoCallback, this, _1));
+
 #ifdef CRAZYFLIE_SUPPORT
   // Crazyflie dual-output publisher (when enabled)
   if (crazyflie_enable_) {
@@ -940,6 +945,35 @@ void AgentControllerNode::publishControllerParams()
   msg.dt = configured_dt_;
 
   params_pub_->publish(msg);
+}
+
+// ============================================================================
+// Plan S: Neighbor Awareness (Passive Monitoring)
+// ============================================================================
+
+void AgentControllerNode::neighborInfoCallback(
+  const my_custom_interfaces_pkg::msg::NeighborInfo::SharedPtr msg)
+{
+  // Store neighbor info for logging/diagnostics (no effect on control loop)
+  last_neighbor_count_ = msg->neighbor_count;
+  last_min_neighbor_distance_ = msg->min_neighbor_distance;
+  last_is_near_collision_ = msg->is_near_collision;
+
+  // Log only when near-collision state changes or if debug is enabled
+  if (msg->is_near_collision) {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+      "Near collision detected! Closest: %s at %.2fm, neighbors: %d",
+      msg->closest_neighbor_id.c_str(),
+      msg->min_neighbor_distance,
+      msg->neighbor_count);
+  }
+
+  // Debug logging (can be enabled via parameter if needed)
+  RCLCPP_DEBUG(get_logger(),
+    "Neighbor info: count=%d, min_dist=%.2fm, near_collision=%s",
+    msg->neighbor_count,
+    msg->min_neighbor_distance,
+    msg->is_near_collision ? "true" : "false");
 }
 
 }  // namespace agent_control_pkg

@@ -12,6 +12,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 #include <my_custom_interfaces_pkg/msg/controller_params.hpp>
+#include <my_custom_interfaces_pkg/msg/neighbor_info.hpp>
 
 #ifdef CRAZYFLIE_SUPPORT
 #include <crazyflie_interfaces/msg/full_state.hpp>
@@ -65,6 +66,9 @@ private:
   void publishDiagnostics();
   void publishControllerParams();
   void ensureFuzzyParamsLoaded();
+
+  // Plan S: Neighbor awareness (passive - for monitoring/logging only)
+  void neighborInfoCallback(const my_custom_interfaces_pkg::msg::NeighborInfo::SharedPtr msg);
 
   AxisLimits axis_limits_x_;
   AxisLimits axis_limits_y_;
@@ -124,6 +128,12 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::TimerBase::SharedPtr params_timer_;
   rclcpp::TimerBase::SharedPtr wind_debug_timer_;
+
+  // Plan S: Neighbor awareness subscription (passive monitoring)
+  rclcpp::Subscription<my_custom_interfaces_pkg::msg::NeighborInfo>::SharedPtr neighbor_info_sub_;
+  int32_t last_neighbor_count_{0};
+  double last_min_neighbor_distance_{0.0};
+  bool last_is_near_collision_{false};
 
 #ifdef CRAZYFLIE_SUPPORT
   // Crazyflie dual-output support

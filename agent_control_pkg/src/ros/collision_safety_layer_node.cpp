@@ -72,6 +72,10 @@ void CollisionSafetyLayer::declareParameters()
   declare_parameter<double>("max_target_deviation", 0.5);
   declare_parameter<double>("publish_rate_hz", 20.0);
   declare_parameter<bool>("publish_metrics", true);
+
+  // Plan S: Perception Hub parameters
+  declare_parameter<bool>("perception_hub.enable", true);
+  declare_parameter<double>("perception_hub.radius", 10.0);
 }
 
 void CollisionSafetyLayer::loadParameters()
@@ -95,6 +99,15 @@ void CollisionSafetyLayer::loadParameters()
       "influence_distance (%.2f) should be > safety_distance (%.2f). Adjusting.",
       influence_distance_, safety_distance_);
     influence_distance_ = safety_distance_ * 2.5;
+  }
+
+  // Plan S: Perception Hub parameters
+  perception_hub_enable_ = get_parameter("perception_hub.enable").as_bool();
+  perception_radius_ = get_parameter("perception_hub.radius").as_double();
+
+  if (perception_hub_enable_) {
+    RCLCPP_INFO(get_logger(),
+      "Plan S: Perception Hub enabled with radius=%.2fm", perception_radius_);
   }
 }
 
@@ -131,6 +144,7 @@ void CollisionSafetyLayer::setupSubscribersAndPublishers()
   odom_subs_.reserve(num_agents_);
   target_subs_.reserve(num_agents_);
   safe_target_pubs_.reserve(num_agents_);
+  neighbor_info_pubs_.reserve(num_agents_);
 
   for (size_t i = 0; i < num_agents_; ++i) {
     const std::string agent_ns = "/agent_" + std::to_string(i);
@@ -155,6 +169,13 @@ void CollisionSafetyLayer::setupSubscribersAndPublishers()
     safe_target_pubs_.push_back(
       create_publisher<geometry_msgs::msg::PoseStamped>(
         agent_ns + "/safe_target_pose", 10));
+
+    // Plan S: Publish neighbor info for each agent
+    if (perception_hub_enable_) {
+      neighbor_info_pubs_.push_back(
+        create_publisher<my_custom_interfaces_pkg::msg::NeighborInfo>(
+          agent_ns + "/neighbor_info", 10));
+    }
   }
 
   // Metrics publisher
@@ -164,8 +185,8 @@ void CollisionSafetyLayer::setupSubscribersAndPublishers()
   }
 
   RCLCPP_INFO(get_logger(),
-    "Set up %zu odom subs, %zu target subs, %zu safe_target pubs",
-    odom_subs_.size(), target_subs_.size(), safe_target_pubs_.size());
+    "Set up %zu odom subs, %zu target subs, %zu safe_target pubs, %zu neighbor_info pubs",
+    odom_subs_.size(), target_subs_.size(), safe_target_pubs_.size(), neighbor_info_pubs_.size());
 }
 
 void CollisionSafetyLayer::odomCallback(
@@ -178,6 +199,9 @@ void CollisionSafetyLayer::odomCallback(
 
   state.position.x = msg->pose.pose.position.x;
   state.position.y = msg->pose.pose.position.y;
+  state.position_z = msg->pose.pose.position.z;
+  state.velocity.x = msg->twist.twist.linear.x;
+  state.velocity.y = msg->twist.twist.linear.y;
   state.last_odom_time = now();
   state.has_odom = true;
 }
@@ -202,6 +226,11 @@ void CollisionSafetyLayer::timerCallback()
 {
   updateMetrics();
   publishSafeTargets();
+
+  // Plan S: Publish neighbor info for each agent
+  if (perception_hub_enable_ && !neighbor_info_pubs_.empty()) {
+    publishNeighborInfo();
+  }
 
   if (metrics_pub_) {
     publishMetrics();
@@ -374,6 +403,87 @@ void CollisionSafetyLayer::publishMetrics()
   msg.data[6] = static_cast<double>(mode_);
 
   metrics_pub_->publish(msg);
+}
+
+// ============================================================================
+// Plan S: Perception Hub Implementation
+// ============================================================================
+
+void CollisionSafetyLayer::publishNeighborInfo()
+{
+  std::lock_guard<std::mutex> lock(state_mutex_);
+
+  for (size_t i = 0; i < num_agents_ && i < neighbor_info_pubs_.size(); ++i) {
+    if (!agent_states_[i].has_odom) {
+      continue;  // Skip agents without position data
+    }
+
+    auto neighbor_info = buildNeighborInfo(i);
+    neighbor_info_pubs_[i]->publish(neighbor_info);
+  }
+}
+
+my_custom_interfaces_pkg::msg::NeighborInfo CollisionSafetyLayer::buildNeighborInfo(
+  size_t agent_idx) const
+{
+  // Must be called with state_mutex_ held
+  my_custom_interfaces_pkg::msg::NeighborInfo info;
+
+  info.header.stamp = now();
+  info.header.frame_id = "world";
+  info.agent_id = "agent_" + std::to_string(agent_idx);
+  info.perception_radius = perception_radius_;
+
+  const auto& my_state = agent_states_[agent_idx];
+
+  double min_distance = std::numeric_limits<double>::max();
+  std::string closest_neighbor_id;
+
+  // Find all neighbors within perception radius
+  for (size_t j = 0; j < num_agents_; ++j) {
+    if (j == agent_idx) continue;
+
+    const auto& other_state = agent_states_[j];
+    if (!other_state.has_odom) continue;
+
+    // Compute distance
+    Position2D diff = other_state.position - my_state.position;
+    double distance = diff.norm();
+
+    // Only include neighbors within perception radius
+    if (distance > perception_radius_) continue;
+
+    // Compute bearing (angle from my position to neighbor)
+    double bearing = std::atan2(diff.y, diff.x);
+
+    // Build NeighborPosition message
+    my_custom_interfaces_pkg::msg::NeighborPosition neighbor;
+    neighbor.agent_id = "agent_" + std::to_string(j);
+    neighbor.position_x = other_state.position.x;
+    neighbor.position_y = other_state.position.y;
+    neighbor.position_z = other_state.position_z;
+    neighbor.distance = distance;
+    neighbor.bearing_rad = bearing;
+    neighbor.velocity_x = other_state.velocity.x;
+    neighbor.velocity_y = other_state.velocity.y;
+
+    info.neighbors.push_back(neighbor);
+
+    // Track closest neighbor
+    if (distance < min_distance) {
+      min_distance = distance;
+      closest_neighbor_id = neighbor.agent_id;
+    }
+  }
+
+  // Set aggregate info
+  info.neighbor_count = static_cast<int32_t>(info.neighbors.size());
+  info.min_neighbor_distance = (min_distance < std::numeric_limits<double>::max())
+                                 ? min_distance : 0.0;
+  info.closest_neighbor_id = closest_neighbor_id;
+  info.is_near_collision = (min_distance < safety_distance_);
+
+  return info;
 }
 
 }  // namespace agent_control_pkg

@@ -40,6 +40,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from geometry_msgs.msg import Vector3
+from nav_msgs.msg import Odometry
 from my_custom_interfaces_pkg.msg import MetricsData
 
 
@@ -55,9 +56,25 @@ class AgentMetrics:
     timestamps: List[float] = field(default_factory=list)
     errors_x: List[float] = field(default_factory=list)
     errors_y: List[float] = field(default_factory=list)
+    errors_z: List[float] = field(default_factory=list)  # Z-axis error (NEW)
     errors_mag: List[float] = field(default_factory=list)
+
+    # Position data (NEW - for trajectory/safety plots)
+    current_x: List[float] = field(default_factory=list)
+    current_y: List[float] = field(default_factory=list)
+    current_z: List[float] = field(default_factory=list)
+    target_x: List[float] = field(default_factory=list)
+    target_y: List[float] = field(default_factory=list)
+    target_z: List[float] = field(default_factory=list)
+
+    # Velocity data (NEW - for jerk analysis)
+    velocity_x: List[float] = field(default_factory=list)
+    velocity_y: List[float] = field(default_factory=list)
+    velocity_z: List[float] = field(default_factory=list)
+
     rmse_x: List[float] = field(default_factory=list)
     rmse_y: List[float] = field(default_factory=list)
+    rmse_z: List[float] = field(default_factory=list)  # Z-axis RMSE (NEW)
     rmse_total: List[float] = field(default_factory=list)  # Per-waypoint RMSE (for CSV)
     iae_x: List[float] = field(default_factory=list)
     iae_y: List[float] = field(default_factory=list)
@@ -226,6 +243,19 @@ class PhaseMetricsLogger(Node):
             )
             self.cmd_subs.append(cmd_sub)
 
+        # Subscribe to odom for velocity data (NEW - for jerk analysis)
+        self.odom_subs = []
+        self.odom_data: Dict[str, List[Tuple[float, float, float, float]]] = defaultdict(list)
+        for i in range(self.num_agents):
+            agent_id = f"agent_{i}"
+            odom_sub = self.create_subscription(
+                Odometry,
+                f"/{agent_id}/odom",
+                lambda msg, aid=agent_id: self.odom_callback(msg, aid),
+                qos
+            )
+            self.odom_subs.append(odom_sub)
+
         # Status timer (1 Hz)
         self.status_timer = self.create_timer(1.0, self.status_callback)
 
@@ -264,9 +294,20 @@ class PhaseMetricsLogger(Node):
         am.timestamps.append(elapsed)
         am.errors_x.append(msg.error_x)
         am.errors_y.append(msg.error_y)
+        am.errors_z.append(msg.error_z)  # NEW: Z-axis error
         am.errors_mag.append(msg.error_magnitude)
+
+        # Store position data (NEW - for trajectory/safety plots)
+        am.current_x.append(msg.current_x)
+        am.current_y.append(msg.current_y)
+        am.current_z.append(msg.current_z)
+        am.target_x.append(msg.target_x)
+        am.target_y.append(msg.target_y)
+        am.target_z.append(msg.target_z)
+
         am.rmse_x.append(msg.rmse_x)
         am.rmse_y.append(msg.rmse_y)
+        am.rmse_z.append(msg.rmse_z)  # NEW: Z-axis RMSE
         am.rmse_total.append(msg.rmse_total)
         am.iae_x.append(msg.iae_x)
         am.iae_y.append(msg.iae_y)
@@ -301,6 +342,26 @@ class PhaseMetricsLogger(Node):
         import math
         mag = math.sqrt(msg.x**2 + msg.y**2)  # XY control effort
         self.cmd_data[agent_id].append((elapsed, mag))
+
+    def odom_callback(self, msg: Odometry, agent_id: str):
+        """Handle odometry data for velocity tracking (jerk analysis)."""
+        if agent_id not in self.agent_metrics:
+            return
+
+        am = self.agent_metrics[agent_id]
+        elapsed = self._get_elapsed_sim_time()
+
+        # Store velocity data from odom twist
+        vx = msg.twist.twist.linear.x
+        vy = msg.twist.twist.linear.y
+        vz = msg.twist.twist.linear.z
+
+        am.velocity_x.append(vx)
+        am.velocity_y.append(vy)
+        am.velocity_z.append(vz)
+
+        # Also store in odom_data for additional analysis
+        self.odom_data[agent_id].append((elapsed, vx, vy, vz))
 
     def status_callback(self):
         """Print status and check for completion."""
@@ -503,29 +564,62 @@ class PhaseMetricsLogger(Node):
 
         with open(filename, 'w', newline='') as f:
             writer = csv.writer(f)
+            # Extended header with position, velocity, and Z-axis data
             writer.writerow([
-                "timestamp", "error_x", "error_y", "error_magnitude",
-                "rmse_x", "rmse_y", "rmse_total",
+                "timestamp",
+                # Position data (NEW - for trajectory/safety plots)
+                "current_x", "current_y", "current_z",
+                "target_x", "target_y", "target_z",
+                # Error data (with Z-axis)
+                "error_x", "error_y", "error_z", "error_magnitude",
+                # RMSE data (with Z-axis)
+                "rmse_x", "rmse_y", "rmse_z", "rmse_total",
+                # Integral metrics
                 "iae_x", "iae_y", "itae_x", "itae_y",
-                "settling_time", "max_overshoot_x", "max_overshoot_y"
+                # Response characteristics
+                "settling_time", "max_overshoot_x", "max_overshoot_y",
+                # Velocity data (NEW - for jerk analysis)
+                "velocity_x", "velocity_y", "velocity_z"
             ])
 
             for i in range(am.samples):
+                # Safely get velocity (may have fewer samples due to timing)
+                vx = am.velocity_x[i] if i < len(am.velocity_x) else 0.0
+                vy = am.velocity_y[i] if i < len(am.velocity_y) else 0.0
+                vz = am.velocity_z[i] if i < len(am.velocity_z) else 0.0
+
                 writer.writerow([
                     f"{am.timestamps[i]:.3f}",
+                    # Position data
+                    f"{am.current_x[i]:.6f}",
+                    f"{am.current_y[i]:.6f}",
+                    f"{am.current_z[i]:.6f}",
+                    f"{am.target_x[i]:.6f}",
+                    f"{am.target_y[i]:.6f}",
+                    f"{am.target_z[i]:.6f}",
+                    # Error data
                     f"{am.errors_x[i]:.6f}",
                     f"{am.errors_y[i]:.6f}",
+                    f"{am.errors_z[i]:.6f}",
                     f"{am.errors_mag[i]:.6f}",
+                    # RMSE data
                     f"{am.rmse_x[i]:.6f}",
                     f"{am.rmse_y[i]:.6f}",
+                    f"{am.rmse_z[i]:.6f}",
                     f"{am.rmse_total[i]:.6f}",
+                    # Integral metrics
                     f"{am.iae_x[i]:.6f}",
                     f"{am.iae_y[i]:.6f}",
                     f"{am.itae_x[i]:.6f}",
                     f"{am.itae_y[i]:.6f}",
+                    # Response characteristics
                     f"{am.settling_times[i]:.3f}",
                     f"{am.max_overshoots_x[i]:.6f}",
                     f"{am.max_overshoots_y[i]:.6f}",
+                    # Velocity data
+                    f"{vx:.6f}",
+                    f"{vy:.6f}",
+                    f"{vz:.6f}",
                 ])
 
         self.get_logger().info(f"Exported {am.samples} samples to {filename}")

@@ -33,6 +33,8 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
+#include "my_custom_interfaces_pkg/msg/neighbor_info.hpp"
+#include "my_custom_interfaces_pkg/msg/neighbor_position.hpp"
 
 namespace agent_control_pkg
 {
@@ -87,6 +89,8 @@ struct Position2D
 struct AgentState
 {
   Position2D position;                                    ///< Current position from odometry
+  Position2D velocity;                                    ///< Current velocity from odometry
+  double position_z{0.0};                                 ///< Z component of position
   Position2D target;                                      ///< Original target from formation coordinator
   double target_z{1.0};                                   ///< Z component of target (preserved)
   geometry_msgs::msg::PoseStamped last_target_msg;        ///< Full target message for republishing
@@ -164,6 +168,22 @@ private:
   void publishMetrics();
   void publishSafeTargets();
 
+  // === Plan S: Perception Hub ===
+  /**
+   * @brief Compute and publish neighbor info for all agents
+   *
+   * For each agent, finds all neighbors within perception_radius_,
+   * computes relative distances and bearings, and publishes NeighborInfo.
+   */
+  void publishNeighborInfo();
+
+  /**
+   * @brief Build NeighborInfo message for a specific agent
+   * @param agent_idx Index of the agent
+   * @return NeighborInfo message with all neighbors within perception radius
+   */
+  my_custom_interfaces_pkg::msg::NeighborInfo buildNeighborInfo(size_t agent_idx) const;
+
   // === Member Variables ===
 
   // Mode
@@ -176,6 +196,10 @@ private:
   double k_repulsion_{3.0};           ///< APF repulsion gain
   double max_target_deviation_{0.5};  ///< [m] Max modification to original target
   double publish_rate_hz_{20.0};      ///< Safe target publish rate
+
+  // Plan S: Perception Hub parameters
+  bool perception_hub_enable_{true};  ///< Enable neighbor info publishing
+  double perception_radius_{10.0};    ///< [m] Max distance for neighbor inclusion
 
   // State tracking
   std::vector<AgentState> agent_states_;
@@ -192,6 +216,9 @@ private:
   std::vector<rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr> safe_target_pubs_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr metrics_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
+
+  // Plan S: Perception Hub publishers
+  std::vector<rclcpp::Publisher<my_custom_interfaces_pkg::msg::NeighborInfo>::SharedPtr> neighbor_info_pubs_;
 };
 
 }  // namespace agent_control_pkg

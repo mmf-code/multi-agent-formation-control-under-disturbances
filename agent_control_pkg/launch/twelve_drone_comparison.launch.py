@@ -20,7 +20,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch import conditions
-from launch.actions import ExecuteProcess, DeclareLaunchArgument, GroupAction
+from launch.actions import ExecuteProcess, DeclareLaunchArgument, GroupAction, TimerAction, Shutdown, OpaqueFunction
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node, PushRosNamespace
@@ -54,9 +54,12 @@ def generate_launch_description():
     # Launch arguments
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     gazebo_gui = LaunchConfiguration('gazebo_gui', default='false')  # Default headless
+    duration = LaunchConfiguration('duration', default='0.0')
 
     declare_use_sim_time = DeclareLaunchArgument('use_sim_time', default_value='true')
     declare_gazebo_gui = DeclareLaunchArgument('gazebo_gui', default_value='false')
+    declare_duration = DeclareLaunchArgument('duration', default_value='0.0',
+        description='Simulation duration in seconds (0 = infinite)')
 
     # Gazebo server
     gzserver = ExecuteProcess(
@@ -299,15 +302,59 @@ def generate_launch_description():
         )
     ])
 
+    # ===== Plan S: Collision Safety Layer as Perception Hub =====
+    # This node provides:
+    # 1. Multi-agent awareness via /agent_X/neighbor_info topics
+    # 2. Collision metrics for safety monitoring
+    # 3. Optional APF-based collision avoidance (mode: avoidance)
+    #
+    # Mode options:
+    # - "disabled": No safe_target, no neighbor_info (baseline comparison)
+    # - "pass_through": Republish targets unchanged, publish neighbor_info (perception only)
+    # - "avoidance": APF collision avoidance + neighbor_info (full safety layer)
+    collision_safety_layer = Node(
+        package='agent_control_pkg',
+        executable='collision_safety_layer_node',
+        name='collision_safety_layer',
+        output='screen',
+        parameters=[{
+            'use_sim_time': use_sim_time,
+            'mode': 'pass_through',  # Use pass_through for perception-only (no control interference)
+            'num_agents': 12,
+            'safety_distance': 0.8,           # [m] Near-miss detection threshold
+            'influence_distance': 2.0,        # [m] APF influence radius (only used in avoidance mode)
+            'k_repulsion': 3.0,               # APF gain (only used in avoidance mode)
+            'max_target_deviation': 0.5,      # [m] Max target modification (only used in avoidance mode)
+            'publish_rate_hz': 20.0,          # Safe target / neighbor info publish rate
+            'publish_metrics': True,          # Enable collision metrics publishing
+            # Plan S: Perception Hub parameters
+            'perception_hub.enable': True,    # Enable neighbor info publishing
+            'perception_hub.radius': 10.0,    # [m] Max distance for neighbor inclusion
+        }]
+    )
+
+    # Duration-based shutdown (only if duration > 0)
+    def create_shutdown_timer(context):
+        duration_val = float(LaunchConfiguration('duration').perform(context))
+        if duration_val > 0:
+            return [TimerAction(
+                period=duration_val,
+                actions=[Shutdown(reason=f'Simulation duration ({duration_val}s) reached')]
+            )]
+        return []
+
     return LaunchDescription([
         declare_use_sim_time,
         declare_gazebo_gui,
+        declare_duration,
         gzserver,
         gzclient,
         wind_publisher,
+        collision_safety_layer,  # Plan S: Perception Hub for multi-agent awareness
         *agent_nodes,
         formation_coordinator_pd,
         formation_coordinator_pid,
         formation_coordinator_it2,
         formation_coordinator_gt2,
+        OpaqueFunction(function=create_shutdown_timer),
     ])

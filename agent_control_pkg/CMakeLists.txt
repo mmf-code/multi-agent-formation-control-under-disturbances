@@ -202,6 +202,7 @@ ament_target_dependencies(collision_safety_layer_node
   geometry_msgs
   nav_msgs
   std_msgs
+  my_custom_interfaces_pkg
 )
 
 # ---------------------------------------------------------------------------
