@@ -209,6 +209,14 @@ void FormationCoordinatorNode::declareParameters()
   declare_parameter<std::vector<double>>("waypoints.z", std::vector<double>{});
   declare_parameter<std::vector<std::string>>("waypoints.shapes", std::vector<std::string>{});
 
+  // Parametric trajectory parameters
+  declare_parameter<std::string>("trajectory.mode", "waypoints");
+  declare_parameter<double>("trajectory.radius", 5.0);
+  declare_parameter<double>("trajectory.period", 30.0);
+  declare_parameter<double>("trajectory.lemniscate_a", 8.0);
+  declare_parameter<double>("trajectory.lemniscate_b", 4.0);
+  declare_parameter<double>("trajectory.spiral_rate", 0.5);
+
   // Shape transition parameters
   declare_parameter<double>("shape_transition_duration", shape_transition_duration_);
 
@@ -257,10 +265,25 @@ void FormationCoordinatorNode::loadParameters()
   motion_start_x_ = get_parameter("motion.start_x").as_double();
   motion_end_x_ = get_parameter("motion.end_x").as_double();
 
-  // Load waypoint parameters
+  // Load trajectory mode parameters
+  const std::string traj_mode_str = get_parameter("trajectory.mode").as_string();
+  trajectory_mode_ = stringToTrajectoryMode(traj_mode_str);
+  trajectory_radius_ = get_parameter("trajectory.radius").as_double();
+  trajectory_period_ = get_parameter("trajectory.period").as_double();
+  trajectory_lemniscate_a_ = get_parameter("trajectory.lemniscate_a").as_double();
+  trajectory_lemniscate_b_ = get_parameter("trajectory.lemniscate_b").as_double();
+  trajectory_spiral_rate_ = get_parameter("trajectory.spiral_rate").as_double();
+
+  // Load waypoint parameters (only used if trajectory.mode == "waypoints")
   waypoints_enable_ = get_parameter("waypoints.enable").as_bool();
-  if (waypoints_enable_) {
+  if (trajectory_mode_ == TrajectoryMode::WAYPOINTS && waypoints_enable_) {
     loadWaypoints();
+  }
+
+  // Log trajectory mode
+  if (trajectory_mode_ != TrajectoryMode::WAYPOINTS) {
+    RCLCPP_INFO(get_logger(), "Trajectory mode: %s (radius=%.1f, period=%.1fs)",
+      traj_mode_str.c_str(), trajectory_radius_, trajectory_period_);
   }
 
   // Load ETC parameters
@@ -374,8 +397,10 @@ void FormationCoordinatorNode::timerCallback()
 
   const double elapsed = (now() - start_time_).seconds();
 
-  // Priority: waypoints > legacy motion > static
-  if (waypoints_enable_ && !waypoints_.empty()) {
+  // Priority: parametric trajectory > waypoints > legacy motion > static
+  if (trajectory_mode_ != TrajectoryMode::WAYPOINTS) {
+    updatePositionFromTrajectory(elapsed);
+  } else if (waypoints_enable_ && !waypoints_.empty()) {
     updatePositionFromWaypoints(elapsed);
   } else if (motion_enable_) {
     // Legacy linear motion along X
@@ -586,6 +611,62 @@ void FormationCoordinatorNode::updatePositionFromWaypoints(double elapsed_time)
     center_x_runtime_ = prev_wp.x + alpha * (current_wp.x - prev_wp.x);
     center_y_runtime_ = prev_wp.y + alpha * (current_wp.y - prev_wp.y);
     center_z_runtime_ = prev_wp.z + alpha * (current_wp.z - prev_wp.z);
+  }
+}
+
+TrajectoryMode FormationCoordinatorNode::stringToTrajectoryMode(const std::string& mode_str) const
+{
+  const std::string lower = to_lower(mode_str);
+  if (lower == "circular" || lower == "circle") {
+    return TrajectoryMode::CIRCULAR;
+  } else if (lower == "lemniscate" || lower == "figure8" || lower == "figure-8") {
+    return TrajectoryMode::LEMNISCATE;
+  } else if (lower == "spiral") {
+    return TrajectoryMode::SPIRAL;
+  }
+  return TrajectoryMode::WAYPOINTS;
+}
+
+void FormationCoordinatorNode::updatePositionFromTrajectory(double elapsed_time)
+{
+  // Angular position based on elapsed time and period
+  const double omega = 2.0 * M_PI / trajectory_period_;
+  const double theta = omega * elapsed_time;
+
+  switch (trajectory_mode_) {
+    case TrajectoryMode::CIRCULAR: {
+      // Circular orbit: x = r*cos(θ), y = r*sin(θ)
+      center_x_runtime_ = center_x_ + trajectory_radius_ * std::cos(theta);
+      center_y_runtime_ = center_y_ + trajectory_radius_ * std::sin(theta);
+      center_z_runtime_ = center_z_;
+      break;
+    }
+
+    case TrajectoryMode::LEMNISCATE: {
+      // Lemniscate (Figure-8): x = a*sin(t), y = b*sin(2t)
+      // This creates a smooth figure-8 pattern
+      center_x_runtime_ = center_x_ + trajectory_lemniscate_a_ * std::sin(theta);
+      center_y_runtime_ = center_y_ + trajectory_lemniscate_b_ * std::sin(2.0 * theta);
+      center_z_runtime_ = center_z_;
+      break;
+    }
+
+    case TrajectoryMode::SPIRAL: {
+      // Expanding spiral: r(t) = r0 + rate*cycles, x = r*cos(θ), y = r*sin(θ)
+      const double cycles = elapsed_time / trajectory_period_;
+      const double current_radius = trajectory_radius_ + trajectory_spiral_rate_ * cycles;
+      center_x_runtime_ = center_x_ + current_radius * std::cos(theta);
+      center_y_runtime_ = center_y_ + current_radius * std::sin(theta);
+      center_z_runtime_ = center_z_;
+      break;
+    }
+
+    default:
+      // Should not reach here, but fallback to static position
+      center_x_runtime_ = center_x_;
+      center_y_runtime_ = center_y_;
+      center_z_runtime_ = center_z_;
+      break;
   }
 }
 

@@ -24,6 +24,15 @@ enum class FormationShape
   V_SHAPE
 };
 
+// Trajectory mode enumeration for center motion
+enum class TrajectoryMode
+{
+  WAYPOINTS,    // Linear interpolation between waypoints (default)
+  CIRCULAR,     // Circular orbit around initial center
+  LEMNISCATE,   // Figure-8 (Bernoulli lemniscate)
+  SPIRAL        // Expanding/contracting spiral
+};
+
 class FormationCoordinatorNode : public rclcpp::Node
 {
 public:
@@ -100,6 +109,17 @@ private:
 
   void loadWaypoints();
   void updatePositionFromWaypoints(double elapsed_time);
+
+  // Parametric trajectory support
+  TrajectoryMode trajectory_mode_{TrajectoryMode::WAYPOINTS};
+  double trajectory_radius_{5.0};       // Radius for circular/lemniscate
+  double trajectory_period_{30.0};      // Period for one complete cycle (seconds)
+  double trajectory_lemniscate_a_{8.0}; // Lemniscate X amplitude
+  double trajectory_lemniscate_b_{4.0}; // Lemniscate Y amplitude
+  double trajectory_spiral_rate_{0.5};  // Spiral expansion rate (m/cycle)
+
+  TrajectoryMode stringToTrajectoryMode(const std::string& mode_str) const;
+  void updatePositionFromTrajectory(double elapsed_time);
 
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<my_custom_interfaces_pkg::msg::FormationState>::SharedPtr state_pub_;
