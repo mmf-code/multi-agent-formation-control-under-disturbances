@@ -375,6 +375,38 @@ install(TARGETS simple_drone_plugin
   RUNTIME DESTINATION bin
 )
 
+# Wind Flag Plugin - rotates based on wind direction
+add_library(wind_flag_plugin SHARED
+  plugins/wind_flag_plugin.cpp
+)
+
+target_include_directories(wind_flag_plugin PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(wind_flag_plugin
+  ${GAZEBO_LIBRARIES}
+  ${gazebo_ros_LIBRARIES}
+)
+
+ament_target_dependencies(wind_flag_plugin
+  rclcpp
+  geometry_msgs
+  gazebo_ros
+)
+
+set_target_properties(wind_flag_plugin PROPERTIES
+  INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:$ORIGIN"
+  BUILD_RPATH "${CMAKE_BINARY_DIR}/lib"
+  INSTALL_RPATH_USE_LINK_PATH TRUE
+)
+
+install(TARGETS wind_flag_plugin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
 # Install Gazebo assets
 install(DIRECTORY
   models/

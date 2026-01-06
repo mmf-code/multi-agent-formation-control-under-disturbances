@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="landing_pad">
+    <static>true</static>
+    <link name="pad">
+      <!-- Main circular pad -->
+      <visual name="pad_base">
+        <pose>0 0 0.005 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>1.5</radius>
+            <length>0.01</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.2 0.2 0.2 1</ambient>
+          <diffuse>0.3 0.3 0.3 1</diffuse>
+        </material>
+      </visual>
+      <!-- Outer ring -->
+      <visual name="outer_ring">
+        <pose>0 0 0.008 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>1.4</radius>
+            <length>0.01</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>1 0.8 0 1</ambient>
+          <diffuse>1 0.9 0.2 1</diffuse>
+        </material>
+      </visual>
+      <visual name="inner_circle">
+        <pose>0 0 0.009 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>1.2</radius>
+            <length>0.01</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.2 0.2 0.2 1</ambient>
+          <diffuse>0.3 0.3 0.3 1</diffuse>
+        </material>
+      </visual>
+      <!-- H marking - vertical bars -->
+      <visual name="h_left">
+        <pose>-0.3 0 0.012 0 0 0</pose>
+        <geometry>
+          <box><size>0.15 0.8 0.01</size></box>
+        </geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+        </material>
+      </visual>
+      <visual name="h_right">
+        <pose>0.3 0 0.012 0 0 0</pose>
+        <geometry>
+          <box><size>0.15 0.8 0.01</size></box>
+        </geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+        </material>
+      </visual>
+      <!-- H marking - horizontal bar -->
+      <visual name="h_center">
+        <pose>0 0 0.012 0 0 0</pose>
+        <geometry>
+          <box><size>0.6 0.15 0.01</size></box>
+        </geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

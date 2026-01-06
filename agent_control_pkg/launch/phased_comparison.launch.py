@@ -152,8 +152,11 @@ def launch_setup(context, *args, **kwargs):
     pkg_agent_control = get_package_share_directory('agent_control_pkg')
     pkg_formation_coordinator = get_package_share_directory('formation_coordinator_pkg')
 
-    # World file
-    world_file = os.path.join(pkg_agent_control, 'worlds', 'crazyflie_12drone_4group.world')
+    # World file - use professional world for video demo
+    if video_demo:
+        world_file = os.path.join(pkg_agent_control, 'worlds', 'crazyflie_12drone_4group_professional.world')
+    else:
+        world_file = os.path.join(pkg_agent_control, 'worlds', 'crazyflie_12drone_4group.world')
 
     # Gazebo paths
     model_path = os.path.join(pkg_agent_control, 'models')
