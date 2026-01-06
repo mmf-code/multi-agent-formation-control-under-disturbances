@@ -23,7 +23,7 @@ PIDController::PIDController(double kp, double ki, double kd, double output_min,
   output_saturated_(false),
   last_output_before_clamp_(0.0),
   anti_windup_mode_(AntiWindupMode::COMBINED),  // Default: most robust
-  tracking_time_constant_(0.0),  // Will be computed from gains if not set
+  tracking_time_constant_(0.0),  
   feedforward_enabled_(false),
   velocity_feedforward_gain_(0.8),
   acceleration_feedforward_gain_(0.1),
@@ -32,14 +32,12 @@ PIDController::PIDController(double kp, double ki, double kd, double output_min,
   filtered_derivative_(0.0)
 {
   if (output_min_ >= output_max_) {
-    // Consider throwing an exception or logging an error for invalid limits
+    // This does not automatically fix the values.
     std::cerr << "PIDController Warning: Output min (" << output_min_ 
               << ") is not less than output max (" << output_max_ << ")." << std::endl;
-    // Default to some safe limits or ensure this state is handled.
   }
-  // It might be better to initialize previous_measurement_ with the first 'current_value'
-  // but for simplicity, 0.0 is often okay if the system starts near there or first_calculation_ handles it.
-  // Or, you can pass an initial current_value to the constructor if known.
+  // previous_measurement_ is initialized to 0.0. The 'first_calculation_' flag ensures
+  // that the derivative term is zero on the first update, preventing derivative kick on startup.
 }
 
 void PIDController::setTunings(double kp, double ki, double kd)
@@ -63,10 +61,6 @@ void PIDController::setOutputLimits(double min_val, double max_val)
 void PIDController::setSetpoint(double setpoint)
 {
   setpoint_ = setpoint;
-  // When setpoint changes, it does not affect the D term directly with derivative on measurement
-  // No need to reset integral usually, unless it's a very large step change and you want faster response
-  // for some specific strategies (e.g., reset integral on large setpoint changes if it causes windup issues
-  // despite clamping, but clamping the PID output usually handles integral windup sufficiently).
 }
 
 double PIDController::getKp() const { return kp_; }
@@ -120,10 +114,10 @@ PIDController::PIDTerms PIDController::calculate_with_terms(double current_value
   // =========================================================================
   double i_term = ki_ * integral_;
 
-  // Calculate what output would be with current integral
+  // output with current integral
   double preliminary_output = p_term + i_term + d_term;
 
-  // Determine if we should integrate (conditional anti-windup)
+  // conditional anti-windup
   bool should_integrate = true;
 
   if (anti_windup_mode_ == AntiWindupMode::CONDITIONAL ||
@@ -137,18 +131,14 @@ PIDController::PIDTerms PIDController::calculate_with_terms(double current_value
     }
   }
 
-  // Integrate only if allowed
   if (should_integrate && anti_windup_mode_ != AntiWindupMode::NONE) {
     integral_ += error * dt;
   } else if (anti_windup_mode_ == AntiWindupMode::NONE) {
-    // No anti-windup: always integrate
     integral_ += error * dt;
   }
 
-  // Recalculate integral term after potential integration
   i_term = ki_ * integral_;
 
-  // Store previous error for external use (e.g., fuzzy dError)
   previous_error_ = error;
 
   // =========================================================================
@@ -180,17 +170,15 @@ PIDController::PIDTerms PIDController::calculate_with_terms(double current_value
       double Ti = (std::abs(ki_) > 1e-9) ? kp_ / ki_ : 1.0;
       double Td = (std::abs(kp_) > 1e-9) ? kd_ / kp_ : 0.0;
       Tt = (Td > 1e-9) ? std::sqrt(Ti * Td) : Ti;
-      if (Tt < dt) Tt = dt;  // Ensure Tt >= dt for stability
+      if (Tt < dt) Tt = dt; 
     }
 
-    // Back-calculate: adjust integral by saturation error
     double integral_correction = (dt / Tt) * saturation_error / ki_;
     integral_ += integral_correction;
   }
 
   // =========================================================================
   // INTEGRAL CLAMPING (safety bound)
-  // Prevents integral from growing beyond what could ever be useful
   // =========================================================================
   if (std::abs(ki_) > 1e-9) {
     double max_integral_contribution = std::max(std::abs(output_max_), std::abs(output_min_));

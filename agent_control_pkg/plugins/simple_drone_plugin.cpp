@@ -1,24 +1,80 @@
-/**
- * @file simple_drone_plugin.cpp
- * @brief Gazebo plugin for 2D quadrotor dynamics simulation
- *
- * This plugin bridges ROS2 control commands with Gazebo physics simulation.
- * It implements a simplified 2D drone model with gravity compensation and
- * altitude locking, allowing X-Y plane motion control while maintaining
- * constant Z height.
- *
- * ROS2 Interface:
- *   Subscribes: /agent_X/cmd_accel (geometry_msgs/Vector3) - Acceleration commands
- *   Publishes:  /agent_X/odom (nav_msgs/Odometry) - Full state feedback
- *
- * Physics Model:
- *   - Applies forces directly: F = m * a_cmd (X-Y axes)
- *   - Z-axis: Gravity compensation + proportional altitude hold (target: 0.5m)
- *   - Update rate: Synchronized with Gazebo physics (default ~1kHz)
- *
- * @author Multi-Agent Formation Control Team
- * @date 2025
- */
+
+  /**
+   * @file simple_drone_plugin.cpp
+   * @brief Gazebo plugin for simplified 2D quadrotor control under wind disturbances
+   *
+   * OVERVIEW:
+   *   Implements a Gazebo ModelPlugin for Crazyflie 2.1 dynamics with planar XY
+   *   motion and altitude-locked Z-axis. Receives acceleration commands from ROS2
+   *   controllers and applies forces to the Gazebo physics engine. Publishes full
+   *   state odometry for feedback control loops.
+   *
+   * PHYSICS MODEL:
+   *   XY-plane:  F = m * a_cmd + F_wind + F_drag
+   *   Z-axis:    F_z = m*g + K_p*(z_ref - z) + K_d*(-dz/dt)  [altitude hold]
+   *   Reference altitude: z_ref = 0.5 m (configurable via SDF)
+   *   Altitude gains: K_p = 12.0, K_d = 4.0 (aggressive for fast Z response)
+   *
+   * ADVANCED FEATURES:
+   *   - Actuator lag: First-order filter with asymmetric tau (tau_up, tau_down)
+   *   - Drag model: Blended linear + quadratic (speed-dependent)
+   *   - Wind injection: Per-drone wind topics for spatial coherence
+   *   - Sensor noise: Gaussian noise on position/velocity (Type-2 Fuzzy testing)
+   *   - Motor model: Optional sim_cf2 rotor dynamics (use_motor_model flag)
+   *
+   * ROS2 INTERFACE:
+   *   Subscribe: /{namespace}/cmd_accel       (geometry_msgs/Vector3, ~200 Hz)
+   *              /{namespace}/wind/velocity    (geometry_msgs/Vector3, ~50 Hz)
+   *              /{namespace}/wind/force       (geometry_msgs/Vector3, ~50 Hz)
+   *              /wind/velocity                (global fallback)
+   *              /wind/force                   (global fallback)
+   *   Publish:   /{namespace}/odom             (nav_msgs/Odometry, ~1000 Hz)
+   *
+   * TESTED SCENARIOS (6-Phase Framework):
+   *   Phase 1: BASELINE      - No wind (reference performance)
+   *   Phase 2: STEADY_WIND   - Constant 3 m/s @ 45° (DC rejection)
+   *   Phase 3: TURBULENCE    - Von Karman turbulence, TI ∈ {0.15, 0.25, 0.35}
+   *   Phase 4: GUST          - Periodic gusts (5 m/s, 1.5s duration, 10s interval)
+   *   Phase 5: COMBINED      - Stochastic: turbulence + gusts + direction wander
+   *   Phase 6: ENDURANCE     - Phase 5 extended to 300 seconds
+   *
+   * ASSUMPTIONS:
+   *   - Small angle approximation (roll, pitch < 15 deg)
+   *   - No rotor dynamics modeled (unless use_motor_model=true)
+   *   - Wind acts as external force disturbance (no torque)
+   *   - Inertia matrix is diagonal (decoupled axes)
+   *   - Collision avoidance handled externally via ROS2 topic remapping (not in plugin)
+   *
+   * THREAD SAFETY:
+   *   cmd_accel_ and wind_velocity_ are accessed from Gazebo's physics thread
+   *   and ROS2 callback threads. Protected by implicit message copying.
+   *
+   * SDF PARAMETERS (configurable from world file):
+   *   - namespace:              ROS2 namespace (e.g., "agent_0")
+   *   - target_altitude:        Altitude hold setpoint [m] (default: 0.5)
+   *   - actuator_tau:           Actuator lag time constant [s] (default: 0.01)
+   *   - actuator_tau_up/down:   Asymmetric lag [s] (default: 0.006, 0.015)
+   *   - drag_coeff_lin:         Linear drag coefficient [N/(m/s)] (default: 0.005)
+   *   - drag_coeff_quad:        Quadratic drag coefficient [N/(m/s)²] (default: 0.01)
+   *   - position_noise_std:     Position noise std dev [m] (default: 0.0)
+   *   - velocity_noise_std:     Velocity noise std dev [m/s] (default: 0.0)
+   *   - use_motor_model:        Enable sim_cf2 motor dynamics (default: false)
+   *
+   * EXTERNAL COMPONENTS (not part of this plugin):
+   *   - Collision avoidance: collision_safety_layer_node (APF-based, ROS2 level)
+   *   - Formation control: formation_coordinator_node (waypoint generation)
+   *   - Wind generation: wind_publisher.py (phase-specific profiles)
+   *   - Metrics logging: phase_metrics_logger.py (performance tracking)
+   *
+   * REFERENCES:
+   *   [1] Crazyflie 2.1 specifications: https://www.bitcraze.io/
+   *   [2] Gazebo ModelPlugin API: http://gazebosim.org/tutorials?tut=plugins_model
+   *   [3] MIL-F-8785C: Military Specification - Flying Qualities of Piloted Airplanes
+   *
+   * @author Atakan Yaman
+   * @date 2025-01-05
+   * @version 2.0 (ETC-enabled, 6-phase framework, motor model support)
+   */
 
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
@@ -41,7 +97,7 @@ namespace gazebo
 {
   /**
    * @class SimpleDronePlugin
-   * @brief Gazebo ModelPlugin for simplified 2D quadrotor simulation
+   * @brief Gazebo ModelPlugin
    *
    * This plugin provides the physics layer for formation control testing.
    * It converts ROS2 acceleration commands into Gazebo forces and publishes
@@ -124,7 +180,7 @@ namespace gazebo
         this->physics_params_.drag_speed_threshold = _sdf->Get<double>("drag_speed_threshold");
       }
 
-      // Load initial wind parameters from SDF (optional fallback)
+      // Load initial wind parameters from SDF - opt. fallback
       // These can be overridden by /wind/velocity and /wind/force topics
       if (_sdf->HasElement("wind_velocity_x")) {
         this->wind_env_.vx = _sdf->Get<double>("wind_velocity_x");
@@ -178,7 +234,7 @@ namespace gazebo
         this->namespace_ = this->model_->GetName();
       }
 
-      // Initialize ROS2 node (managed by gazebo_ros)
+      // Initialize ROS2 node
       this->ros_node_ = gazebo_ros::Node::Get(_sdf);
 
       RCLCPP_INFO(this->ros_node_->get_logger(),
@@ -304,7 +360,7 @@ namespace gazebo
     }
 
     /**
-     * @brief Callback for wind velocity (dynamic wind environment)
+     * @brief Callback for wind velocity
      * @param msg Vector3 containing wind velocity in m/s
      *
      * Updates the wind environment for drag calculation (relative airspeed).
@@ -320,7 +376,7 @@ namespace gazebo
     {
       this->wind_env_.vx = msg->x;
       this->wind_env_.vy = msg->y;
-      // Note: Drag force is computed as F_drag = -cd * (v - v_wind)
+      // Drag force is computed as F_drag = -cd * (v - v_wind)
       // Updating wind velocity affects relative airspeed in physics core
     }
 
@@ -386,8 +442,8 @@ namespace gazebo
     }
 
     /**
-     * @brief Apply legacy F=ma physics (original implementation)
-     * @param dt Time step [s]
+     * @brief In the current world configuration (use_motor_model=true), the simulation updates drone dynamics via applyMotorPhysics; applyLegacyPhysics is only used as a fallback when the motor model is disabled or not initialized.
+     * @param dt 
      */
     void applyLegacyPhysics(double dt)
     {
