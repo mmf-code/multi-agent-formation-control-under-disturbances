@@ -79,6 +79,15 @@ public:
     this->wind_x_ = msg->x;
     this->wind_y_ = msg->y;
     this->has_wind_data_ = true;
+    this->msg_count_++;
+
+    // Log every 50th message to avoid spam
+    if (this->msg_count_ % 50 == 1) {
+      double speed = std::sqrt(msg->x * msg->x + msg->y * msg->y);
+      RCLCPP_INFO(this->ros_node_->get_logger(),
+        "Wind received: vx=%.2f, vy=%.2f, speed=%.2f m/s, yaw=%.1f deg",
+        msg->x, msg->y, speed, std::atan2(msg->y, msg->x) * 180.0 / M_PI);
+    }
   }
 
   void OnUpdate()
@@ -119,11 +128,11 @@ public:
     while (yaw_error < -M_PI) yaw_error += 2 * M_PI;
 
     // Apply proportional control with damping
-    double kp = 2.0;  // Proportional gain
+    double kp = 5.0;  // Proportional gain (increased for faster response)
     double torque = kp * yaw_error;
 
-    // Clamp torque
-    torque = std::max(-1.0, std::min(1.0, torque));
+    // Clamp torque (increased for more visible movement)
+    torque = std::max(-3.0, std::min(3.0, torque));
 
     this->joint_->SetForce(0, torque);
   }
@@ -140,6 +149,7 @@ private:
   double wind_x_ = 0.0;
   double wind_y_ = 0.0;
   bool has_wind_data_ = false;
+  int msg_count_ = 0;
 
   double update_period_ = 0.1;
   common::Time last_update_time_;

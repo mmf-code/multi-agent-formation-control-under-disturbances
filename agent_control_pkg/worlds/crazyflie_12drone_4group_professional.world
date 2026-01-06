@@ -949,66 +949,8 @@
       </link>
     </model>
 
-    <!-- ========================================= -->
-    <!-- WIND STRENGTH INDICATOR PANEL -->
-    <!-- Static panel showing wind speed scale -->
-    <!-- Located next to wind flag -->
-    <!-- ========================================= -->
-
-    <model name="wind_scale_panel">
-      <static>true</static>
-      <pose>15 -3 0 0 0 0</pose>
-      <link name="link">
-        <!-- Panel background -->
-        <visual name="bg"><pose>0 0 1.5 0 0 0</pose>
-          <geometry><box><size>0.1 2.0 3.0</size></box></geometry>
-          <material><ambient>0.2 0.2 0.25 1</ambient><diffuse>0.25 0.25 0.3 1</diffuse></material></visual>
-        <!-- Wind speed bars (0-5 m/s scale) -->
-        <!-- 0 m/s - gray -->
-        <visual name="bar0"><pose>0.06 -0.6 0.4 0 0 0</pose>
-          <geometry><box><size>0.02 0.6 0.3</size></box></geometry>
-          <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.5 0.5 0.5 1</diffuse></material></visual>
-        <!-- 1 m/s - light green -->
-        <visual name="bar1"><pose>0.06 -0.6 0.8 0 0 0</pose>
-          <geometry><box><size>0.02 0.6 0.3</size></box></geometry>
-          <material><ambient>0.3 0.7 0.3 1</ambient><diffuse>0.4 0.8 0.4 1</diffuse></material></visual>
-        <!-- 2 m/s - green -->
-        <visual name="bar2"><pose>0.06 -0.6 1.2 0 0 0</pose>
-          <geometry><box><size>0.02 0.6 0.3</size></box></geometry>
-          <material><ambient>0.2 0.8 0.2 1</ambient><diffuse>0.3 0.9 0.3 1</diffuse></material></visual>
-        <!-- 3 m/s - yellow -->
-        <visual name="bar3"><pose>0.06 -0.6 1.6 0 0 0</pose>
-          <geometry><box><size>0.02 0.6 0.3</size></box></geometry>
-          <material><ambient>0.9 0.9 0.2 1</ambient><diffuse>1 1 0.3 1</diffuse></material></visual>
-        <!-- 4 m/s - orange -->
-        <visual name="bar4"><pose>0.06 -0.6 2.0 0 0 0</pose>
-          <geometry><box><size>0.02 0.6 0.3</size></box></geometry>
-          <material><ambient>1 0.6 0.1 1</ambient><diffuse>1 0.7 0.2 1</diffuse></material></visual>
-        <!-- 5+ m/s - red -->
-        <visual name="bar5"><pose>0.06 -0.6 2.4 0 0 0</pose>
-          <geometry><box><size>0.02 0.6 0.3</size></box></geometry>
-          <material><ambient>1 0.2 0.2 1</ambient><diffuse>1 0.3 0.3 1</diffuse></material></visual>
-        <!-- Scale markers -->
-        <visual name="m0"><pose>0.06 -0.15 0.25 0 0 0</pose>
-          <geometry><box><size>0.02 0.1 0.02</size></box></geometry>
-          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material></visual>
-        <visual name="m1"><pose>0.06 -0.15 0.65 0 0 0</pose>
-          <geometry><box><size>0.02 0.1 0.02</size></box></geometry>
-          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material></visual>
-        <visual name="m2"><pose>0.06 -0.15 1.05 0 0 0</pose>
-          <geometry><box><size>0.02 0.1 0.02</size></box></geometry>
-          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material></visual>
-        <visual name="m3"><pose>0.06 -0.15 1.45 0 0 0</pose>
-          <geometry><box><size>0.02 0.1 0.02</size></box></geometry>
-          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material></visual>
-        <visual name="m4"><pose>0.06 -0.15 1.85 0 0 0</pose>
-          <geometry><box><size>0.02 0.1 0.02</size></box></geometry>
-          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material></visual>
-        <visual name="m5"><pose>0.06 -0.15 2.25 0 0 0</pose>
-          <geometry><box><size>0.02 0.1 0.02</size></box></geometry>
-          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material></visual>
-      </link>
-    </model>
+    <!-- Wind scale panel removed - was static/misleading -->
+    <!-- Wind direction shown by rotating windsock only -->
 
   </world>
 </sdf>
