@@ -417,7 +417,7 @@ class WindPublisher(Node):
 
         elif self.profile in ['vonkarman', 'dryden']:
             # Scientifically-grounded turbulence models (MIL-F-8785C)
-            # Mean wind + atmospheric turbulence with visual amplification
+            # Mean wind + atmospheric turbulence
             if self.turbulence_generator is None:
                 self.get_logger().error('Turbulence generator not initialized!')
                 return
@@ -425,41 +425,15 @@ class WindPublisher(Node):
             # Generate turbulence sample
             turb_sample = self.turbulence_generator.generate_sample()
 
-            # Amplification factor for visual effect (2.5x makes direction changes visible)
-            # This increases perceived turbulence while maintaining spectral characteristics
-            VISUAL_AMP = 2.5
+            # Mean wind (base magnitude and direction)
+            mean_wind_x = self.magnitude * math.cos(self.direction_rad)
+            mean_wind_y = self.magnitude * math.sin(self.direction_rad)
 
-            # Direction jitter - adds low-frequency direction wander (realistic for atmospheric)
-            # Real atmospheric turbulence causes direction to wander over time
-            dt = 1.0 / 20.0  # assume 20 Hz
-            if not hasattr(self, '_turb_dir_offset'):
-                self._turb_dir_offset = 0.0
-                self._turb_gust_timer = 0.0
-
-            # Slow direction wander (Ornstein-Uhlenbeck process)
-            self._turb_dir_offset += -0.1 * self._turb_dir_offset * dt + 0.3 * random.gauss(0, 1) * math.sqrt(dt)
-            self._turb_dir_offset = max(-0.5, min(0.5, self._turb_dir_offset))  # clamp to ±30°
-
-            # Occasional gust events (Poisson process) - 5% chance per second
-            self._turb_gust_timer -= dt
-            if self._turb_gust_timer <= 0 and random.random() < 0.05 * dt:
-                self._turb_gust_timer = random.uniform(0.5, 1.5)  # gust duration
-                gust_dir = random.choice([-1, 1]) * random.uniform(0.3, 0.7)
-                self._turb_dir_offset = gust_dir
-                self.get_logger().info(f'🌪️ Gust event: direction shift {math.degrees(gust_dir):+.0f}°')
-
-            # Current direction with wander
-            current_dir = self.direction_rad + self._turb_dir_offset
-
-            # Mean wind with wandering direction
-            mean_wind_x = self.magnitude * math.cos(current_dir)
-            mean_wind_y = self.magnitude * math.sin(current_dir)
-
-            # Superpose mean wind + amplified turbulence
+            # Superpose mean wind + turbulence
             msg = Vector3()
-            msg.x = mean_wind_x + turb_sample.u * VISUAL_AMP
-            msg.y = mean_wind_y + turb_sample.v * VISUAL_AMP
-            msg.z = turb_sample.w * VISUAL_AMP
+            msg.x = mean_wind_x + turb_sample.u
+            msg.y = mean_wind_y + turb_sample.v
+            msg.z = turb_sample.w
 
             self.wind_pub.publish(msg)
 

@@ -70,24 +70,24 @@ PHASE_DEFINITIONS: Dict[int, PhaseDefinition] = {
     3: PhaseDefinition(
         phase_id=3,
         name="TURBULENCE",
-        purpose="Stochastic uncertainty management; separation vs TI",
+        purpose="High chaos stochastic uncertainty; fuzzy advantage demonstration",
         duration_sec=60,
         wind_config={
             "profile": "vonkarman",
-            "magnitude": 2.5,
+            "magnitude": 4.0,  # Increased from 2.5 for dramatic effect
             "direction": 45.0,
-            "mean_wind_speed": 2.5,
-            "turbulence_intensity": 0.20,  # Default, overridden by sweep
+            "mean_wind_speed": 4.0,  # Match magnitude
+            "turbulence_intensity": 0.55,  # Default, overridden by sweep
             "integral_length_u": 30.0,
             "integral_length_v": 15.0,
             "integral_length_w": 5.0,
             "publish_rate": 20.0,
         },
-        sweep_values=[0.15, 0.25, 0.35],  # TI sweep
+        sweep_values=[0.45, 0.55, 0.65],  # High TI sweep for chaos
         expectations=[
-            "Performance degrades with TI",
-            "Ranking separation may increase at higher TI",
-            "Hypothesis: GT2 > IT2 > PID > PD at high TI",
+            "Strong performance separation between controllers",
+            "PID/PD struggle with high-frequency variations",
+            "GT2 > IT2 > PID > PD clearly visible",
         ],
     ),
     4: PhaseDefinition(
