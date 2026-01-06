@@ -68,9 +68,9 @@ public:
     this->update_connection_ = event::Events::ConnectWorldUpdateBegin(
       std::bind(&WindFlagPlugin::OnUpdate, this));
 
-    gzmsg << "WindFlagPlugin loaded for model: " << _model->GetName()
-          << ", joint: " << joint_name
-          << ", topic: " << wind_topic << "\n";
+    RCLCPP_INFO(this->ros_node_->get_logger(),
+      "WindFlagPlugin loaded for model: %s, joint: %s, topic: %s",
+      _model->GetName().c_str(), joint_name.c_str(), wind_topic.c_str());
   }
 
   void OnWindVelocity(const geometry_msgs::msg::Vector3::SharedPtr msg)
