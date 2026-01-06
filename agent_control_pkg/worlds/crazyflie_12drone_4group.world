@@ -319,30 +319,385 @@
       </plugin>
     </model>
 
-    <!-- Target Markers for each group -->
-    <include>
-      <uri>model://checkpoint_marker</uri>
-      <name>target_pd</name>
-      <pose>10 -12 0.5 0 0 0</pose>
-    </include>
+    <!-- ========================================= -->
+    <!-- VISUAL ENHANCEMENTS FOR VIDEO DEMO -->
+    <!-- ========================================= -->
 
-    <include>
-      <uri>model://checkpoint_marker</uri>
-      <name>target_pid</name>
-      <pose>10 -4 0.5 0 0 0</pose>
-    </include>
+    <!-- ===== FIGURE-8 GROUND PATH MARKERS ===== -->
+    <!-- Each group has colored ground markers showing trajectory -->
 
-    <include>
-      <uri>model://checkpoint_marker</uri>
-      <name>target_it2</name>
-      <pose>10 4 0.5 0 0 0</pose>
-    </include>
+    <!-- Group 0 (PD) Path Markers - RED - Y=-12m -->
+    <model name="path_pd_center">
+      <static>true</static>
+      <pose>0 -12 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.3</radius><length>0.02</length></cylinder></geometry>
+          <material><ambient>1 0.2 0.2 0.8</ambient><diffuse>1 0.2 0.2 0.8</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="path_pd_right">
+      <static>true</static>
+      <pose>6 -12 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.25</radius><length>0.02</length></cylinder></geometry>
+          <material><ambient>1 0.2 0.2 0.6</ambient><diffuse>1 0.2 0.2 0.6</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="path_pd_left">
+      <static>true</static>
+      <pose>-6 -12 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.25</radius><length>0.02</length></cylinder></geometry>
+          <material><ambient>1 0.2 0.2 0.6</ambient><diffuse>1 0.2 0.2 0.6</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <!-- PD Figure-8 outline markers -->
+    <model name="path_pd_r1"><static>true</static><pose>4.2 -7.8 0.01 0 0 0</pose>
+      <link name="link"><visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.02</length></cylinder></geometry>
+      <material><ambient>1 0.3 0.3 0.5</ambient><diffuse>1 0.3 0.3 0.5</diffuse></material></visual></link></model>
+    <model name="path_pd_r2"><static>true</static><pose>4.2 -16.2 0.01 0 0 0</pose>
+      <link name="link"><visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.02</length></cylinder></geometry>
+      <material><ambient>1 0.3 0.3 0.5</ambient><diffuse>1 0.3 0.3 0.5</diffuse></material></visual></link></model>
+    <model name="path_pd_l1"><static>true</static><pose>-4.2 -7.8 0.01 0 0 0</pose>
+      <link name="link"><visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.02</length></cylinder></geometry>
+      <material><ambient>1 0.3 0.3 0.5</ambient><diffuse>1 0.3 0.3 0.5</diffuse></material></visual></link></model>
+    <model name="path_pd_l2"><static>true</static><pose>-4.2 -16.2 0.01 0 0 0</pose>
+      <link name="link"><visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.02</length></cylinder></geometry>
+      <material><ambient>1 0.3 0.3 0.5</ambient><diffuse>1 0.3 0.3 0.5</diffuse></material></visual></link></model>
 
-    <include>
-      <uri>model://checkpoint_marker</uri>
-      <name>target_gt2</name>
-      <pose>10 12 0.5 0 0 0</pose>
-    </include>
+    <!-- Group 1 (PID) Path Markers - ORANGE - Y=-4m -->
+    <model name="path_pid_center">
+      <static>true</static>
+      <pose>0 -4 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.3</radius><length>0.02</length></cylinder></geometry>
+          <material><ambient>1 0.6 0.1 0.8</ambient><diffuse>1 0.6 0.1 0.8</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="path_pid_right">
+      <static>true</static>
+      <pose>6 -4 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.25</radius><length>0.02</length></cylinder></geometry>
+          <material><ambient>1 0.6 0.1 0.6</ambient><diffuse>1 0.6 0.1 0.6</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="path_pid_left">
+      <static>true</static>
+      <pose>-6 -4 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.25</radius><length>0.02</length></cylinder></geometry>
+          <material><ambient>1 0.6 0.1 0.6</ambient><diffuse>1 0.6 0.1 0.6</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="path_pid_r1"><static>true</static><pose>4.2 0.2 0.01 0 0 0</pose>
+      <link name="link"><visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.02</length></cylinder></geometry>
+      <material><ambient>1 0.6 0.2 0.5</ambient><diffuse>1 0.6 0.2 0.5</diffuse></material></visual></link></model>
+    <model name="path_pid_r2"><static>true</static><pose>4.2 -8.2 0.01 0 0 0</pose>
+      <link name="link"><visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.02</length></cylinder></geometry>
+      <material><ambient>1 0.6 0.2 0.5</ambient><diffuse>1 0.6 0.2 0.5</diffuse></material></visual></link></model>
+    <model name="path_pid_l1"><static>true</static><pose>-4.2 0.2 0.01 0 0 0</pose>
+      <link name="link"><visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.02</length></cylinder></geometry>
+      <material><ambient>1 0.6 0.2 0.5</ambient><diffuse>1 0.6 0.2 0.5</diffuse></material></visual></link></model>
+    <model name="path_pid_l2"><static>true</static><pose>-4.2 -8.2 0.01 0 0 0</pose>
+      <link name="link"><visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.02</length></cylinder></geometry>
+      <material><ambient>1 0.6 0.2 0.5</ambient><diffuse>1 0.6 0.2 0.5</diffuse></material></visual></link></model>
+
+    <!-- Group 2 (IT2) Path Markers - GREEN - Y=4m -->
+    <model name="path_it2_center">
+      <static>true</static>
+      <pose>0 4 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.3</radius><length>0.02</length></cylinder></geometry>
+          <material><ambient>0.2 0.8 0.2 0.8</ambient><diffuse>0.2 0.8 0.2 0.8</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="path_it2_right">
+      <static>true</static>
+      <pose>6 4 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.25</radius><length>0.02</length></cylinder></geometry>
+          <material><ambient>0.2 0.8 0.2 0.6</ambient><diffuse>0.2 0.8 0.2 0.6</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="path_it2_left">
+      <static>true</static>
+      <pose>-6 4 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.25</radius><length>0.02</length></cylinder></geometry>
+          <material><ambient>0.2 0.8 0.2 0.6</ambient><diffuse>0.2 0.8 0.2 0.6</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="path_it2_r1"><static>true</static><pose>4.2 8.2 0.01 0 0 0</pose>
+      <link name="link"><visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.02</length></cylinder></geometry>
+      <material><ambient>0.3 0.8 0.3 0.5</ambient><diffuse>0.3 0.8 0.3 0.5</diffuse></material></visual></link></model>
+    <model name="path_it2_r2"><static>true</static><pose>4.2 -0.2 0.01 0 0 0</pose>
+      <link name="link"><visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.02</length></cylinder></geometry>
+      <material><ambient>0.3 0.8 0.3 0.5</ambient><diffuse>0.3 0.8 0.3 0.5</diffuse></material></visual></link></model>
+    <model name="path_it2_l1"><static>true</static><pose>-4.2 8.2 0.01 0 0 0</pose>
+      <link name="link"><visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.02</length></cylinder></geometry>
+      <material><ambient>0.3 0.8 0.3 0.5</ambient><diffuse>0.3 0.8 0.3 0.5</diffuse></material></visual></link></model>
+    <model name="path_it2_l2"><static>true</static><pose>-4.2 -0.2 0.01 0 0 0</pose>
+      <link name="link"><visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.02</length></cylinder></geometry>
+      <material><ambient>0.3 0.8 0.3 0.5</ambient><diffuse>0.3 0.8 0.3 0.5</diffuse></material></visual></link></model>
+
+    <!-- Group 3 (GT2) Path Markers - BLUE - Y=12m -->
+    <model name="path_gt2_center">
+      <static>true</static>
+      <pose>0 12 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.3</radius><length>0.02</length></cylinder></geometry>
+          <material><ambient>0.2 0.4 1 0.8</ambient><diffuse>0.2 0.4 1 0.8</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="path_gt2_right">
+      <static>true</static>
+      <pose>6 12 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.25</radius><length>0.02</length></cylinder></geometry>
+          <material><ambient>0.2 0.4 1 0.6</ambient><diffuse>0.2 0.4 1 0.6</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="path_gt2_left">
+      <static>true</static>
+      <pose>-6 12 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.25</radius><length>0.02</length></cylinder></geometry>
+          <material><ambient>0.2 0.4 1 0.6</ambient><diffuse>0.2 0.4 1 0.6</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="path_gt2_r1"><static>true</static><pose>4.2 16.2 0.01 0 0 0</pose>
+      <link name="link"><visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.02</length></cylinder></geometry>
+      <material><ambient>0.3 0.5 1 0.5</ambient><diffuse>0.3 0.5 1 0.5</diffuse></material></visual></link></model>
+    <model name="path_gt2_r2"><static>true</static><pose>4.2 7.8 0.01 0 0 0</pose>
+      <link name="link"><visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.02</length></cylinder></geometry>
+      <material><ambient>0.3 0.5 1 0.5</ambient><diffuse>0.3 0.5 1 0.5</diffuse></material></visual></link></model>
+    <model name="path_gt2_l1"><static>true</static><pose>-4.2 16.2 0.01 0 0 0</pose>
+      <link name="link"><visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.02</length></cylinder></geometry>
+      <material><ambient>0.3 0.5 1 0.5</ambient><diffuse>0.3 0.5 1 0.5</diffuse></material></visual></link></model>
+    <model name="path_gt2_l2"><static>true</static><pose>-4.2 7.8 0.01 0 0 0</pose>
+      <link name="link"><visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.02</length></cylinder></geometry>
+      <material><ambient>0.3 0.5 1 0.5</ambient><diffuse>0.3 0.5 1 0.5</diffuse></material></visual></link></model>
+
+    <!-- ===== SCALE REFERENCE MARKERS ===== -->
+    <!-- 1m scale bars at origin -->
+    <model name="scale_x">
+      <static>true</static>
+      <pose>0.5 0 0.02 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>1.0 0.05 0.02</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="scale_y">
+      <static>true</static>
+      <pose>0 0.5 0.02 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.05 1.0 0.02</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===== WINDSOCK / WIND INDICATOR ===== -->
+    <!-- Position: Side of arena, visible from all angles -->
+    <model name="windsock_pole">
+      <static>true</static>
+      <pose>12 0 1.5 0 0 0</pose>
+      <link name="pole">
+        <visual name="pole_visual">
+          <geometry><cylinder><radius>0.05</radius><length>3.0</length></cylinder></geometry>
+          <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.5 0.5 0.5 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <!-- Windsock cone - points in wind direction -->
+    <model name="windsock_cone">
+      <static>true</static>
+      <pose>12.3 0 2.8 0 1.57 0</pose>
+      <link name="sock">
+        <visual name="sock_visual">
+          <geometry><cylinder><radius>0.15</radius><length>0.6</length></cylinder></geometry>
+          <material><ambient>1 0.5 0 1</ambient><diffuse>1 0.5 0 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="windsock_tip">
+      <static>true</static>
+      <pose>12.7 0 2.8 0 1.57 0</pose>
+      <link name="tip">
+        <visual name="tip_visual">
+          <geometry><cylinder><radius>0.08</radius><length>0.3</length></cylinder></geometry>
+          <material><ambient>1 0.3 0 1</ambient><diffuse>1 0.3 0 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===== LANE SEPARATOR LINES ===== -->
+    <!-- Visual separation between controller groups -->
+    <model name="lane_sep_1">
+      <static>true</static>
+      <pose>0 -8 0.005 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>16 0.03 0.01</size></box></geometry>
+          <material><ambient>0.7 0.7 0.7 0.4</ambient><diffuse>0.7 0.7 0.7 0.4</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="lane_sep_2">
+      <static>true</static>
+      <pose>0 0 0.005 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>16 0.03 0.01</size></box></geometry>
+          <material><ambient>0.7 0.7 0.7 0.4</ambient><diffuse>0.7 0.7 0.7 0.4</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="lane_sep_3">
+      <static>true</static>
+      <pose>0 8 0.005 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>16 0.03 0.01</size></box></geometry>
+          <material><ambient>0.7 0.7 0.7 0.4</ambient><diffuse>0.7 0.7 0.7 0.4</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===== GROUP LABEL POSTS ===== -->
+    <!-- Tall posts at lane edges to identify groups -->
+    <model name="label_pd">
+      <static>true</static>
+      <pose>-9 -12 0.75 0 0 0</pose>
+      <link name="link">
+        <visual name="post">
+          <geometry><cylinder><radius>0.08</radius><length>1.5</length></cylinder></geometry>
+          <material><ambient>1 0.2 0.2 1</ambient><diffuse>1 0.2 0.2 1</diffuse></material>
+        </visual>
+        <visual name="label">
+          <pose>0 0 0.9 0 0 0</pose>
+          <geometry><box><size>0.8 0.1 0.3</size></box></geometry>
+          <material><ambient>1 0.2 0.2 1</ambient><diffuse>1 0.2 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="label_pid">
+      <static>true</static>
+      <pose>-9 -4 0.75 0 0 0</pose>
+      <link name="link">
+        <visual name="post">
+          <geometry><cylinder><radius>0.08</radius><length>1.5</length></cylinder></geometry>
+          <material><ambient>1 0.6 0.1 1</ambient><diffuse>1 0.6 0.1 1</diffuse></material>
+        </visual>
+        <visual name="label">
+          <pose>0 0 0.9 0 0 0</pose>
+          <geometry><box><size>0.8 0.1 0.3</size></box></geometry>
+          <material><ambient>1 0.6 0.1 1</ambient><diffuse>1 0.6 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="label_it2">
+      <static>true</static>
+      <pose>-9 4 0.75 0 0 0</pose>
+      <link name="link">
+        <visual name="post">
+          <geometry><cylinder><radius>0.08</radius><length>1.5</length></cylinder></geometry>
+          <material><ambient>0.2 0.8 0.2 1</ambient><diffuse>0.2 0.8 0.2 1</diffuse></material>
+        </visual>
+        <visual name="label">
+          <pose>0 0 0.9 0 0 0</pose>
+          <geometry><box><size>0.8 0.1 0.3</size></box></geometry>
+          <material><ambient>0.2 0.8 0.2 1</ambient><diffuse>0.2 0.8 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="label_gt2">
+      <static>true</static>
+      <pose>-9 12 0.75 0 0 0</pose>
+      <link name="link">
+        <visual name="post">
+          <geometry><cylinder><radius>0.08</radius><length>1.5</length></cylinder></geometry>
+          <material><ambient>0.2 0.4 1 1</ambient><diffuse>0.2 0.4 1 1</diffuse></material>
+        </visual>
+        <visual name="label">
+          <pose>0 0 0.9 0 0 0</pose>
+          <geometry><box><size>0.8 0.1 0.3</size></box></geometry>
+          <material><ambient>0.2 0.4 1 1</ambient><diffuse>0.2 0.4 1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===== ARENA BOUNDARY MARKERS ===== -->
+    <!-- Corner posts to show arena extent -->
+    <model name="corner_nw">
+      <static>true</static>
+      <pose>-8 18 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.1</radius><length>1.0</length></cylinder></geometry>
+          <material><ambient>0.8 0.8 0.8 1</ambient><diffuse>0.8 0.8 0.8 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="corner_ne">
+      <static>true</static>
+      <pose>8 18 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.1</radius><length>1.0</length></cylinder></geometry>
+          <material><ambient>0.8 0.8 0.8 1</ambient><diffuse>0.8 0.8 0.8 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="corner_sw">
+      <static>true</static>
+      <pose>-8 -18 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.1</radius><length>1.0</length></cylinder></geometry>
+          <material><ambient>0.8 0.8 0.8 1</ambient><diffuse>0.8 0.8 0.8 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="corner_se">
+      <static>true</static>
+      <pose>8 -18 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.1</radius><length>1.0</length></cylinder></geometry>
+          <material><ambient>0.8 0.8 0.8 1</ambient><diffuse>0.8 0.8 0.8 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
 
   </world>
 </sdf>

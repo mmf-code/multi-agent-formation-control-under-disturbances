@@ -1,6 +1,6 @@
 # VIDEO DEMO: Group 0 - PD Controllers
-# Figure-8 trajectory with shape transitions
-# Center: Y=-12, Duration: 90s
+# Professional figure-8 trajectory with clear shape transitions
+# Center: Y=-12, Duration: 120s
 
 /formation_0/formation_coordinator_pd:
   ros__parameters:
@@ -10,18 +10,17 @@
       - agent_1
       - agent_2
 
-    # Formation shape: triangle (initial)
+    # Formation shape
     formation.shape: triangle
-    formation.spacing: 2.5
+    formation.spacing: 3.0
 
-    # Formation center position (matches spawn)
+    # Formation center (spawn position)
     formation.center.x: 0.0
     formation.center.y: -12.0
     formation.center.z: 0.5
     formation.yaw_deg: 0.0
     frame_id: odom
 
-    # Update rate (Hz)
     publish_frequency_hz: 10.0
 
     # PSO parameters
@@ -32,22 +31,31 @@
     pso.cognitive_coeff: 1.5
     pso.social_coeff: 1.5
 
-    # Legacy motion (disabled)
     motion.enable: false
 
-    # Figure-8 Trajectory (90s, 12 waypoints)
-    # Pattern: Start → Right loop → Cross center → Left loop → Return
-    # Phase A (0-20s): Assembly at center
-    # Phase B (20-50s): Figure-8 with shape changes
-    # Phase C (50-70s): Hold during wind challenge
-    # Phase D (70-90s): Return to center
-    waypoints.enable: true
-    waypoints.times: [10.0, 20.0, 27.5, 35.0, 42.5, 50.0, 57.5, 65.0, 72.5, 80.0, 85.0, 90.0]
-    # Figure-8: Two circles (radius 3m) connected
-    waypoints.x: [0.0, 0.0, 2.5, 3.0, 2.5, 0.0, -2.5, -3.0, -2.5, 0.0, 0.0, 0.0]
-    waypoints.y: [-12.0, -12.0, -10.0, -12.0, -14.0, -12.0, -14.0, -12.0, -10.0, -12.0, -12.0, -12.0]
-    waypoints.z: [0.5, 0.7, 0.8, 0.9, 0.8, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6, 0.5]
-    waypoints.shapes: [triangle, triangle, triangle, line, line, v_shape, v_shape, line, line, triangle, triangle, triangle]
+    # PROFESSIONAL FIGURE-8 TRAJECTORY (120s, 16 waypoints)
+    # Larger radius (6m), clearer shape transitions, more dramatic movements
+    #
+    # Timeline:
+    #   0-15s:   Assembly - hover at start
+    #   15-30s:  Right loop (triangle formation)
+    #   30-45s:  Cross center + shape transition to LINE
+    #   45-60s:  Left loop (line formation)
+    #   60-75s:  Cross center + shape transition to V_SHAPE
+    #   75-90s:  Right loop (v_shape formation)
+    #   90-105s: Cross center + shape transition to TRIANGLE
+    #   105-120s: Return to start (triangle)
 
-    # Event-Triggered Communication (ETC)
+    waypoints.enable: true
+    waypoints.times: [15.0, 22.5, 30.0, 37.5, 45.0, 52.5, 60.0, 67.5, 75.0, 82.5, 90.0, 97.5, 105.0, 112.5, 120.0]
+
+    # Figure-8 with 6m radius loops
+    # Right loop: center at (6, -12), Left loop: center at (-6, -12)
+    waypoints.x: [0.0, 4.2, 6.0, 4.2, 0.0, -4.2, -6.0, -4.2, 0.0, 4.2, 6.0, 4.2, 0.0, 0.0, 0.0]
+    waypoints.y: [-12.0, -7.8, -12.0, -16.2, -12.0, -16.2, -12.0, -7.8, -12.0, -7.8, -12.0, -16.2, -12.0, -12.0, -12.0]
+    waypoints.z: [0.6, 0.8, 1.0, 0.8, 0.6, 0.8, 1.0, 0.8, 0.6, 0.8, 1.0, 0.8, 0.6, 0.5, 0.5]
+
+    # Shape transitions: hold each shape for ~30s for visibility
+    waypoints.shapes: [triangle, triangle, triangle, triangle, line, line, line, line, v_shape, v_shape, v_shape, v_shape, triangle, triangle, triangle]
+
     etc.enable: false

@@ -1,6 +1,6 @@
 # VIDEO DEMO: Group 3 - GT2 Fuzzy Controllers
-# Figure-8 trajectory with shape transitions (synchronized with other groups)
-# Center: Y=12, Duration: 90s
+# Professional figure-8 trajectory with clear shape transitions
+# Center: Y=12, Duration: 120s
 
 /formation_3/formation_coordinator_gt2:
   ros__parameters:
@@ -10,21 +10,17 @@
       - agent_10
       - agent_11
 
-    # Formation shape: triangle (initial)
     formation.shape: triangle
-    formation.spacing: 2.5
+    formation.spacing: 3.0
 
-    # Formation center position (matches spawn)
     formation.center.x: 0.0
     formation.center.y: 12.0
     formation.center.z: 0.5
     formation.yaw_deg: 0.0
     frame_id: odom
 
-    # Update rate (Hz)
     publish_frequency_hz: 10.0
 
-    # PSO parameters
     pso.enable: true
     pso.num_particles: 20
     pso.max_iterations: 50
@@ -32,16 +28,16 @@
     pso.cognitive_coeff: 1.5
     pso.social_coeff: 1.5
 
-    # Legacy motion (disabled)
     motion.enable: false
 
-    # Figure-8 Trajectory - SYNCHRONIZED with all groups
+    # SYNCHRONIZED with all groups - same pattern, different Y lane
     waypoints.enable: true
-    waypoints.times: [10.0, 20.0, 27.5, 35.0, 42.5, 50.0, 57.5, 65.0, 72.5, 80.0, 85.0, 90.0]
-    waypoints.x: [0.0, 0.0, 2.5, 3.0, 2.5, 0.0, -2.5, -3.0, -2.5, 0.0, 0.0, 0.0]
-    waypoints.y: [12.0, 12.0, 14.0, 12.0, 10.0, 12.0, 10.0, 12.0, 14.0, 12.0, 12.0, 12.0]
-    waypoints.z: [0.5, 0.7, 0.8, 0.9, 0.8, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6, 0.5]
-    waypoints.shapes: [triangle, triangle, triangle, line, line, v_shape, v_shape, line, line, triangle, triangle, triangle]
+    waypoints.times: [15.0, 22.5, 30.0, 37.5, 45.0, 52.5, 60.0, 67.5, 75.0, 82.5, 90.0, 97.5, 105.0, 112.5, 120.0]
 
-    # Event-Triggered Communication (ETC)
+    waypoints.x: [0.0, 4.2, 6.0, 4.2, 0.0, -4.2, -6.0, -4.2, 0.0, 4.2, 6.0, 4.2, 0.0, 0.0, 0.0]
+    waypoints.y: [12.0, 16.2, 12.0, 7.8, 12.0, 7.8, 12.0, 16.2, 12.0, 16.2, 12.0, 7.8, 12.0, 12.0, 12.0]
+    waypoints.z: [0.6, 0.8, 1.0, 0.8, 0.6, 0.8, 1.0, 0.8, 0.6, 0.8, 1.0, 0.8, 0.6, 0.5, 0.5]
+
+    waypoints.shapes: [triangle, triangle, triangle, triangle, line, line, line, line, v_shape, v_shape, v_shape, v_shape, triangle, triangle, triangle]
+
     etc.enable: false

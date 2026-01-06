@@ -19,7 +19,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Parametreler
 PHASE=${1:-3}  # Default Phase 3 (rüzgarlı) - IT2/GT2 farkı görünür
-DURATION=${2:-90}
+DURATION=${2:-120}
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
@@ -34,10 +34,11 @@ echo "║  Formations: Triangle → Line → V-Shape → Triangle            ║
 echo "║  Groups: PD (Y=-12) | PID (Y=-4) | IT2 (Y=4) | GT2 (Y=12)   ║"
 echo "║                                                              ║"
 echo "║  Timeline:                                                   ║"
-echo "║    0-20s:  Assembly & stabilization                          ║"
-echo "║    20-50s: Figure-8 with shape transitions                   ║"
-echo "║    50-70s: Wind challenge (IT2/GT2 advantage visible)        ║"
-echo "║    70-90s: Recovery & finale                                 ║"
+echo "║    0-15s:   Assembly & stabilization (TRIANGLE)              ║"
+echo "║    15-45s:  Figure-8 right loop (TRIANGLE → LINE)            ║"
+echo "║    45-75s:  Figure-8 left loop (LINE → V_SHAPE)              ║"
+echo "║    75-105s: Figure-8 right loop (V_SHAPE → TRIANGLE)         ║"
+echo "║    105-120s: Return to start & finale                        ║"
 echo "║                                                              ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
@@ -145,14 +146,16 @@ for ((i=0; i<=$DURATION; i++)); do
     space=$(printf '%*s' "$((50 - progress))" | tr ' ' '░')
 
     # Faz gösterimi
-    if [ $i -lt 20 ]; then
-        phase_text="Assembly"
-    elif [ $i -lt 50 ]; then
-        phase_text="Figure-8 "
-    elif [ $i -lt 70 ]; then
-        phase_text="Wind Test"
+    if [ $i -lt 15 ]; then
+        phase_text="Assembly  [TRIANGLE]"
+    elif [ $i -lt 45 ]; then
+        phase_text="Right Loop [TRI→LINE]"
+    elif [ $i -lt 75 ]; then
+        phase_text="Left Loop  [LINE→V]"
+    elif [ $i -lt 105 ]; then
+        phase_text="Right Loop [V→TRI]"
     else
-        phase_text="Finale   "
+        phase_text="Finale     [TRIANGLE]"
     fi
 
     printf "\r  [%s%s] %3ds/%ds | %s " "$bar" "$space" $i $DURATION "$phase_text"
