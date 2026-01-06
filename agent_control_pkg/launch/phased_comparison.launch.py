@@ -125,6 +125,8 @@ def launch_setup(context, *args, **kwargs):
     gazebo_gui_str = LaunchConfiguration('gazebo_gui').perform(context)
     use_sim_time = LaunchConfiguration('use_sim_time').perform(context)
     collision_mode = LaunchConfiguration('collision_mode').perform(context).lower()
+    paused = LaunchConfiguration('paused').perform(context).lower() == 'true'
+    video_demo = LaunchConfiguration('video_demo').perform(context).lower() == 'true'
 
     # Validate collision mode
     valid_collision_modes = ['disabled', 'pass_through', 'passthrough', 'avoidance']
@@ -176,8 +178,12 @@ def launch_setup(context, *args, **kwargs):
 
     # Gazebo server
     # Note: Plugin loading via -s flags removed - plugins are defined in the world file
+    gzserver_cmd = ['gzserver', world_file]
+    if paused:
+        gzserver_cmd.append('--pause')
+
     gzserver = ExecuteProcess(
-        cmd=['gzserver', world_file],
+        cmd=gzserver_cmd,
         output='screen',
         additional_env={
             'GAZEBO_PLUGIN_PATH': os.environ.get('GAZEBO_PLUGIN_PATH', ''),
@@ -340,32 +346,41 @@ def launch_setup(context, *args, **kwargs):
         ])
         agent_nodes.append(agent_controller)
 
-    # Formation coordinators
-    formation_config_pd = os.path.join(pkg_formation_coordinator, 'config', 'formation_12drone_pd.yaml')
-    formation_config_pid = os.path.join(pkg_formation_coordinator, 'config', 'formation_12drone_pid_group.yaml')
-    formation_config_it2 = os.path.join(pkg_formation_coordinator, 'config', 'formation_12drone_it2_group.yaml')
-    formation_config_gt2 = os.path.join(pkg_formation_coordinator, 'config', 'formation_12drone_gt2_group.yaml')
+    # Formation coordinators (select video demo or standard configs)
+    if video_demo:
+        # Video demo: circular trajectories with shape transitions
+        config_subdir = 'video_demo'
+        formation_config_pd = os.path.join(pkg_formation_coordinator, 'config', config_subdir, 'formation_video_pd.yaml')
+        formation_config_pid = os.path.join(pkg_formation_coordinator, 'config', config_subdir, 'formation_video_pid.yaml')
+        formation_config_it2 = os.path.join(pkg_formation_coordinator, 'config', config_subdir, 'formation_video_it2.yaml')
+        formation_config_gt2 = os.path.join(pkg_formation_coordinator, 'config', config_subdir, 'formation_video_gt2.yaml')
+    else:
+        # Standard: linear waypoint trajectories
+        formation_config_pd = os.path.join(pkg_formation_coordinator, 'config', 'formation_12drone_pd.yaml')
+        formation_config_pid = os.path.join(pkg_formation_coordinator, 'config', 'formation_12drone_pid_group.yaml')
+        formation_config_it2 = os.path.join(pkg_formation_coordinator, 'config', 'formation_12drone_it2_group.yaml')
+        formation_config_gt2 = os.path.join(pkg_formation_coordinator, 'config', 'formation_12drone_gt2_group.yaml')
 
     formation_coordinators = [
         GroupAction([PushRosNamespace('formation_0'), Node(
             package='formation_coordinator_pkg', executable='formation_coordinator_node',
             name='formation_coordinator_pd', output='screen',
-            parameters=[formation_config_pd, {'use_sim_time': True}]
+            parameters=[formation_config_pd, {'use_sim_time': False}]
         )]),
         GroupAction([PushRosNamespace('formation_1'), Node(
             package='formation_coordinator_pkg', executable='formation_coordinator_node',
             name='formation_coordinator_pid', output='screen',
-            parameters=[formation_config_pid, {'use_sim_time': True}]
+            parameters=[formation_config_pid, {'use_sim_time': False}]
         )]),
         GroupAction([PushRosNamespace('formation_2'), Node(
             package='formation_coordinator_pkg', executable='formation_coordinator_node',
             name='formation_coordinator_it2', output='screen',
-            parameters=[formation_config_it2, {'use_sim_time': True}]
+            parameters=[formation_config_it2, {'use_sim_time': False}]
         )]),
         GroupAction([PushRosNamespace('formation_3'), Node(
             package='formation_coordinator_pkg', executable='formation_coordinator_node',
             name='formation_coordinator_gt2', output='screen',
-            parameters=[formation_config_gt2, {'use_sim_time': True}]
+            parameters=[formation_config_gt2, {'use_sim_time': False}]
         )]),
     ]
 
@@ -431,6 +446,14 @@ def generate_launch_description():
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         DeclareLaunchArgument('gazebo_gui', default_value='false',
             description='Launch Gazebo GUI'),
+
+        # Start paused for video recording
+        DeclareLaunchArgument('paused', default_value='false',
+            description='Start Gazebo paused for video recording'),
+
+        # Video demo mode (use enhanced circular trajectories)
+        DeclareLaunchArgument('video_demo', default_value='false',
+            description='Use video demo trajectories (circular with shape transitions)'),
 
         # Collision avoidance mode
         # 'disabled' (default): No collision avoidance - baseline comparison
