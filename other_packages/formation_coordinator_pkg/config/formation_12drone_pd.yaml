@@ -33,11 +33,12 @@
     motion.enable: false
     motion.vx: 0.0
 
-    # Parametric trajectory: Lemniscate (Figure-8)
+    # HOVER MODE: Static position holding for disturbance rejection test
+    # Using waypoints mode with waypoints.enable=false = pure hover
     trajectory.mode: "lemniscate"
-    trajectory.period: 60.0           # One complete figure-8 in 60s
-    trajectory.lemniscate_a: 5.0      # X amplitude (±5m)
-    trajectory.lemniscate_b: 2.0      # Y amplitude (±2m, small to stay in lane)
+    trajectory.period: 60.0
+    trajectory.lemniscate_a: 5.0
+    trajectory.lemniscate_b: 2.0
 
     # Waypoint trajectory (disabled - using parametric)
     waypoints.enable: false

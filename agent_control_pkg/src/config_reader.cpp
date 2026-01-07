@@ -378,10 +378,17 @@ bool loadFuzzyParamsYAML(const std::string& file_path, FuzzyParams& fp) {
                 }
             }
         } else if (section == "rules") {
-            if (line.rfind("- [", 0) == 0 && line.back() == ']') {
-                auto tokens = parseStringList_fuzzy_cfg(line.substr(3, line.size() - 4));
-                if (tokens.size() == 4) {
-                    fp.rules.push_back({tokens[0], tokens[1], tokens[2], tokens[3]});
+            // Handle rules with optional comments: "- [A, B, C, D]  # comment"
+            if (line.rfind("- [", 0) == 0) {
+                // Find the closing bracket (ignore anything after it, like comments)
+                auto rb = line.find(']');
+                if (rb != std::string::npos && rb > 3) {
+                    // Extract content between [ and ]
+                    std::string rule_content = line.substr(3, rb - 3);
+                    auto tokens = parseStringList_fuzzy_cfg(rule_content);
+                    if (tokens.size() == 4) {
+                        fp.rules.push_back({tokens[0], tokens[1], tokens[2], tokens[3]});
+                    }
                 }
             }
         }

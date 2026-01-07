@@ -10,94 +10,96 @@
 # Date: 2026-01-04
 
 membership_functions:
-  # Error: ±2.0m range (matches observed simulation errors)
+  # Error: ±5.0m range (EXPANDED for strong wind scenarios)
+  # Allows fuzzy to respond to large errors from wind disturbance
   error:
-    NB: [-2.0, -1.6, -1.2, -2.2, -1.7, -1.1]
-    NS: [-1.4, -0.8, -0.2, -1.6, -0.9, 0.0]
-    ZE: [-0.3, 0.0, 0.3, -0.4, 0.0, 0.4]
-    PS: [0.2, 0.8, 1.4, 0.0, 0.9, 1.6]
-    PB: [1.2, 1.6, 2.0, 1.1, 1.7, 2.2]
+    NB: [-5.0, -4.0, -2.5, -5.5, -4.25, -2.0]   # Very negative error
+    NS: [-3.0, -1.5, -0.3, -3.5, -1.75, 0.0]    # Small negative error
+    ZE: [-0.5, 0.0, 0.5, -0.7, 0.0, 0.7]        # Near target
+    PS: [0.3, 1.5, 3.0, 0.0, 1.75, 3.5]         # Small positive error
+    PB: [2.5, 4.0, 5.0, 2.0, 4.25, 5.5]         # Very positive error
 
-  # dError: ±1.0 m/s - CRITICAL for transient detection
-  # Fast error changes indicate disturbance
+  # dError: ±2.0 m/s (EXPANDED for fast transients)
+  # Larger range to detect aggressive wind changes
   dError:
-    DN: [-1.0, -0.6, 0.0, -1.2, -0.7, 0.1]      # Error decreasing fast
-    DZ: [-0.2, 0.0, 0.2, -0.3, 0.0, 0.3]        # Stable
-    DP: [0.0, 0.6, 1.0, -0.1, 0.7, 1.2]         # Error increasing fast (DISTURBANCE!)
+    DN: [-2.0, -1.2, 0.0, -2.5, -1.4, 0.2]      # Error decreasing fast
+    DZ: [-0.4, 0.0, 0.4, -0.6, 0.0, 0.6]        # Stable
+    DP: [0.0, 1.2, 2.0, -0.2, 1.4, 2.5]         # Error increasing fast (DISTURBANCE!)
 
-  # Wind: Used for context, not direct feedforward
-  # Helps distinguish wind-caused transients from other sources
+  # Wind: Expanded range for stronger winds
   wind:
-    LOW:  [0.0, 0.0, 1.5, 0.0, 0.0, 2.0]        # Calm (0-1.5 m/s)
-    MED:  [1.0, 2.5, 4.0, 0.5, 2.5, 4.5]        # Moderate (1-4 m/s)
-    HIGH: [3.0, 4.5, 6.0, 2.5, 5.0, 6.5]        # Strong (3+ m/s)
+    LOW:  [0.0, 0.0, 2.0, 0.0, 0.0, 2.5]        # Calm (0-2 m/s)
+    MED:  [1.5, 3.5, 5.5, 1.0, 3.5, 6.0]        # Moderate (1.5-5.5 m/s)
+    HIGH: [4.5, 6.0, 8.0, 4.0, 6.5, 9.0]        # Strong (4.5+ m/s)
 
-  # Correction: Transient boost (adds to PID)
+  # Correction: Balanced output (±4 m/s² range)
+  # Strong but safe corrections for wind disturbance
   correction:
-    LNC: [-4.0, -3.0, -2.0, -4.5, -3.25, -1.5]  # Large negative
-    SNC: [-2.5, -1.5, -0.5, -3.0, -1.75, 0.0]   # Small negative
-    NC:  [-0.5, 0.0, 0.5, -0.8, 0.0, 0.8]       # No correction
-    SPC: [0.5, 1.5, 2.5, 0.0, 1.75, 3.0]        # Small positive
-    LPC: [2.0, 3.0, 4.0, 1.5, 3.25, 4.5]        # Large positive
+    LNC: [-4.0, -3.0, -1.5, -4.5, -3.25, -1.0]  # Large negative
+    SNC: [-2.5, -1.5, -0.3, -3.0, -1.75, 0.0]   # Small negative
+    NC:  [-0.3, 0.0, 0.3, -0.5, 0.0, 0.5]       # No correction
+    SPC: [0.3, 1.5, 2.5, 0.0, 1.75, 3.0]        # Small positive
+    LPC: [1.5, 3.0, 4.0, 1.0, 3.25, 4.5]        # Large positive
 
-# Rules: Focus on ERROR DYNAMICS, not steady-state
-# Key insight: Fast error increase (DP) = disturbance hitting = boost correction
+# Rules: AGGRESSIVE ERROR COMPENSATION for video demo
+# Key change: Large errors get LARGE correction regardless of dError state
+# This makes fuzzy actively fight wind disturbance, not just transients
 rules:
   # === CALM CONDITIONS (LOW wind) ===
-  # Standard PD-like response, minimal intervention
-  - [PB, DZ, LOW, SPC]    # Large error, stable -> small boost
-  - [PS, DZ, LOW, NC]     # Small error, stable -> let PID handle
+  # Standard response with error-proportional correction
+  - [PB, DZ, LOW, LPC]    # Large error -> LARGE correction (not small!)
+  - [PS, DZ, LOW, SPC]    # Small error -> small correction
   - [ZE, DZ, LOW, NC]     # On target -> no action
-  - [NS, DZ, LOW, NC]
-  - [NB, DZ, LOW, SNC]
+  - [NS, DZ, LOW, SNC]
+  - [NB, DZ, LOW, LNC]
 
-  # Error decreasing (system recovering) -> reduce action, avoid overshoot
-  - [PB, DN, LOW, NC]     # Error shrinking fast -> ease off
+  # Error decreasing (system recovering) -> maintain some correction
+  - [PB, DN, LOW, SPC]    # Still large error -> keep pushing
   - [PS, DN, LOW, NC]
   - [ZE, DN, LOW, SNC]    # Approaching target fast -> brake
   - [NS, DN, LOW, NC]
-  - [NB, DN, LOW, NC]
+  - [NB, DN, LOW, SNC]
 
-  # Error increasing (disturbance!) -> BOOST correction
+  # Error increasing (disturbance!) -> MAXIMUM correction
   - [PB, DP, LOW, LPC]    # Error growing -> strong response
-  - [PS, DP, LOW, SPC]
+  - [PS, DP, LOW, LPC]    # Even small error growing -> act!
   - [ZE, DP, LOW, SPC]    # Was stable, now drifting -> act early
   - [NS, DP, LOW, SNC]
   - [NB, DP, LOW, LNC]
 
   # === MODERATE WIND (MED) ===
-  # More aggressive on transients
-  - [PB, DZ, MED, SPC]
-  - [PS, DZ, MED, NC]
-  - [ZE, DZ, MED, NC]     # Steady wind, steady error -> PID handles
-  - [NS, DZ, MED, NC]
-  - [NB, DZ, MED, SNC]
+  # Aggressive steady-state AND transient compensation
+  - [PB, DZ, MED, LPC]    # Large error in wind -> LARGE correction
+  - [PS, DZ, MED, SPC]    # Small error in wind -> small correction
+  - [ZE, DZ, MED, NC]     # Steady -> no extra action
+  - [NS, DZ, MED, SNC]
+  - [NB, DZ, MED, LNC]
 
-  - [PB, DN, MED, NC]
+  - [PB, DN, MED, SPC]    # Recovering but still error -> maintain
   - [PS, DN, MED, NC]
   - [ZE, DN, MED, SNC]
   - [NS, DN, MED, NC]
-  - [NB, DN, MED, NC]
+  - [NB, DN, MED, SNC]
 
-  - [PB, DP, MED, LPC]    # Gust hitting -> strong response
+  - [PB, DP, MED, LPC]    # Gust hitting -> MAX response
   - [PS, DP, MED, LPC]
   - [ZE, DP, MED, SPC]
   - [NS, DP, MED, SNC]
   - [NB, DP, MED, LNC]
 
   # === STRONG WIND (HIGH) ===
-  # Maximum transient response, trust PID for steady-state
-  - [PB, DZ, HIGH, SPC]   # Steady under strong wind -> small boost
-  - [PS, DZ, HIGH, NC]
-  - [ZE, DZ, HIGH, NC]    # Stabilized -> don't fight PID
-  - [NS, DZ, HIGH, NC]
-  - [NB, DZ, HIGH, SNC]
+  # MAXIMUM compensation - fuzzy MUST help against strong wind
+  - [PB, DZ, HIGH, LPC]   # Large error + strong wind -> MAX correction!
+  - [PS, DZ, HIGH, SPC]   # Small error -> proportional
+  - [ZE, DZ, HIGH, NC]    # Stabilized -> maintain
+  - [NS, DZ, HIGH, SNC]
+  - [NB, DZ, HIGH, LNC]
 
-  - [PB, DN, HIGH, NC]    # Recovering -> let it settle
-  - [PS, DN, HIGH, NC]
-  - [ZE, DN, HIGH, SNC]
-  - [NS, DN, HIGH, NC]
-  - [NB, DN, HIGH, NC]
+  - [PB, DN, HIGH, LPC]   # Recovering but wind strong -> keep pushing
+  - [PS, DN, HIGH, SPC]
+  - [ZE, DN, HIGH, NC]
+  - [NS, DN, HIGH, SNC]
+  - [NB, DN, HIGH, LNC]
 
   - [PB, DP, HIGH, LPC]   # Strong gust on top of wind -> MAX response
   - [PS, DP, HIGH, LPC]

@@ -65,7 +65,7 @@
     <!-- ========================================= -->
 
     <model name="agent_0">
-      <pose>-4 -12 0.5 0 0 0</pose>
+      <pose>0 -10.3 0.5 0 0 0</pose>
       <include>
         <uri>model://crazyflie</uri>
       </include>
@@ -85,7 +85,7 @@
     </model>
 
     <model name="agent_1">
-      <pose>0 -12 0.5 0 0 0</pose>
+      <pose>-1.5 -12.9 0.5 0 0 0</pose>
       <include>
         <uri>model://crazyflie</uri>
       </include>
@@ -105,7 +105,7 @@
     </model>
 
     <model name="agent_2">
-      <pose>4 -12 0.5 0 0 0</pose>
+      <pose>1.5 -12.9 0.5 0 0 0</pose>
       <include>
         <uri>model://crazyflie</uri>
       </include>
@@ -130,7 +130,7 @@
     <!-- ========================================= -->
 
     <model name="agent_3">
-      <pose>-4 -4 0.5 0 0 0</pose>
+      <pose>0 -2.3 0.5 0 0 0</pose>
       <include>
         <uri>model://crazyflie</uri>
       </include>
@@ -150,7 +150,7 @@
     </model>
 
     <model name="agent_4">
-      <pose>0 -4 0.5 0 0 0</pose>
+      <pose>-1.5 -4.9 0.5 0 0 0</pose>
       <include>
         <uri>model://crazyflie</uri>
       </include>
@@ -170,7 +170,7 @@
     </model>
 
     <model name="agent_5">
-      <pose>4 -4 0.5 0 0 0</pose>
+      <pose>1.5 -4.9 0.5 0 0 0</pose>
       <include>
         <uri>model://crazyflie</uri>
       </include>
@@ -195,7 +195,7 @@
     <!-- ========================================= -->
 
     <model name="agent_6">
-      <pose>-4 4 0.5 0 0 0</pose>
+      <pose>0 5.7 0.5 0 0 0</pose>
       <include>
         <uri>model://crazyflie</uri>
       </include>
@@ -215,7 +215,7 @@
     </model>
 
     <model name="agent_7">
-      <pose>0 4 0.5 0 0 0</pose>
+      <pose>-1.5 3.1 0.5 0 0 0</pose>
       <include>
         <uri>model://crazyflie</uri>
       </include>
@@ -235,7 +235,7 @@
     </model>
 
     <model name="agent_8">
-      <pose>4 4 0.5 0 0 0</pose>
+      <pose>1.5 3.1 0.5 0 0 0</pose>
       <include>
         <uri>model://crazyflie</uri>
       </include>
@@ -260,7 +260,7 @@
     <!-- ========================================= -->
 
     <model name="agent_9">
-      <pose>-4 12 0.5 0 0 0</pose>
+      <pose>0 13.7 0.5 0 0 0</pose>
       <include>
         <uri>model://crazyflie</uri>
       </include>
@@ -280,7 +280,7 @@
     </model>
 
     <model name="agent_10">
-      <pose>0 12 0.5 0 0 0</pose>
+      <pose>-1.5 11.1 0.5 0 0 0</pose>
       <include>
         <uri>model://crazyflie</uri>
       </include>
@@ -300,7 +300,7 @@
     </model>
 
     <model name="agent_11">
-      <pose>4 12 0.5 0 0 0</pose>
+      <pose>1.5 11.1 0.5 0 0 0</pose>
       <include>
         <uri>model://crazyflie</uri>
       </include>

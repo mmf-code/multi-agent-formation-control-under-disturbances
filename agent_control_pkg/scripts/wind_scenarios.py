@@ -151,6 +151,66 @@ PHASE_DEFINITIONS: Dict[int, PhaseDefinition] = {
             "Meaningful cumulative comparisons (ITAE, effort)",
         ],
     ),
+    # =========================================================================
+    # CALIBRATED DEMO SCENARIOS - Physics-based wind for visible differences
+    # =========================================================================
+    # Physics (Crazyflie 2.1):
+    #   - k_aero = 0.0056 N/(m/s)², mass = 0.027 kg
+    #   - Accel = k_aero * v² / mass = 0.207 * v²
+    #   - Controller output limit: ±10 m/s²
+    #   - PD Kp = 0.538 → steady-state error = accel / Kp
+    #
+    # For visible PD drift (~8m) without flying away:
+    #   - Target accel: 4-5 m/s² (within limits, significant error)
+    #   - Wind speed: 4.5 m/s → 0.207 * 20 = 4.1 m/s² → PD error ~7.6m
+    # =========================================================================
+    7: PhaseDefinition(
+        phase_id=7,
+        name="EXTREME_DEMO",
+        purpose="Dramatic video demo: PD drifts significantly, Fuzzy holds position",
+        duration_sec=90,
+        wind_config={
+            "profile": "aggressive",
+            "magnitude": 3.5,  # 3.5 m/s → ~2.5 m/s² accel (safe but visible)
+            "direction": 45.0,  # Diagonal for visual effect
+            "stochastic_mag_std": 0.8,
+            "stochastic_dir_rate": 10.0,
+            "stochastic_gust_prob": 0.10,  # Gusts every ~10 seconds
+            "stochastic_gust_mag": 1.5,  # Gusts up to 5.25 m/s peak
+            "stochastic_turbulence": 0.5,
+            "publish_rate": 20.0,
+            "start_delay_sec": 15.0,
+        },
+        expectations=[
+            "PD drones drift 2-4 meters off trajectory (visible!)",
+            "PID recovers slowly (1-2m transient, <1m steady)",
+            "IT2/GT2 maintain position with <1m error",
+            "Clear visual separation between controller groups",
+        ],
+    ),
+    8: PhaseDefinition(
+        phase_id=8,
+        name="STRONG_DEMO",
+        purpose="Stronger wind to push limits - PD fails more, fuzzy still works",
+        duration_sec=90,
+        wind_config={
+            "profile": "aggressive",
+            "magnitude": 5.5,  # 5.5 m/s → ~6.3 m/s² accel → PD drifts ~12m
+            "direction": 90.0,  # Pure Y direction (perpendicular to trajectory)
+            "stochastic_mag_std": 1.2,
+            "stochastic_dir_rate": 20.0,
+            "stochastic_gust_prob": 0.12,
+            "stochastic_gust_mag": 1.6,  # Gusts up to 9 m/s (at actuator limit)
+            "stochastic_turbulence": 1.0,
+            "publish_rate": 20.0,
+            "start_delay_sec": 15.0,
+        },
+        expectations=[
+            "PD drones drift 10-15 meters (clearly failing)",
+            "PID struggles more but recovers",
+            "Fuzzy controllers show clear advantage",
+        ],
+    ),
 }
 
 
@@ -174,7 +234,7 @@ def get_phase_config(
         ValueError: If phase_id is invalid or sweep_index out of range
     """
     if phase_id not in PHASE_DEFINITIONS:
-        raise ValueError(f"Invalid phase_id: {phase_id}. Must be 1-6.")
+        raise ValueError(f"Invalid phase_id: {phase_id}. Must be 1-8.")
 
     phase = PHASE_DEFINITIONS[phase_id]
     config = dict(phase.wind_config)  # Copy to avoid mutation
@@ -199,21 +259,21 @@ def get_phase_config(
 def get_phase_duration(phase_id: int) -> int:
     """Get the duration in seconds for a specific phase."""
     if phase_id not in PHASE_DEFINITIONS:
-        raise ValueError(f"Invalid phase_id: {phase_id}. Must be 1-6.")
+        raise ValueError(f"Invalid phase_id: {phase_id}. Must be 1-8.")
     return PHASE_DEFINITIONS[phase_id].duration_sec
 
 
 def get_phase_name(phase_id: int) -> str:
     """Get the name of a specific phase."""
     if phase_id not in PHASE_DEFINITIONS:
-        raise ValueError(f"Invalid phase_id: {phase_id}. Must be 1-6.")
+        raise ValueError(f"Invalid phase_id: {phase_id}. Must be 1-8.")
     return PHASE_DEFINITIONS[phase_id].name
 
 
 def get_sweep_count(phase_id: int) -> int:
     """Get number of sweep iterations for a phase (1 if no sweep)."""
     if phase_id not in PHASE_DEFINITIONS:
-        raise ValueError(f"Invalid phase_id: {phase_id}. Must be 1-6.")
+        raise ValueError(f"Invalid phase_id: {phase_id}. Must be 1-8.")
     phase = PHASE_DEFINITIONS[phase_id]
     return len(phase.sweep_values) if phase.sweep_values else 1
 

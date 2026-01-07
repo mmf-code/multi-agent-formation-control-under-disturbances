@@ -1,17 +1,23 @@
+// Professional Robotics Arena Ground Material
+// Pure white floor with subtle grid for video recording
+
 material ArenaGround/Grid
 {
   technique
   {
     pass
     {
-      ambient 0.5 0.5 0.5 1.0
-      diffuse 0.8 0.8 0.8 1.0
-      specular 0.1 0.1 0.1 1.0 1.0
+      // Pure white floor
+      ambient 1.0 1.0 1.0 1.0
+      diffuse 1.0 1.0 1.0 1.0
+      specular 0.1 0.1 0.1 1.0 4.0
 
       texture_unit
       {
         texture arena_grid.png
-        scale 0.125 0.125
+        // Fine grid scaling
+        scale 0.1 0.1
+        filtering trilinear
       }
     }
   }

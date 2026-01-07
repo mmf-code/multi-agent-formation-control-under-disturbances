@@ -21,10 +21,10 @@
     formation.yaw_deg: 0.0
     frame_id: odom
 
-    publish_frequency_hz: 10.0
+    publish_frequency_hz: 5.0
 
     # PSO parameters
-    pso.enable: true
+    pso.enable: false
     pso.num_particles: 20
     pso.max_iterations: 50
     pso.inertia_weight: 0.7

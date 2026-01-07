@@ -12,22 +12,22 @@
 # Date: 2026-01-04
 
 membership_functions:
-  # Error: ±2.0m range
+  # Error: ±5.0m range (EXPANDED for strong wind scenarios)
   error:
-    NB: [-2.0, -1.6, -1.2, -2.2, -1.7, -1.1]
-    NS: [-1.4, -0.8, -0.2, -1.6, -0.9, 0.0]
-    ZE: [-0.3, 0.0, 0.3, -0.4, 0.0, 0.4]
-    PS: [0.2, 0.8, 1.4, 0.0, 0.9, 1.6]
-    PB: [1.2, 1.6, 2.0, 1.1, 1.7, 2.2]
+    NB: [-5.0, -4.0, -2.5, -5.5, -4.25, -2.0]   # Very negative error
+    NS: [-3.0, -1.5, -0.3, -3.5, -1.75, 0.0]    # Small negative error
+    ZE: [-0.5, 0.0, 0.5, -0.7, 0.0, 0.7]        # Near target
+    PS: [0.3, 1.5, 3.0, 0.0, 1.75, 3.5]         # Small positive error
+    PB: [2.5, 4.0, 5.0, 2.0, 4.25, 5.5]         # Very positive error
 
-  # dError: 5 levels for finer transient detection
-  # Key: DP/PB = disturbance hitting, DN/NB = recovering
+  # dError: 5 levels with EXPANDED range (±2.5 m/s)
+  # Key: PB = disturbance hitting, NB = fast recovery
   dError:
-    NB: [-1.0, -0.8, -0.4, -1.2, -0.9, -0.3]    # Fast recovery
-    NS: [-0.6, -0.3, 0.0, -0.7, -0.35, 0.05]    # Slow recovery
-    ZE: [-0.15, 0.0, 0.15, -0.2, 0.0, 0.2]      # Stable
-    PS: [0.0, 0.3, 0.6, -0.05, 0.35, 0.7]       # Slow drift
-    PB: [0.4, 0.8, 1.0, 0.3, 0.9, 1.2]          # Fast drift (DISTURBANCE!)
+    NB: [-2.5, -1.8, -0.8, -3.0, -2.0, -0.6]    # Fast recovery
+    NS: [-1.2, -0.5, 0.0, -1.5, -0.6, 0.1]      # Slow recovery
+    ZE: [-0.3, 0.0, 0.3, -0.5, 0.0, 0.5]        # Stable
+    PS: [0.0, 0.5, 1.2, -0.1, 0.6, 1.5]         # Slow drift
+    PB: [0.8, 1.8, 2.5, 0.6, 2.0, 3.0]          # Fast drift (DISTURBANCE!)
 
   # Wind: Normalized [0, 1] - used for context only
   wind:
@@ -35,108 +35,110 @@ membership_functions:
     MEDIUM: [0.2, 0.5, 0.8, 0.15, 0.5, 0.85]    # Moderate
     HIGH:   [0.6, 0.85, 1.0, 0.5, 0.9, 1.0]     # Strong
 
-  # Correction: Transient boost
+  # Correction: Balanced output (±4 m/s² range)
   correction:
-    NB: [-4.0, -3.0, -2.0, -4.5, -3.25, -1.5]
-    NS: [-2.5, -1.5, -0.3, -3.0, -1.75, 0.0]
-    ZE: [-0.4, 0.0, 0.4, -0.6, 0.0, 0.6]
-    PS: [0.3, 1.5, 2.5, 0.0, 1.75, 3.0]
-    PB: [2.0, 3.0, 4.0, 1.5, 3.25, 4.5]
+    NB: [-4.0, -3.0, -1.5, -4.5, -3.25, -1.0]   # Large negative
+    NS: [-2.5, -1.5, -0.3, -3.0, -1.75, 0.0]    # Small negative
+    ZE: [-0.3, 0.0, 0.3, -0.5, 0.0, 0.5]        # No correction
+    PS: [0.3, 1.5, 2.5, 0.0, 1.75, 3.0]         # Small positive
+    PB: [1.5, 3.0, 4.0, 1.0, 3.25, 4.5]         # Large positive
 
-# Rules: 75 rules (5×5×3) - Focus on dError dynamics
+# Rules: 75 rules (5×5×3) - AGGRESSIVE ERROR COMPENSATION
+# Key change: Large errors get LARGE correction regardless of dError state
+# This makes fuzzy actively fight wind disturbance, not just transients
 rules:
   # ===== LOW WIND (25 rules) =====
-  # Minimal intervention, let PID work
-  - [NB, NB, LOW, ZE]     # Recovering fast -> ease off
-  - [NB, NS, LOW, ZE]
-  - [NB, ZE, LOW, NS]     # Stable error -> small correction
-  - [NB, PS, LOW, NS]     # Starting to drift -> act
-  - [NB, PB, LOW, NB]     # Disturbance! -> strong response
+  # Error-proportional correction even when stable
+  - [NB, NB, LOW, NS]     # Recovering fast -> some braking
+  - [NB, NS, LOW, NS]
+  - [NB, ZE, LOW, NB]     # Stable large error -> LARGE correction!
+  - [NB, PS, LOW, NB]     # Starting to drift -> max response
+  - [NB, PB, LOW, NB]     # Disturbance! -> max response
 
   - [NS, NB, LOW, ZE]
   - [NS, NS, LOW, ZE]
-  - [NS, ZE, LOW, ZE]     # Let PID handle
+  - [NS, ZE, LOW, NS]     # Small error -> small correction
   - [NS, PS, LOW, NS]
   - [NS, PB, LOW, NB]
 
   - [ZE, NB, LOW, PS]     # Overshooting -> brake
   - [ZE, NS, LOW, ZE]
   - [ZE, ZE, LOW, ZE]     # Perfect -> no action
-  - [ZE, PS, LOW, ZE]
+  - [ZE, PS, LOW, NS]
   - [ZE, PB, LOW, NS]     # Sudden drift -> counter
 
   - [PS, NB, LOW, PB]
   - [PS, NS, LOW, PS]
-  - [PS, ZE, LOW, ZE]
-  - [PS, PS, LOW, ZE]
-  - [PS, PB, LOW, PS]
+  - [PS, ZE, LOW, PS]     # Small error -> small correction
+  - [PS, PS, LOW, PS]
+  - [PS, PB, LOW, PB]
 
   - [PB, NB, LOW, PB]     # Recovering from disturbance
-  - [PB, NS, LOW, ZE]
-  - [PB, ZE, LOW, PS]
-  - [PB, PS, LOW, PS]
-  - [PB, PB, LOW, PB]     # Disturbance! -> strong
+  - [PB, NS, LOW, PS]
+  - [PB, ZE, LOW, PB]     # Stable large error -> LARGE correction!
+  - [PB, PS, LOW, PB]
+  - [PB, PB, LOW, PB]     # Disturbance! -> max response
 
   # ===== MEDIUM WIND (25 rules) =====
-  # More responsive to transients
-  - [NB, NB, MEDIUM, ZE]
-  - [NB, NS, MEDIUM, ZE]
-  - [NB, ZE, MEDIUM, NS]
-  - [NB, PS, MEDIUM, NB]  # Wind + drift -> act fast
+  # Aggressive steady-state AND transient compensation
+  - [NB, NB, MEDIUM, NS]
+  - [NB, NS, MEDIUM, NS]
+  - [NB, ZE, MEDIUM, NB]  # Large error + wind -> MAX correction
+  - [NB, PS, MEDIUM, NB]  # Wind + drift -> max response
   - [NB, PB, MEDIUM, NB]
 
   - [NS, NB, MEDIUM, ZE]
   - [NS, NS, MEDIUM, ZE]
-  - [NS, ZE, MEDIUM, ZE]
-  - [NS, PS, MEDIUM, NS]
+  - [NS, ZE, MEDIUM, NS]  # Small error -> small correction
+  - [NS, PS, MEDIUM, NB]
   - [NS, PB, MEDIUM, NB]
 
   - [ZE, NB, MEDIUM, PS]
   - [ZE, NS, MEDIUM, ZE]
-  - [ZE, ZE, MEDIUM, ZE]  # Stable in wind -> PID has it
+  - [ZE, ZE, MEDIUM, ZE]  # Stable at target -> maintain
   - [ZE, PS, MEDIUM, NS]
   - [ZE, PB, MEDIUM, NB]  # Gust! -> respond
 
   - [PS, NB, MEDIUM, PB]
   - [PS, NS, MEDIUM, PS]
-  - [PS, ZE, MEDIUM, ZE]
-  - [PS, PS, MEDIUM, PS]
+  - [PS, ZE, MEDIUM, PS]  # Small error -> small correction
+  - [PS, PS, MEDIUM, PB]
   - [PS, PB, MEDIUM, PB]
 
   - [PB, NB, MEDIUM, PB]
   - [PB, NS, MEDIUM, PS]
-  - [PB, ZE, MEDIUM, PS]
+  - [PB, ZE, MEDIUM, PB]  # Large error + wind -> MAX correction
   - [PB, PS, MEDIUM, PB]
   - [PB, PB, MEDIUM, PB]
 
   # ===== HIGH WIND (25 rules) =====
-  # Maximum transient response, trust PID for steady-state
-  - [NB, NB, HIGH, ZE]    # Let recovery happen
-  - [NB, NS, HIGH, ZE]
-  - [NB, ZE, HIGH, NS]
+  # MAXIMUM compensation - fuzzy MUST help against strong wind
+  - [NB, NB, HIGH, NS]    # Recovering -> maintain some correction
+  - [NB, NS, HIGH, NS]
+  - [NB, ZE, HIGH, NB]    # Large error + strong wind -> MAX correction!
   - [NB, PS, HIGH, NB]    # Gust on wind -> max response
   - [NB, PB, HIGH, NB]
 
-  - [NS, NB, HIGH, PS]
+  - [NS, NB, HIGH, ZE]
   - [NS, NS, HIGH, ZE]
-  - [NS, ZE, HIGH, ZE]
+  - [NS, ZE, HIGH, NS]    # Small error -> proportional
   - [NS, PS, HIGH, NB]
   - [NS, PB, HIGH, NB]
 
   - [ZE, NB, HIGH, PS]
   - [ZE, NS, HIGH, ZE]
-  - [ZE, ZE, HIGH, ZE]    # Stable in strong wind -> don't fight PID
+  - [ZE, ZE, HIGH, ZE]    # Stable at target -> maintain
   - [ZE, PS, HIGH, NS]
   - [ZE, PB, HIGH, NB]    # Sudden gust -> immediate
 
   - [PS, NB, HIGH, PB]
   - [PS, NS, HIGH, PS]
-  - [PS, ZE, HIGH, ZE]
+  - [PS, ZE, HIGH, PS]    # Small error -> proportional
   - [PS, PS, HIGH, PB]
   - [PS, PB, HIGH, PB]
 
   - [PB, NB, HIGH, PB]
   - [PB, NS, HIGH, PS]
-  - [PB, ZE, HIGH, PS]
+  - [PB, ZE, HIGH, PB]    # Large error + strong wind -> MAX correction!
   - [PB, PS, HIGH, PB]
   - [PB, PB, HIGH, PB]    # Max error + gust -> max response
