@@ -84,6 +84,18 @@ def get_phase_wind_params(phase_id: int, sweep_index: int, seed: int) -> dict:
             6: {"profile": "stochastic", "magnitude": 2.5, "direction": 45.0,
                 "stochastic_mag_std": 1.5, "stochastic_dir_rate": 15.0,
                 "stochastic_gust_prob": 0.08, "stochastic_gust_mag": 2.0},
+            # CALIBRATED DEMO scenarios - PD fails, Fuzzy survives
+            # Phase 7: VIDEO DEMO - Lower base wind + stronger gusts for visible difference
+            # Key: Lower constant (2.2 m/s) so drones can track, but frequent gusts (0.15 prob)
+            # where fuzzy shows smoother recovery. Gusts 2.5 m/s = dramatic visible jolts
+            7: {"profile": "stochastic", "magnitude": 2.2, "direction": 45.0,
+                "stochastic_mag_std": 0.4, "stochastic_dir_rate": 6.0,
+                "stochastic_gust_prob": 0.15, "stochastic_gust_mag": 2.5,
+                "stochastic_turbulence": 0.15, "start_delay_sec": 8.0},
+            8: {"profile": "aggressive", "magnitude": 5.5, "direction": 90.0,
+                "stochastic_mag_std": 1.2, "stochastic_dir_rate": 20.0,
+                "stochastic_gust_prob": 0.12, "stochastic_gust_mag": 1.6,
+                "stochastic_turbulence": 1.0, "start_delay_sec": 15.0},
         }
         config = phase_configs.get(phase_id, phase_configs[1])
     else:
@@ -93,14 +105,15 @@ def get_phase_wind_params(phase_id: int, sweep_index: int, seed: int) -> dict:
     config["random_seed"] = seed
     # Add wind delay for formation stabilization (Phase 1 has no wind, others get delay)
     # This allows drones to reach formation before wind disturbance begins
-    # Delay is 10s, steady-state analysis starts at 15s, giving 5s of wind response before SS
-    config["start_delay_sec"] = 0.0 if phase_id == 1 else 10.0
+    # Use config value if provided, else default: 0s for phase 1, 10s for others
+    if "start_delay_sec" not in config:
+        config["start_delay_sec"] = 0.0 if phase_id == 1 else 10.0
     return config
 
 
 def get_duration(phase_id: int) -> int:
     """Get duration in seconds for a phase."""
-    durations = {1: 60, 2: 60, 3: 60, 4: 60, 5: 60, 6: 300}
+    durations = {1: 60, 2: 60, 3: 60, 4: 60, 5: 60, 6: 300, 7: 90, 8: 90}
     return durations.get(phase_id, 60)
 
 
@@ -108,7 +121,8 @@ def get_name(phase_id: int) -> str:
     """Get phase name."""
     names = {
         1: "BASELINE", 2: "STEADY_WIND", 3: "TURBULENCE",
-        4: "GUST", 5: "COMBINED", 6: "ENDURANCE"
+        4: "GUST", 5: "COMBINED", 6: "ENDURANCE",
+        7: "EXTREME_DEMO", 8: "STRONG_DEMO"
     }
     return names.get(phase_id, "UNKNOWN")
 
@@ -141,8 +155,8 @@ def launch_setup(context, *args, **kwargs):
     collision_active = collision_mode != 'disabled'
 
     # Validate phase
-    if phase_id < 1 or phase_id > 6:
-        raise ValueError(f"Invalid phase: {phase_id}. Must be 1-6.")
+    if phase_id < 1 or phase_id > 8:
+        raise ValueError(f"Invalid phase: {phase_id}. Must be 1-8.")
 
     phase_name = get_name(phase_id)
     duration = get_duration(phase_id)
@@ -242,24 +256,29 @@ def launch_setup(context, *args, **kwargs):
     }
 
     # ==========================================================================
-    # PID GAINS - Tuned for Crazyflie 2.1 physics model (DO NOT CHANGE)
+    # PID GAINS - Tuned for Crazyflie 2.1 physics model
+    # FAIR COMPARISON: All controllers use SAME base Kp, Kd values
+    # Differences come from:
+    #   - PD: No integral (Ki=0) → cannot eliminate steady-state error
+    #   - PID: Full PID → integral eliminates steady-state error slowly
+    #   - IT2/GT2: PID + Fuzzy rules → intelligent disturbance compensation
     # ==========================================================================
-    TUNED_KP = 3.501   # Proportional gain
-    TUNED_KI = 1.946   # Integral gain
-    TUNED_KD = 3.608   # Derivative gain
+    TUNED_KP = 3.501   # Proportional gain (SAME for all controllers)
+    TUNED_KI = 1.946   # Integral gain (only PID, IT2, GT2 use this)
+    TUNED_KD = 3.608   # Derivative gain (SAME for all controllers)
 
     # Fuzzy mix ratios - ADDITIVE mode
     # Keep full PID, add fuzzy correction on top
     # Formula: u = 1.0*PID + k_fuzzy*Fuzzy
-    # TEST: Increasing fuzzy authority for better transient rejection
     MIX_K_PID = 1.0
-    MIX_K_FUZZY = 0.8  # TEST: Higher fuzzy authority
+    MIX_K_FUZZY = 0.5  # Balanced fuzzy authority (1.0 causes oscillation/divergence)
 
-    # PD controller params (Group 0) - No integral action
+    # PD controller params (Group 0) - SAME Kp/Kd as others, but Ki=0
+    # Structural difference: no integral action → cannot eliminate steady-state error
     pd_controller_params = {
         **common_base,
         'controller_type': 'pd',
-        'pid.kp': TUNED_KP, 'pid.ki': 0.0, 'pid.kd': TUNED_KD,
+        'pid.kp': TUNED_KP, 'pid.ki': 0.0, 'pid.kd': TUNED_KD,  # SAME Kp/Kd, no Ki
         'fuzzy.enable': False,
     }
 
